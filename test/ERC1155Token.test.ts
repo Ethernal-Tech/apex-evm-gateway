@@ -1,78 +1,78 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import {
-  ChildERC1155,
-  ChildERC1155__factory,
-  ChildERC1155Predicate,
-  ChildERC1155Predicate__factory,
+  ERC1155Token,
+  ERC1155Token__factory,
+  ERC1155TokenPredicate,
+  ERC1155TokenPredicate__factory,
 } from "../typechain-types";
 import { setBalance, impersonateAccount } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-describe("ChildERC1155", () => {
-  let childERC1155: ChildERC1155,
-    predicateChildERC1155: ChildERC1155,
-    childERC1155Predicate: ChildERC1155Predicate,
+describe("ERC1155Token", () => {
+  let eRC1155Token: ERC1155Token,
+    predicateERC1155Token: ERC1155Token,
+    eRC1155TokenPredicate: ERC1155TokenPredicate,
     rootToken: string,
     accounts: SignerWithAddress[];
   before(async () => {
     accounts = await ethers.getSigners();
 
-    const ChildERC1155: ChildERC1155__factory = await ethers.getContractFactory("ChildERC1155");
-    childERC1155 = await ChildERC1155.deploy();
+    const ERC1155Token: ERC1155Token__factory = await ethers.getContractFactory("ERC1155Token");
+    eRC1155Token = await ERC1155Token.deploy();
 
-    await childERC1155.deployed();
+    await eRC1155Token.deployed();
 
-    const ChildERC1155Predicate: ChildERC1155Predicate__factory = await ethers.getContractFactory(
-      "ChildERC1155Predicate"
+    const ERC1155TokenPredicate: ERC1155TokenPredicate__factory = await ethers.getContractFactory(
+      "ERC1155TokenPredicate"
     );
-    childERC1155Predicate = await ChildERC1155Predicate.deploy();
+    eRC1155TokenPredicate = await ERC1155TokenPredicate.deploy();
 
-    await childERC1155Predicate.deployed();
+    await eRC1155TokenPredicate.deployed();
 
-    impersonateAccount(childERC1155Predicate.address);
-    setBalance(childERC1155Predicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    impersonateAccount(eRC1155TokenPredicate.address);
+    setBalance(eRC1155TokenPredicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
     rootToken = ethers.Wallet.createRandom().address;
   });
 
   it("fail initialization", async () => {
-    await expect(childERC1155.initialize(ethers.constants.AddressZero, "")).to.be.revertedWith(
-      "ChildERC1155: BAD_INITIALIZATION"
+    await expect(eRC1155Token.initialize(ethers.constants.AddressZero, "")).to.be.revertedWith(
+      "ERC1155Token: BAD_INITIALIZATION"
     );
   });
 
   it("initialize and validate initialization", async () => {
-    expect(await childERC1155.rootToken()).to.equal(ethers.constants.AddressZero);
-    expect(await childERC1155.predicate()).to.equal(ethers.constants.AddressZero);
+    expect(await eRC1155Token.rootToken()).to.equal(ethers.constants.AddressZero);
+    expect(await eRC1155Token.predicate()).to.equal(ethers.constants.AddressZero);
 
-    predicateChildERC1155 = childERC1155.connect(await ethers.getSigner(childERC1155Predicate.address));
-    await predicateChildERC1155.initialize(rootToken, "TEST");
+    predicateERC1155Token = eRC1155Token.connect(await ethers.getSigner(eRC1155TokenPredicate.address));
+    await predicateERC1155Token.initialize(rootToken, "TEST");
 
-    expect(await childERC1155.rootToken()).to.equal(rootToken);
-    expect(await childERC1155.predicate()).to.equal(childERC1155Predicate.address);
+    expect(await eRC1155Token.rootToken()).to.equal(rootToken);
+    expect(await eRC1155Token.predicate()).to.equal(eRC1155TokenPredicate.address);
   });
 
   it("fail reinitialization", async () => {
-    await expect(childERC1155.initialize(ethers.constants.AddressZero, "")).to.be.revertedWith(
+    await expect(eRC1155Token.initialize(ethers.constants.AddressZero, "")).to.be.revertedWith(
       "Initializable: contract is already initialized"
     );
   });
 
   it("mint tokens fail: only predicate", async () => {
-    await expect(childERC1155.mint(ethers.constants.AddressZero, 0, 1)).to.be.revertedWith(
-      "ChildERC1155: Only predicate can call"
+    await expect(eRC1155Token.mint(ethers.constants.AddressZero, 0, 1)).to.be.revertedWith(
+      "ERC1155Token: Only predicate can call"
     );
   });
 
   it("burn tokens fail: only predicate", async () => {
-    await expect(childERC1155.burn(ethers.constants.AddressZero, 0, 1)).to.be.revertedWith(
-      "ChildERC1155: Only predicate can call"
+    await expect(eRC1155Token.burn(ethers.constants.AddressZero, 0, 1)).to.be.revertedWith(
+      "ERC1155Token: Only predicate can call"
     );
   });
 
   it("mint tokens success", async () => {
-    const mintTx = await predicateChildERC1155.mint(accounts[0].address, 0, 1);
+    const mintTx = await predicateERC1155Token.mint(accounts[0].address, 0, 1);
     const mintReceipt = await mintTx.wait();
 
     const transferEvent = mintReceipt?.events?.find((log: { event: string }) => log.event === "TransferSingle");
@@ -88,7 +88,7 @@ describe("ChildERC1155", () => {
       name: "TEST",
       version: "1",
       chainId: network.config.chainId,
-      verifyingContract: childERC1155.address,
+      verifyingContract: eRC1155Token.address,
     };
 
     const types = {
@@ -99,7 +99,7 @@ describe("ChildERC1155", () => {
       ],
     };
 
-    const functionData = childERC1155.interface.encodeFunctionData("safeTransferFrom", [
+    const functionData = eRC1155Token.interface.encodeFunctionData("safeTransferFrom", [
       accounts[0].address,
       accounts[1].address,
       0,
@@ -109,7 +109,7 @@ describe("ChildERC1155", () => {
     const value = {
       nonce: 0,
       from: accounts[0].address,
-      functionSignature: childERC1155.interface.encodeFunctionData("safeTransferFrom", [
+      functionSignature: eRC1155Token.interface.encodeFunctionData("safeTransferFrom", [
         accounts[0].address,
         accounts[1].address,
         0,
@@ -123,17 +123,17 @@ describe("ChildERC1155", () => {
     const s = "0x".concat(signature.slice(66, 130));
     let v: any = "0x".concat(signature.slice(130, 132));
     v = ethers.BigNumber.from(v).toNumber();
-    await expect(childERC1155.executeMetaTransaction(accounts[1].address, functionData, r, s, v)).to.be.revertedWith(
+    await expect(eRC1155Token.executeMetaTransaction(accounts[1].address, functionData, r, s, v)).to.be.revertedWith(
       "Signer and signature do not match"
     );
   });
 
   it("execute meta-tx: success", async () => {
     const domain = {
-      name: `ChildERC1155-${(await childERC1155.rootToken()).toLowerCase()}`,
+      name: `ERC1155Token-${(await eRC1155Token.rootToken()).toLowerCase()}`,
       version: "1",
       chainId: network.config.chainId,
-      verifyingContract: childERC1155.address,
+      verifyingContract: eRC1155Token.address,
     };
 
     const types = {
@@ -144,7 +144,7 @@ describe("ChildERC1155", () => {
       ],
     };
 
-    const functionData = childERC1155.interface.encodeFunctionData("safeTransferFrom", [
+    const functionData = eRC1155Token.interface.encodeFunctionData("safeTransferFrom", [
       accounts[0].address,
       accounts[1].address,
       0,
@@ -154,7 +154,7 @@ describe("ChildERC1155", () => {
     const value = {
       nonce: 0,
       from: accounts[0].address,
-      functionSignature: childERC1155.interface.encodeFunctionData("safeTransferFrom", [
+      functionSignature: eRC1155Token.interface.encodeFunctionData("safeTransferFrom", [
         accounts[0].address,
         accounts[1].address,
         0,
@@ -168,7 +168,7 @@ describe("ChildERC1155", () => {
     const s = "0x".concat(signature.slice(66, 130));
     let v: any = "0x".concat(signature.slice(130, 132));
     v = ethers.BigNumber.from(v).toNumber();
-    const transferTx = await childERC1155.executeMetaTransaction(accounts[0].address, functionData, r, s, v);
+    const transferTx = await eRC1155Token.executeMetaTransaction(accounts[0].address, functionData, r, s, v);
     const transferReceipt = await transferTx.wait();
 
     const transferEvent = transferReceipt?.events?.find((log: { event: string }) => log.event === "TransferSingle");
@@ -178,7 +178,7 @@ describe("ChildERC1155", () => {
   });
 
   it("burn tokens success", async () => {
-    const burnTx = await predicateChildERC1155.burn(accounts[1].address, 0, 1);
+    const burnTx = await predicateERC1155Token.burn(accounts[1].address, 0, 1);
     const burnReceipt = await burnTx.wait();
 
     const transferEvent = burnReceipt?.events?.find((log: any) => log.event === "TransferSingle");
@@ -189,25 +189,25 @@ describe("ChildERC1155", () => {
 
   // TODO - fix
   // it("batch mint tokens success", async () => {
-  //   const mintTx = await predicateChildERC1155.mintBatch(
+  //   const mintTx = await predicateERC1155Token.mintBatch(
   //     [accounts[0].address, accounts[0].address, accounts[1].address],
   //     [0, 1, 2],
   //     [1, 2, 3]
   //   );
   //   await expect(mintTx)
-  //     .to.emit(predicateChildERC1155, "TransferSingle")
+  //     .to.emit(predicateERC1155Token, "TransferSingle")
   //     .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[0].address, 0, 1);
   //   await expect(mintTx)
-  //     .to.emit(predicateChildERC1155, "TransferSingle")
+  //     .to.emit(predicateERC1155Token, "TransferSingle")
   //     .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[0].address, 1, 2);
   //   await expect(mintTx)
-  //     .to.emit(predicateChildERC1155, "TransferSingle")
+  //     .to.emit(predicateERC1155Token, "TransferSingle")
   //     .withArgs("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", ethers.constants.AddressZero, accounts[1].address, 2, 3);
   // });
   // it("batch burn tokens success", async () => {
-  //   const burnTx = await predicateChildERC1155.burnBatch(accounts[0].address, [0, 1], [1, 2]);
+  //   const burnTx = await predicateERC1155Token.burnBatch(accounts[0].address, [0, 1], [1, 2]);
   //   await expect(burnTx)
-  //     .to.emit(predicateChildERC1155, "TransferBatch")
+  //     .to.emit(predicateERC1155Token, "TransferBatch")
   //     .withArgs(
   //       "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
   //       accounts[0].address,

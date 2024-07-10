@@ -9,12 +9,12 @@ import "./lib/EIP712MetaTransaction.sol";
 import "./interfaces/IERC1155Token.sol";
 
 /**
-    @title ChildERC1155
+    @title ERC1155Token
     @author Polygon Technology (@QEDK, @wschwab)
-    @notice Child token template for ChildERC1155 predicate deployments
-    @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
+    @notice Token template for ERC1155Token predicate deployments
+    @dev All tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
-contract ChildERC1155 is
+contract ERC1155Token is
     EIP712MetaTransaction,
     ERC1155Upgradeable,
     IERC1155Token
@@ -26,7 +26,7 @@ contract ChildERC1155 is
     modifier onlyPredicate() {
         require(
             msg.sender == _predicate,
-            "ChildERC1155: Only predicate can call"
+            "ERC1155Token: Only predicate can call"
         );
         _;
     }
@@ -38,12 +38,12 @@ contract ChildERC1155 is
         address rootToken_,
         string calldata uri_
     ) external initializer {
-        require(rootToken_ != address(0), "ChildERC1155: BAD_INITIALIZATION");
+        require(rootToken_ != address(0), "ERC1155Token: BAD_INITIALIZATION");
         _rootToken = rootToken_;
         _predicate = msg.sender;
         __ERC1155_init(uri_);
         _initializeEIP712(
-            string.concat("ChildERC1155-", rootToken_.toHexString()),
+            string.concat("ERC1155Token-", rootToken_.toHexString()),
             "1"
         );
     }
@@ -86,7 +86,7 @@ contract ChildERC1155 is
         uint256 length = accounts.length;
         require(
             length == tokenIds.length && length == amounts.length,
-            "ChildERC1155: array len mismatch"
+            "ERC1155Token: array len mismatch"
         );
         for (uint256 i = 0; i < length; ) {
             _mint(accounts[i], tokenIds[i], amounts[i], "");
