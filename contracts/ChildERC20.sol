@@ -5,7 +5,7 @@ pragma solidity 0.8.24;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "./lib/EIP712MetaTransaction.sol";
-import "./interfaces/IChildERC20.sol";
+import "./interfaces/IERC20Token.sol";
 
 /**
     @title ChildERC20
@@ -14,7 +14,7 @@ import "./interfaces/IChildERC20.sol";
     @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
 // solhint-disable reason-string
-contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IChildERC20 {
+contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
     address private _predicate;
     address private _rootToken;
     uint8 private _decimals;
@@ -29,7 +29,7 @@ contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IChildERC20 {
     }
 
     /**
-     * @inheritdoc IChildERC20
+     * @inheritdoc IERC20Token
      */
     function initialize(
         address rootToken_,
@@ -65,21 +65,21 @@ contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IChildERC20 {
     }
 
     /**
-     * @inheritdoc IChildERC20
+     * @inheritdoc IERC20Token
      */
     function predicate() external view virtual returns (address) {
         return _predicate;
     }
 
     /**
-     * @inheritdoc IChildERC20
+     * @inheritdoc IERC20Token
      */
     function rootToken() external view virtual returns (address) {
         return _rootToken;
     }
 
     /**
-     * @inheritdoc IChildERC20
+     * @inheritdoc IERC20Token
      */
     function mint(
         address account,
@@ -91,7 +91,7 @@ contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IChildERC20 {
     }
 
     /**
-     * @inheritdoc IChildERC20
+     * @inheritdoc IERC20Token
      */
     function burn(
         address account,

@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IChildERC20Predicate.sol";
-import "./interfaces/IChildERC20.sol";
+import "./interfaces/IERC20Token.sol";
 import "./interfaces/IStateSender.sol";
 import "./System.sol";
 
@@ -110,7 +110,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
      * @param childToken Address of the child token being withdrawn
      * @param amount Amount to withdraw
      */
-    function withdraw(IChildERC20 childToken, uint256 amount) external {
+    function withdraw(IERC20Token childToken, uint256 amount) external {
         _beforeTokenWithdraw();
         _withdraw(childToken, msg.sender, amount);
         _afterTokenWithdraw();
@@ -123,7 +123,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
      * @param amount Amount to withdraw
      */
     function withdrawTo(
-        IChildERC20 childToken,
+        IERC20Token childToken,
         address receiver,
         uint256 amount
     ) external {
@@ -182,7 +182,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
     function _afterTokenWithdraw() internal virtual {}
 
     function _withdraw(
-        IChildERC20 childToken,
+        IERC20Token childToken,
         address receiver,
         uint256 amount
     ) private {
@@ -229,7 +229,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
             uint256 amount
         ) = abi.decode(data, (address, address, address, uint256));
 
-        IChildERC20 childToken = IChildERC20(
+        IERC20Token childToken = IERC20Token(
             rootTokenToChildToken[depositToken]
         );
 
@@ -239,17 +239,17 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         );
         assert(address(childToken).code.length != 0);
 
-        address rootToken = IChildERC20(childToken).rootToken();
+        address rootToken = IERC20Token(childToken).rootToken();
 
         // a mapped child token should match deposited token
         assert(rootToken == depositToken);
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
-        assert(IChildERC20(childToken).predicate() == address(this));
+        assert(IERC20Token(childToken).predicate() == address(this));
 
         require(
-            IChildERC20(childToken).mint(receiver, amount),
+            IERC20Token(childToken).mint(receiver, amount),
             "ChildERC20Predicate: MINT_FAILED"
         );
 
@@ -277,7 +277,7 @@ contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
         ) = abi.decode(data, (bytes32, address, string, string, uint8));
         assert(rootToken != address(0)); // invariant since root predicate performs the same check
         assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
-        IChildERC20 childToken = IChildERC20(
+        IERC20Token childToken = IERC20Token(
             Clones.cloneDeterministic(
                 childTokenTemplate,
                 keccak256(abi.encodePacked(rootToken))

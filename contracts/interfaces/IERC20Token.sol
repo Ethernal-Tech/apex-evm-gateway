@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20Metadat
 /**
  * @dev Interface of IChildERC20
  */
-interface IChildERC20 is IERC20MetadataUpgradeable {
+interface IERC20Token is IERC20MetadataUpgradeable {
     /**
      * @dev Sets the values for {rootToken}, {name}, {symbol} and {decimals}.
      *

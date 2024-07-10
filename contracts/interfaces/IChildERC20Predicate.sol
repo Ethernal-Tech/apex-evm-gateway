@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 import "./IStateReceiver.sol";
-import "./IChildERC20.sol";
+import "./IERC20Token.sol";
 
 interface IChildERC20Predicate is IStateReceiver {
     function initialize(
@@ -19,10 +19,10 @@ interface IChildERC20Predicate is IStateReceiver {
         bytes calldata data
     ) external;
 
-    function withdraw(IChildERC20 childToken, uint256 amount) external;
+    function withdraw(IERC20Token childToken, uint256 amount) external;
 
     function withdrawTo(
-        IChildERC20 childToken,
+        IERC20Token childToken,
         address receiver,
         uint256 amount
     ) external;
