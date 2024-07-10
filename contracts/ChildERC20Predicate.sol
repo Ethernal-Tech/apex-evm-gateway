@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "./interfaces/IChildERC20Predicate.sol";
+import "./interfaces/IERC20TokenPredicate.sol";
 import "./interfaces/IERC20Token.sol";
 import "./interfaces/IStateSender.sol";
 import "./System.sol";
@@ -16,7 +16,7 @@ import "./System.sol";
     @notice Enables ERC20 token deposits and withdrawals across an arbitrary root chain and child chain
  */
 // solhint-disable reason-string
-contract ChildERC20Predicate is IChildERC20Predicate, Initializable, System {
+contract ChildERC20Predicate is IERC20TokenPredicate, Initializable, System {
     using SafeERC20 for IERC20;
 
     /// @custom:security write-protection="onlySystemCall()"

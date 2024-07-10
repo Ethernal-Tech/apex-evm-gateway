@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import "./IStateReceiver.sol";
 import "./IERC20Token.sol";
 
-interface IChildERC20Predicate is IStateReceiver {
+interface IERC20TokenPredicate is IStateReceiver {
     function initialize(
         address newL2StateSender,
         address newStateReceiver,
