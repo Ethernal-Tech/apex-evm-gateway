@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "./interfaces/IChildERC1155Predicate.sol";
+import "./interfaces/IERC1155TokenPredicate.sol";
 import "./interfaces/IERC1155Token.sol";
 import "./interfaces/IStateSender.sol";
 import "./System.sol";
@@ -16,7 +16,7 @@ import "./System.sol";
  */
 // solhint-disable reason-string
 contract ChildERC1155Predicate is
-    IChildERC1155Predicate,
+    IERC1155TokenPredicate,
     Initializable,
     System
 {

@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import "./IERC1155Token.sol";
 import "./IStateReceiver.sol";
 
-interface IChildERC1155Predicate is IStateReceiver {
+interface IERC1155TokenPredicate is IStateReceiver {
     function initialize(
         address newL2StateSender,
         address newStateReceiver,
