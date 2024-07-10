@@ -8,13 +8,13 @@ import "./lib/EIP712MetaTransaction.sol";
 import "./interfaces/IERC20Token.sol";
 
 /**
-    @title ChildERC20
+    @title ERC20Token
     @author Polygon Technology (@QEDK)
-    @notice Child token template for ChildERC20 predicate deployments
-    @dev All child tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
+    @notice Token template for ERC20 predicate deployments
+    @dev All tokens are clones of this contract. Burning and minting is controlled by respective predicates only.
  */
 // solhint-disable reason-string
-contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
+contract ERC20Token is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
     address private _predicate;
     address private _rootToken;
     uint8 private _decimals;
@@ -22,7 +22,7 @@ contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
     modifier onlyPredicate() {
         require(
             msg.sender == _predicate,
-            "ChildERC20: Only predicate can call"
+            "ERC20Token: Only predicate can call"
         );
 
         _;
@@ -41,7 +41,7 @@ contract ChildERC20 is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
             rootToken_ != address(0) &&
                 bytes(name_).length != 0 &&
                 bytes(symbol_).length != 0,
-            "ChildERC20: BAD_INITIALIZATION"
+            "ERC20Token: BAD_INITIALIZATION"
         );
         _rootToken = rootToken_;
         _decimals = decimals_;

@@ -1,31 +1,31 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import { ChildERC20, ChildERC20__factory, ChildERC20Predicate, ChildERC20Predicate__factory } from "../typechain-types";
+import { ERC20Token, ERC20Token__factory, ERC20TokenPredicate, ERC20TokenPredicate__factory } from "../typechain-types";
 import { setBalance, impersonateAccount } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-describe("ChildERC20", () => {
-  let childERC20: ChildERC20,
-    predicateChildERC20: ChildERC20,
-    childERC20Predicate: ChildERC20Predicate,
+describe("ERC20Token", () => {
+  let eRC20Token: ERC20Token,
+    predicateERC20Token: ERC20Token,
+    eRC20TokenPredicate: ERC20TokenPredicate,
     rootToken: string,
     totalSupply: number,
     accounts: SignerWithAddress[];
   before(async () => {
     accounts = await ethers.getSigners();
 
-    const ChildERC20: ChildERC20__factory = await ethers.getContractFactory("ChildERC20");
-    childERC20 = await ChildERC20.deploy();
+    const ERC20Token: ERC20Token__factory = await ethers.getContractFactory("ERC20Token");
+    eRC20Token = await ERC20Token.deploy();
 
-    await childERC20.deployed();
+    await eRC20Token.deployed();
 
-    const ChildERC20Predicate: ChildERC20Predicate__factory = await ethers.getContractFactory("ChildERC20Predicate");
-    childERC20Predicate = await ChildERC20Predicate.deploy();
+    const ERC20TokenPredicate: ERC20TokenPredicate__factory = await ethers.getContractFactory("ERC20TokenPredicate");
+    eRC20TokenPredicate = await ERC20TokenPredicate.deploy();
 
-    await childERC20Predicate.deployed();
+    await eRC20TokenPredicate.deployed();
 
-    impersonateAccount(childERC20Predicate.address);
-    setBalance(childERC20Predicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    impersonateAccount(eRC20TokenPredicate.address);
+    setBalance(eRC20TokenPredicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
     rootToken = ethers.Wallet.createRandom().address;
 
@@ -33,50 +33,50 @@ describe("ChildERC20", () => {
   });
 
   it("fail initialization", async () => {
-    await expect(childERC20.initialize(ethers.constants.AddressZero, "", "", 0)).to.be.revertedWith(
-      "ChildERC20: BAD_INITIALIZATION"
+    await expect(eRC20Token.initialize(ethers.constants.AddressZero, "", "", 0)).to.be.revertedWith(
+      "ERC20Token: BAD_INITIALIZATION"
     );
   });
 
   it("initialize and validate initialization", async () => {
-    expect(await childERC20.rootToken()).to.equal(ethers.constants.AddressZero);
-    expect(await childERC20.predicate()).to.equal(ethers.constants.AddressZero);
-    expect(await childERC20.name()).to.equal("");
-    expect(await childERC20.symbol()).to.equal("");
-    expect(await childERC20.decimals()).to.equal(0);
+    expect(await eRC20Token.rootToken()).to.equal(ethers.constants.AddressZero);
+    expect(await eRC20Token.predicate()).to.equal(ethers.constants.AddressZero);
+    expect(await eRC20Token.name()).to.equal("");
+    expect(await eRC20Token.symbol()).to.equal("");
+    expect(await eRC20Token.decimals()).to.equal(0);
 
-    predicateChildERC20 = childERC20.connect(await ethers.getSigner(childERC20Predicate.address));
-    await predicateChildERC20.initialize(rootToken, "TEST", "TEST", 18);
+    predicateERC20Token = eRC20Token.connect(await ethers.getSigner(eRC20TokenPredicate.address));
+    await predicateERC20Token.initialize(rootToken, "TEST", "TEST", 18);
 
-    expect(await childERC20.rootToken()).to.equal(rootToken);
-    expect(await childERC20.predicate()).to.equal(childERC20Predicate.address);
-    expect(await childERC20.name()).to.equal("TEST");
-    expect(await childERC20.symbol()).to.equal("TEST");
-    expect(await childERC20.decimals()).to.equal(18);
+    expect(await eRC20Token.rootToken()).to.equal(rootToken);
+    expect(await eRC20Token.predicate()).to.equal(eRC20TokenPredicate.address);
+    expect(await eRC20Token.name()).to.equal("TEST");
+    expect(await eRC20Token.symbol()).to.equal("TEST");
+    expect(await eRC20Token.decimals()).to.equal(18);
   });
 
   it("fail reinitialization", async () => {
-    await expect(childERC20.initialize(ethers.constants.AddressZero, "", "", 0)).to.be.revertedWith(
+    await expect(eRC20Token.initialize(ethers.constants.AddressZero, "", "", 0)).to.be.revertedWith(
       "Initializable: contract is already initialized"
     );
   });
 
   it("mint tokens fail: only predicate", async () => {
-    await expect(childERC20.mint(ethers.constants.AddressZero, 0)).to.be.revertedWith(
-      "ChildERC20: Only predicate can call"
+    await expect(eRC20Token.mint(ethers.constants.AddressZero, 0)).to.be.revertedWith(
+      "ERC20Token: Only predicate can call"
     );
   });
 
   it("burn tokens fail: only predicate", async () => {
-    await expect(childERC20.burn(ethers.constants.AddressZero, 0)).to.be.revertedWith(
-      "ChildERC20: Only predicate can call"
+    await expect(eRC20Token.burn(ethers.constants.AddressZero, 0)).to.be.revertedWith(
+      "ERC20Token: Only predicate can call"
     );
   });
 
   it("mint tokens success", async () => {
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
     totalSupply += randomAmount;
-    const mintTx = await predicateChildERC20.mint(accounts[0].address, ethers.utils.parseUnits(String(randomAmount)));
+    const mintTx = await predicateERC20Token.mint(accounts[0].address, ethers.utils.parseUnits(String(randomAmount)));
     const mintReceipt = await mintTx.wait();
 
     const transferEvent = mintReceipt?.events?.find((log: { event: string }) => log.event === "Transfer");
@@ -84,7 +84,7 @@ describe("ChildERC20", () => {
     expect(transferEvent?.args?.from).to.equal(ethers.constants.AddressZero);
     expect(transferEvent?.args?.to).to.equal(accounts[0].address);
     expect(transferEvent?.args?.value).to.equal(ethers.utils.parseUnits(String(randomAmount)));
-    expect(await childERC20.totalSupply()).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+    expect(await eRC20Token.totalSupply()).to.equal(ethers.utils.parseUnits(String(randomAmount)));
   });
 
   it("execute meta-tx: fail", async () => {
@@ -92,7 +92,7 @@ describe("ChildERC20", () => {
       name: "TEST",
       version: "1",
       chainId: network.config.chainId,
-      verifyingContract: childERC20.address,
+      verifyingContract: eRC20Token.address,
     };
 
     const types = {
@@ -103,11 +103,11 @@ describe("ChildERC20", () => {
       ],
     };
 
-    const functionData = childERC20.interface.encodeFunctionData("transfer", [accounts[0].address, 1]);
+    const functionData = eRC20Token.interface.encodeFunctionData("transfer", [accounts[0].address, 1]);
     const value = {
       nonce: 0,
       from: accounts[0].address,
-      functionSignature: childERC20.interface.encodeFunctionData("transfer", [accounts[0].address, 1]),
+      functionSignature: eRC20Token.interface.encodeFunctionData("transfer", [accounts[0].address, 1]),
     };
 
     const signature = await (await ethers.getSigner(accounts[0].address))._signTypedData(domain, types, value);
@@ -115,7 +115,7 @@ describe("ChildERC20", () => {
     const s = "0x".concat(signature.slice(66, 130));
     let v: any = "0x".concat(signature.slice(130, 132));
     v = ethers.BigNumber.from(v).toNumber();
-    await expect(childERC20.executeMetaTransaction(accounts[1].address, functionData, r, s, v)).to.be.revertedWith(
+    await expect(eRC20Token.executeMetaTransaction(accounts[1].address, functionData, r, s, v)).to.be.revertedWith(
       "Signer and signature do not match"
     );
   });
@@ -125,7 +125,7 @@ describe("ChildERC20", () => {
       name: "TEST",
       version: "1",
       chainId: network.config.chainId,
-      verifyingContract: childERC20.address,
+      verifyingContract: eRC20Token.address,
     };
 
     const types = {
@@ -136,11 +136,11 @@ describe("ChildERC20", () => {
       ],
     };
 
-    const functionData = childERC20.interface.encodeFunctionData("transfer", [accounts[0].address, 1]);
+    const functionData = eRC20Token.interface.encodeFunctionData("transfer", [accounts[0].address, 1]);
     const value = {
       nonce: 0,
       from: accounts[0].address,
-      functionSignature: childERC20.interface.encodeFunctionData("transfer", [accounts[0].address, 1]),
+      functionSignature: eRC20Token.interface.encodeFunctionData("transfer", [accounts[0].address, 1]),
     };
 
     const signature = await (await ethers.getSigner(accounts[0].address))._signTypedData(domain, types, value);
@@ -148,7 +148,7 @@ describe("ChildERC20", () => {
     const s = "0x".concat(signature.slice(66, 130));
     let v: any = "0x".concat(signature.slice(130, 132));
     v = ethers.BigNumber.from(v).toNumber();
-    const transferTx = await childERC20.executeMetaTransaction(accounts[0].address, functionData, r, s, v);
+    const transferTx = await eRC20Token.executeMetaTransaction(accounts[0].address, functionData, r, s, v);
     const transferReceipt = await transferTx.wait();
 
     const transferEvent = transferReceipt?.events?.find((log: { event: string }) => log.event === "Transfer");
@@ -160,13 +160,13 @@ describe("ChildERC20", () => {
   it("burn tokens success", async () => {
     const randomAmount = Math.floor(Math.random() * totalSupply + 1);
     totalSupply -= randomAmount;
-    const burnTx = await predicateChildERC20.burn(accounts[0].address, ethers.utils.parseUnits(String(randomAmount)));
+    const burnTx = await predicateERC20Token.burn(accounts[0].address, ethers.utils.parseUnits(String(randomAmount)));
     const burnReceipt = await burnTx.wait();
 
     const transferEvent = burnReceipt?.events?.find((log: any) => log.event === "Transfer");
     expect(transferEvent?.args?.from).to.equal(accounts[0].address);
     expect(transferEvent?.args?.to).to.equal(ethers.constants.AddressZero);
     expect(transferEvent?.args?.value).to.equal(ethers.utils.parseUnits(String(randomAmount)));
-    expect(await childERC20.totalSupply()).to.equal(ethers.utils.parseUnits(String(totalSupply)));
+    expect(await eRC20Token.totalSupply()).to.equal(ethers.utils.parseUnits(String(totalSupply)));
   });
 });

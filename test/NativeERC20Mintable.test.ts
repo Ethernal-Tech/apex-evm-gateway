@@ -5,8 +5,8 @@ import { ethers } from "hardhat";
 import {
   NativeERC20Mintable,
   NativeERC20Mintable__factory,
-  ChildERC20Predicate,
-  ChildERC20Predicate__factory,
+  ERC20TokenPredicate,
+  ERC20TokenPredicate__factory,
   MockNativeERC20Transfer,
   MockNativeERC20Transfer__factory,
 } from "../typechain-types";
@@ -18,7 +18,7 @@ describe("NativeERC20Mintable", () => {
     predicateNativeERC20: NativeERC20Mintable,
     minterNativeERC20: NativeERC20Mintable,
     zeroAddressNativeERC20: NativeERC20Mintable,
-    childERC20Predicate: ChildERC20Predicate,
+    eRC20TokenPredicate: ERC20TokenPredicate,
     mockNativeERC20Transfer: MockNativeERC20Transfer,
     balance: BigNumber,
     totalSupply: number,
@@ -28,10 +28,10 @@ describe("NativeERC20Mintable", () => {
     await hre.network.provider.send("hardhat_reset");
     accounts = await ethers.getSigners();
 
-    const ChildERC20Predicate: ChildERC20Predicate__factory = await ethers.getContractFactory("ChildERC20Predicate");
-    childERC20Predicate = await ChildERC20Predicate.deploy();
+    const ERC20TokenPredicate: ERC20TokenPredicate__factory = await ethers.getContractFactory("ERC20TokenPredicate");
+    eRC20TokenPredicate = await ERC20TokenPredicate.deploy();
 
-    await childERC20Predicate.deployed();
+    await eRC20TokenPredicate.deployed();
 
     const NativeERC20: NativeERC20Mintable__factory = await ethers.getContractFactory("NativeERC20Mintable");
     nativeERC20 = await NativeERC20.deploy();
@@ -121,7 +121,7 @@ describe("NativeERC20Mintable", () => {
   it("initialize and validate initialization", async () => {
     await expect(
       systemNativeERC20.initialize(
-        childERC20Predicate.address,
+        eRC20TokenPredicate.address,
         accounts[1].address,
         ethers.constants.AddressZero,
         "TEST",
@@ -134,7 +134,7 @@ describe("NativeERC20Mintable", () => {
     expect(await nativeERC20.symbol()).to.equal("TEST");
     expect(await nativeERC20.decimals()).to.equal(18);
     expect(await nativeERC20.totalSupply()).to.equal(0);
-    expect(await nativeERC20.predicate()).to.equal(childERC20Predicate.address);
+    expect(await nativeERC20.predicate()).to.equal(eRC20TokenPredicate.address);
     expect(await nativeERC20.rootToken()).to.equal(ethers.constants.AddressZero);
     expect(await nativeERC20.owner()).to.equal(accounts[1].address);
   });
@@ -162,13 +162,13 @@ describe("NativeERC20Mintable", () => {
   it("mint tokens fail: zero address", async () => {
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
-      params: [childERC20Predicate.address],
+      params: [eRC20TokenPredicate.address],
     });
     await hre.network.provider.request({
       method: "hardhat_setBalance",
-      params: [childERC20Predicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"],
+      params: [eRC20TokenPredicate.address, "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"],
     });
-    predicateNativeERC20 = nativeERC20.connect(await ethers.getSigner(childERC20Predicate.address));
+    predicateNativeERC20 = nativeERC20.connect(await ethers.getSigner(eRC20TokenPredicate.address));
     await expect(predicateNativeERC20.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith(
       "ERC20: mint to the zero address"
     );
