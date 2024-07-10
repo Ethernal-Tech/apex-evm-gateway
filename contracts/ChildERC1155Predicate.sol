@@ -5,7 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IChildERC1155Predicate.sol";
-import "./interfaces/IChildERC1155.sol";
+import "./interfaces/IERC1155Token.sol";
 import "./interfaces/IStateSender.sol";
 import "./System.sol";
 
@@ -70,7 +70,7 @@ contract ChildERC1155Predicate is
     );
     event L2TokenMapped(address indexed rootToken, address indexed childToken);
 
-    modifier onlyValidToken(IChildERC1155 childToken) {
+    modifier onlyValidToken(IERC1155Token childToken) {
         require(
             _verifyContract(childToken),
             "ChildERC1155Predicate: NOT_CONTRACT"
@@ -142,7 +142,7 @@ contract ChildERC1155Predicate is
      * @param amount Amount of the NFT to withdraw
      */
     function withdraw(
-        IChildERC1155 childToken,
+        IERC1155Token childToken,
         uint256 tokenId,
         uint256 amount
     ) external {
@@ -159,7 +159,7 @@ contract ChildERC1155Predicate is
      * @param amount Amount of NFT to withdraw
      */
     function withdrawTo(
-        IChildERC1155 childToken,
+        IERC1155Token childToken,
         address receiver,
         uint256 tokenId,
         uint256 amount
@@ -177,7 +177,7 @@ contract ChildERC1155Predicate is
      * @param amounts Amounts of NFTs to withdraw
      */
     function withdrawBatch(
-        IChildERC1155 childToken,
+        IERC1155Token childToken,
         address[] calldata receivers,
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
@@ -227,7 +227,7 @@ contract ChildERC1155Predicate is
     // slither-disable-end dead-code
 
     function _withdraw(
-        IChildERC1155 childToken,
+        IERC1155Token childToken,
         address receiver,
         uint256 tokenId,
         uint256 amount
@@ -270,7 +270,7 @@ contract ChildERC1155Predicate is
     }
 
     function _withdrawBatch(
-        IChildERC1155 childToken,
+        IERC1155Token childToken,
         address[] calldata receivers,
         uint256[] calldata tokenIds,
         uint256[] calldata amounts
@@ -328,7 +328,7 @@ contract ChildERC1155Predicate is
             uint256 amount
         ) = abi.decode(data, (address, address, address, uint256, uint256));
 
-        IChildERC1155 childToken = IChildERC1155(
+        IERC1155Token childToken = IERC1155Token(
             rootTokenToChildToken[depositToken]
         );
 
@@ -339,16 +339,16 @@ contract ChildERC1155Predicate is
         // a mapped token should always pass specifications
         assert(_verifyContract(childToken));
 
-        address rootToken = IChildERC1155(childToken).rootToken();
+        address rootToken = IERC1155Token(childToken).rootToken();
 
         // a mapped child token should match deposited token
         assert(rootToken == depositToken);
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
-        assert(IChildERC1155(childToken).predicate() == address(this));
+        assert(IERC1155Token(childToken).predicate() == address(this));
         require(
-            IChildERC1155(childToken).mint(receiver, tokenId, amount),
+            IERC1155Token(childToken).mint(receiver, tokenId, amount),
             "ChildERC1155Predicate: MINT_FAILED"
         );
         // slither-disable-next-line reentrancy-events
@@ -375,7 +375,7 @@ contract ChildERC1155Predicate is
                 (bytes32, address, address, address[], uint256[], uint256[])
             );
 
-        IChildERC1155 childToken = IChildERC1155(
+        IERC1155Token childToken = IERC1155Token(
             rootTokenToChildToken[depositToken]
         );
 
@@ -386,16 +386,16 @@ contract ChildERC1155Predicate is
         // a mapped token should always pass specifications
         assert(_verifyContract(childToken));
 
-        address rootToken = IChildERC1155(childToken).rootToken();
+        address rootToken = IERC1155Token(childToken).rootToken();
 
         // a mapped child token should match deposited token
         assert(rootToken == depositToken);
         // a mapped token should never have root token unset
         assert(rootToken != address(0));
         // a mapped token should never have predicate unset
-        assert(IChildERC1155(childToken).predicate() == address(this));
+        assert(IERC1155Token(childToken).predicate() == address(this));
         require(
-            IChildERC1155(childToken).mintBatch(receivers, tokenIds, amounts),
+            IERC1155Token(childToken).mintBatch(receivers, tokenIds, amounts),
             "ChildERC1155Predicate: MINT_FAILED"
         );
         // slither-disable-next-line reentrancy-events
@@ -420,7 +420,7 @@ contract ChildERC1155Predicate is
         );
         assert(rootToken != address(0)); // invariant since root predicate performs the same check
         assert(rootTokenToChildToken[rootToken] == address(0)); // invariant since root predicate performs the same check
-        IChildERC1155 childToken = IChildERC1155(
+        IERC1155Token childToken = IERC1155Token(
             Clones.cloneDeterministic(
                 childTokenTemplate,
                 keccak256(abi.encodePacked(rootToken))
@@ -436,7 +436,7 @@ contract ChildERC1155Predicate is
     // slither does not handle try-catch blocks correctly
     // slither-disable-next-line unused-return
     function _verifyContract(
-        IChildERC1155 childToken
+        IERC1155Token childToken
     ) private view returns (bool) {
         if (address(childToken).code.length == 0) {
             return false;

@@ -6,7 +6,7 @@ pragma solidity 0.8.24;
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "./lib/EIP712MetaTransaction.sol";
-import "./interfaces/IChildERC1155.sol";
+import "./interfaces/IERC1155Token.sol";
 
 /**
     @title ChildERC1155
@@ -17,7 +17,7 @@ import "./interfaces/IChildERC1155.sol";
 contract ChildERC1155 is
     EIP712MetaTransaction,
     ERC1155Upgradeable,
-    IChildERC1155
+    IERC1155Token
 {
     using StringsUpgradeable for address;
     address private _predicate;
@@ -32,7 +32,7 @@ contract ChildERC1155 is
     }
 
     /**
-     * @inheritdoc IChildERC1155
+     * @inheritdoc IERC1155Token
      */
     function initialize(
         address rootToken_,
@@ -49,21 +49,21 @@ contract ChildERC1155 is
     }
 
     /**
-     * @inheritdoc IChildERC1155
+     * @inheritdoc IERC1155Token
      */
     function predicate() external view virtual returns (address) {
         return _predicate;
     }
 
     /**
-     * @inheritdoc IChildERC1155
+     * @inheritdoc IERC1155Token
      */
     function rootToken() external view virtual returns (address) {
         return _rootToken;
     }
 
     /**
-     * @inheritdoc IChildERC1155
+     * @inheritdoc IERC1155Token
      */
     function mint(
         address account,
@@ -76,7 +76,7 @@ contract ChildERC1155 is
     }
 
     /**
-     * @inheritdoc IChildERC1155
+     * @inheritdoc IERC1155Token
      */
     function mintBatch(
         address[] calldata accounts,
@@ -98,7 +98,7 @@ contract ChildERC1155 is
     }
 
     /**
-     * @inheritdoc IChildERC1155
+     * @inheritdoc IERC1155Token
      */
     function burn(
         address from,
@@ -111,7 +111,7 @@ contract ChildERC1155 is
     }
 
     /**
-     * @inheritdoc IChildERC1155
+     * @inheritdoc IERC1155Token
      */
     function burnBatch(
         address from,

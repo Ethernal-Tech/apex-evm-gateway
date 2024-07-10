@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/IERC1155Met
 /**
  * @dev Interface of IChildERC1155
  */
-interface IChildERC1155 is IERC1155MetadataURIUpgradeable {
+interface IERC1155Token is IERC1155MetadataURIUpgradeable {
     /**
      * @dev Sets the value for {rootToken} and {uri_}
      *
