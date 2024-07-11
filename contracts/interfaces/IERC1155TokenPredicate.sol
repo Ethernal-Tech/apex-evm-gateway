@@ -14,7 +14,7 @@ interface IERC1155TokenPredicate is IStateReceiver {
 
     function onStateReceive(
         uint256 /* id */,
-        address sender,
+        // address sender,
         bytes calldata data
     ) external;
 

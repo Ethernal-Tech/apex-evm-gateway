@@ -99,23 +99,22 @@ contract ERC1155TokenPredicate is
 
     /**
      * @notice Function to be used for token deposits
-     * @param sender Address of the sender on the root chain
      * @param data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
     function onStateReceive(
         uint256 /* id */,
-        address sender,
+        // address sender,
         bytes calldata data
     ) external {
         require(
             msg.sender == stateReceiver,
             "ERC1155TokenPredicate: ONLY_STATE_RECEIVER"
         );
-        require(
-            sender == rootERC1155Predicate,
-            "ERC1155TokenPredicate: ONLY_ROOT_PREDICATE"
-        );
+        // require(
+        //     sender == rootERC1155Predicate,
+        //     "ERC1155TokenPredicate: ONLY_ROOT_PREDICATE"
+        // );
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
             _beforeTokenDeposit();

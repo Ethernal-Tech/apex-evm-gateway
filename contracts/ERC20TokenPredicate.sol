@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IERC20TokenPredicate.sol";
 import "./interfaces/IERC20Token.sol";
-import "./interfaces/IStateSender.sol";
+import "./interfaces/IGateway.sol";
 import "./System.sol";
 
 /**
@@ -20,9 +20,7 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
     using SafeERC20 for IERC20;
 
     /// @custom:security write-protection="onlySystemCall()"
-    IStateSender public l2StateSender;
-    /// @custom:security write-protection="onlySystemCall()"
-    address public stateReceiver;
+    IGateway public gateway;
     /// @custom:security write-protection="onlySystemCall()"
     address public rootERC20Predicate;
     /// @custom:security write-protection="onlySystemCall()"
@@ -33,41 +31,38 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
 
     mapping(address => address) public rootTokenToToken;
 
-    event L2ERC20Deposit(
+    event Deposit(
         address indexed rootToken,
         address indexed token,
         address sender,
         address indexed receiver,
         uint256 amount
     );
-    event L2ERC20Withdraw(
+    event Withdraw(
         address indexed rootToken,
         address indexed token,
         address sender,
         address indexed receiver,
         uint256 amount
     );
-    event L2TokenMapped(address indexed rootToken, address indexed token);
+    event TokenMapped(address indexed rootToken, address indexed token);
 
     /**
      * @notice Initialization function for ERC2Token0Predicate
-     * @param newL2StateSender Address of L2StateSender to send exit information to
-     * @param newStateReceiver Address of StateReceiver to receive deposit information from
+     * @param newGateway Address of Gaeaway to receive deposit information from
      * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
      * @param newTokenTemplate Address of token implementation to deploy clones of
      * @param newNativeTokenRootAddress Address of native token on root chain
      * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
      */
     function initialize(
-        address newL2StateSender,
-        address newStateReceiver,
+        address newGateway,
         address newRootERC20Predicate,
         address newTokenTemplate,
         address newNativeTokenRootAddress
     ) public virtual onlySystemCall initializer {
         _initialize(
-            newL2StateSender,
-            newStateReceiver,
+            newGateway,
             newRootERC20Predicate,
             newTokenTemplate,
             newNativeTokenRootAddress
@@ -76,22 +71,17 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
 
     /**
      * @notice Function to be used for token deposits
-     * @param sender Address of the sender on the root chain
      * @param data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
     function onStateReceive(
         uint256 /* id */,
-        address sender,
+        // address sender,
         bytes calldata data
     ) external {
         require(
-            msg.sender == stateReceiver,
-            "ERC20TokenPredicate: ONLY_STATE_RECEIVER"
-        );
-        require(
-            sender == rootERC20Predicate,
-            "ERC20TokenPredicate: ONLY_ROOT_PREDICATE"
+            msg.sender == address(gateway),
+            "ERC20TokenPredicate: ONLY_GATEWAY_ALLOWED"
         );
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
@@ -134,38 +124,31 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
 
     /**
      * @notice Internal initialization function for ERC20TokenPredicate
-     * @param newL2StateSender Address of L2StateSender to send exit information to
-     * @param newStateReceiver Address of StateReceiver to receive deposit information from
+     * @param newGateway Address of Gatewey to receive deposit information from
      * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
      * @param newTokenTemplate Address of token implementation to deploy clones of
      * @param newNativeTokenRootAddress Address of native token on root chain
      * @dev Can be called multiple times.
      */
     function _initialize(
-        address newL2StateSender,
-        address newStateReceiver,
+        address newGateway,
         address newRootERC20Predicate,
         address newTokenTemplate,
         address newNativeTokenRootAddress
     ) internal {
         require(
-            newL2StateSender != address(0) &&
-                newStateReceiver != address(0) &&
+            newGateway != address(0) &&
                 newRootERC20Predicate != address(0) &&
                 newTokenTemplate != address(0),
             "ERC20TokenPredicate: BAD_INITIALIZATION"
         );
-        l2StateSender = IStateSender(newL2StateSender);
-        stateReceiver = newStateReceiver;
+        gateway = IGateway(newGateway);
         rootERC20Predicate = newRootERC20Predicate;
         tokenTemplate = newTokenTemplate;
         if (newNativeTokenRootAddress != address(0)) {
             rootTokenToToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CONTRACT;
             // slither-disable-next-line reentrancy-events
-            emit L2TokenMapped(
-                newNativeTokenRootAddress,
-                NATIVE_TOKEN_CONTRACT
-            );
+            emit TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CONTRACT);
         }
     }
 
@@ -204,19 +187,13 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
             token.burn(msg.sender, amount),
             "ERC20TokenPredicate: BURN_FAILED"
         );
-        l2StateSender.syncState(
+        gateway.syncState(
             rootERC20Predicate,
             abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount)
         );
 
         // slither-disable-next-line reentrancy-events
-        emit L2ERC20Withdraw(
-            rootToken,
-            address(token),
-            msg.sender,
-            receiver,
-            amount
-        );
+        emit Withdraw(rootToken, address(token), msg.sender, receiver, amount);
     }
 
     function _deposit(bytes calldata data) private {
@@ -250,13 +227,7 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
         );
 
         // slither-disable-next-line reentrancy-events
-        emit L2ERC20Deposit(
-            depositToken,
-            address(token),
-            depositor,
-            receiver,
-            amount
-        );
+        emit Deposit(depositToken, address(token), depositor, receiver, amount);
     }
 
     /**
@@ -283,7 +254,7 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
         token.initialize(rootToken, name, symbol, decimals);
 
         // slither-disable-next-line reentrancy-events
-        emit L2TokenMapped(rootToken, address(token));
+        emit TokenMapped(rootToken, address(token));
     }
 
     // slither-disable-next-line unused-state,naming-convention
