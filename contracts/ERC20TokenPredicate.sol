@@ -22,51 +22,40 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
     /// @custom:security write-protection="onlySystemCall()"
     IGateway public gateway;
     /// @custom:security write-protection="onlySystemCall()"
-    address public rootERC20Predicate;
+    uint8 public sourceTokenId;
     /// @custom:security write-protection="onlySystemCall()"
     address public tokenTemplate;
     bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
 
-    mapping(address => address) public rootTokenToToken;
+    mapping(uint8 => address) public sourceTokenToToken;
 
     event Deposit(
-        address indexed rootToken,
+        uint8 indexed sourceTokenId,
         address indexed token,
-        address sender,
         address indexed receiver,
         uint256 amount
     );
     event Withdraw(
-        address indexed rootToken,
+        uint8 indexed sourceTokenId,
         address indexed token,
-        address sender,
         string receiver,
         uint256 amount
     );
-    event TokenMapped(address indexed rootToken, address indexed token);
+    event TokenMapped(uint8 indexed sourceTokenId, address indexed token);
 
     /**
      * @notice Initialization function for ERC2Token0Predicate
      * @param newGateway Address of Gaeaway to receive deposit information from
-     * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
      * @param newTokenTemplate Address of token implementation to deploy clones of
-     * @param newNativeTokenRootAddress Address of native token on root chain
      * @dev Can only be called once. `newNativeTokenRootAddress` should be set to zero where root token does not exist.
      */
     function initialize(
         address newGateway,
-        address newRootERC20Predicate,
-        address newTokenTemplate,
-        address newNativeTokenRootAddress
+        address newTokenTemplate
     ) public virtual onlySystemCall initializer {
-        _initialize(
-            newGateway,
-            newRootERC20Predicate,
-            newTokenTemplate,
-            newNativeTokenRootAddress
-        );
+        _initialize(newGateway, newTokenTemplate);
     }
 
     /**
@@ -74,11 +63,7 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
      * @param data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
-    function onStateReceive(
-        uint256 /* id */,
-        // address sender,
-        bytes calldata data
-    ) external {
+    function onStateReceive(bytes calldata data) external {
         require(
             msg.sender == address(gateway),
             "ERC20TokenPredicate: ONLY_GATEWAY_ALLOWED"
@@ -94,50 +79,42 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
     }
 
     /**
-     * @notice Function to withdraw tokens from the withdrawer to themselves on the root chain
+     * @notice Function to withdraw tokens from the withdrawer to receiver on the source chain
      * @param token Address of the token being withdrawn
+     * @param destinationTokenId ID of the token/source chain
+     * @param receiver address of the receiver on the source chain
      * @param amount Amount to withdraw
      */
     function withdraw(
         IERC20Token token,
+        uint8 destinationTokenId,
         string calldata receiver,
         uint256 amount
     ) external {
-        _withdraw(token, msg.sender, receiver, amount);
+        _withdraw(token, destinationTokenId, msg.sender, receiver, amount);
     }
 
     /**
      * @notice Internal initialization function for ERC20TokenPredicate
      * @param newGateway Address of Gatewey to receive deposit information from
-     * @param newRootERC20Predicate Address of root ERC20 predicate to communicate with
      * @param newTokenTemplate Address of token implementation to deploy clones of
-     * @param newNativeTokenRootAddress Address of native token on root chain
      * @dev Can be called multiple times.
      */
     function _initialize(
         address newGateway,
-        address newRootERC20Predicate,
-        address newTokenTemplate,
-        address newNativeTokenRootAddress
+        address newTokenTemplate
     ) internal {
         require(
-            newGateway != address(0) &&
-                newRootERC20Predicate != address(0) &&
-                newTokenTemplate != address(0),
+            newGateway != address(0) && newTokenTemplate != address(0),
             "ERC20TokenPredicate: BAD_INITIALIZATION"
         );
         gateway = IGateway(newGateway);
-        rootERC20Predicate = newRootERC20Predicate;
         tokenTemplate = newTokenTemplate;
-        if (newNativeTokenRootAddress != address(0)) {
-            rootTokenToToken[newNativeTokenRootAddress] = NATIVE_TOKEN_CONTRACT;
-            // slither-disable-next-line reentrancy-events
-            emit TokenMapped(newNativeTokenRootAddress, NATIVE_TOKEN_CONTRACT);
-        }
     }
 
     function _withdraw(
         IERC20Token token,
+        uint8 destinationToken,
         address caller,
         string calldata receiver,
         uint256 amount
@@ -147,36 +124,28 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
             "ERC20TokenPredicate: NOT_CONTRACT"
         );
 
-        address rootToken = token.rootToken();
-
         require(
-            rootTokenToToken[rootToken] == address(token),
+            sourceTokenToToken[destinationToken] == address(token),
             "ERC20TokenPredicate: UNMAPPED_TOKEN"
         );
-        // a mapped token should never have root token unset
-        assert(rootToken != address(0));
-        // a mapped token should never have predicate unset
-        assert(token.predicate() == address(this));
 
         require(token.burn(caller, amount), "ERC20TokenPredicate: BURN_FAILED");
         gateway.syncState(
-            abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount)
+            abi.encode(WITHDRAW_SIG, destinationToken, receiver, amount)
         );
 
         // slither-disable-next-line reentrancy-events
 
-        emit Withdraw(rootToken, address(token), msg.sender, receiver, amount);
+        emit Withdraw(destinationToken, address(token), receiver, amount);
     }
 
     function _deposit(bytes calldata data) private {
-        (
-            address depositToken,
-            address depositor,
-            address receiver,
-            uint256 amount
-        ) = abi.decode(data, (address, address, address, uint256));
+        (uint8 _sourceTokenId, address receiver, uint256 amount) = abi.decode(
+            data,
+            (uint8, address, uint256)
+        );
 
-        IERC20Token token = IERC20Token(rootTokenToToken[depositToken]);
+        IERC20Token token = IERC20Token(sourceTokenToToken[_sourceTokenId]);
 
         require(
             address(token) != address(0),
@@ -184,49 +153,39 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
         );
         assert(address(token).code.length != 0);
 
-        address rootToken = IERC20Token(token).rootToken();
-
-        // a mapped token should match deposited token
-        assert(rootToken == depositToken);
-        // a mapped token should never have root token unset
-        assert(rootToken != address(0));
-        // a mapped token should never have predicate unset
-        assert(IERC20Token(token).predicate() == address(this));
-
         require(
             IERC20Token(token).mint(receiver, amount),
             "ERC20TokenPredicate: MINT_FAILED"
         );
 
         // slither-disable-next-line reentrancy-events
-        emit Deposit(depositToken, address(token), depositor, receiver, amount);
+        emit Deposit(sourceTokenId, address(token), receiver, amount);
     }
 
     /**
      * @notice Function to be used for mapping a root token to a token
-     * @dev Allows for 1-to-1 mappings for any root token to a token
+     * @dev Allows fsourceTOkenIdor 1-to-1 mappings for any root token to a token
      */
     function _mapToken(bytes calldata data) private {
         (
             ,
-            address rootToken,
+            uint8 _sourceTokenId,
             string memory name,
             string memory symbol,
             uint8 decimals
-        ) = abi.decode(data, (bytes32, address, string, string, uint8));
-        assert(rootToken != address(0)); // invariant since root predicate performs the same check
-        assert(rootTokenToToken[rootToken] == address(0)); // invariant since root predicate performs the same check
+        ) = abi.decode(data, (bytes32, uint8, string, string, uint8));
+        assert(sourceTokenToToken[_sourceTokenId] == address(0)); // invariant since root predicate performs the same check
         IERC20Token token = IERC20Token(
             Clones.cloneDeterministic(
                 tokenTemplate,
-                keccak256(abi.encodePacked(rootToken))
+                keccak256(abi.encodePacked(_sourceTokenId))
             )
         );
-        rootTokenToToken[rootToken] = address(token);
-        token.initialize(rootToken, name, symbol, decimals);
+        sourceTokenToToken[_sourceTokenId] = address(token);
+        token.initialize(_sourceTokenId, name, symbol, decimals);
 
         // slither-disable-next-line reentrancy-events
-        emit TokenMapped(rootToken, address(token));
+        emit TokenMapped(_sourceTokenId, address(token));
     }
 
     // slither-disable-next-line unused-state,naming-convention

@@ -16,7 +16,7 @@ import "./interfaces/IERC20Token.sol";
 // solhint-disable reason-string
 contract ERC20Token is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
     address private _predicate;
-    address private _rootToken;
+    uint8 private _sourceTokenId;
     uint8 private _decimals;
 
     modifier onlyPredicate() {
@@ -32,18 +32,16 @@ contract ERC20Token is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
      * @inheritdoc IERC20Token
      */
     function initialize(
-        address rootToken_,
+        uint8 sourceTokenId_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_
     ) external initializer {
         require(
-            rootToken_ != address(0) &&
-                bytes(name_).length != 0 &&
-                bytes(symbol_).length != 0,
+            bytes(name_).length != 0 && bytes(symbol_).length != 0,
             "ERC20Token: BAD_INITIALIZATION"
         );
-        _rootToken = rootToken_;
+        _sourceTokenId = sourceTokenId_;
         _decimals = decimals_;
         _predicate = msg.sender;
         __ERC20_init(name_, symbol_);
@@ -74,8 +72,8 @@ contract ERC20Token is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
     /**
      * @inheritdoc IERC20Token
      */
-    function rootToken() external view virtual returns (address) {
-        return _rootToken;
+    function sourceTokenId() external view virtual returns (uint8) {
+        return _sourceTokenId;
     }
 
     /**
@@ -106,12 +104,9 @@ contract ERC20Token is EIP712MetaTransaction, ERC20Upgradeable, IERC20Token {
         internal
         view
         virtual
-        override(EIP712MetaTransaction, ContextUpgradeable)
+        override(ContextUpgradeable, EIP712MetaTransaction)
         returns (address)
     {
         return EIP712MetaTransaction._msgSender();
     }
-
-    // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
 }

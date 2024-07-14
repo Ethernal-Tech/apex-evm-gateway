@@ -12,11 +12,11 @@ interface IERC1155TokenPredicate is IStateReceiver {
         address newChildTokenTemplate
     ) external;
 
-    function onStateReceive(
-        uint256 /* id */,
-        // address sender,
-        bytes calldata data
-    ) external;
+    // function onStateReceive(
+    //     uint256 /* id */,
+    //     // address sender,
+    //     bytes calldata data
+    // ) external;
 
     function withdraw(
         IERC1155Token childToken,

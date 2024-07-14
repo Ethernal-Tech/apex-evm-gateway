@@ -16,7 +16,7 @@ interface IERC20Token is IERC20MetadataUpgradeable {
      * initialization.
      */
     function initialize(
-        address rootToken_,
+        uint8 rootToken_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_
@@ -32,7 +32,7 @@ interface IERC20Token is IERC20MetadataUpgradeable {
      * @notice Returns predicate address controlling the child token
      * @return address Returns the address of the predicate
      */
-    function rootToken() external view returns (address);
+    function sourceTokenId() external view returns (uint8);
 
     /**
      * @notice Mints an amount of tokens to a particular address

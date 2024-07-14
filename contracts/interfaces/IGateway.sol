@@ -10,6 +10,7 @@ interface IGateway is IStateSender, IGatewayStructs {
 
     function withdraw(
         IERC20Token token,
+        uint8 destinationTokenId,
         string calldata receiver,
         uint256 amount
     ) external;

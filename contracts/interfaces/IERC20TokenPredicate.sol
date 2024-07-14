@@ -7,9 +7,7 @@ import "./IERC20Token.sol";
 interface IERC20TokenPredicate is IStateReceiver {
     function initialize(
         address newGataway,
-        address newRootERC20Predicate,
-        address newChildTokenTemplate,
-        address newNativeTokenRootAddress
+        address newChildTokenTemplate
     ) external;
 
     // function onStateReceive(
@@ -19,7 +17,8 @@ interface IERC20TokenPredicate is IStateReceiver {
     // ) external;
 
     function withdraw(
-        IERC20Token childToken,
+        IERC20Token token,
+        uint8 destinationTokenId,
         string calldata receiver,
         uint256 amount
     ) external;

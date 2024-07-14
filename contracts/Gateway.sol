@@ -25,15 +25,21 @@ contract Gateway is IGateway {
         //TO DO: validate signatures precompile
         uint256 dataLength = data.length;
         for (uint i; i < dataLength; i++)
-            eRC20TokenPredicate.onStateReceive(0, data[i]);
+            eRC20TokenPredicate.onStateReceive(data[i]);
     }
 
     function withdraw(
         IERC20Token token,
+        uint8 destinationTokenId,
         string calldata receiver,
         uint256 amount
     ) external {
-        eRC20TokenPredicate.withdraw(token, receiver, amount);
+        eRC20TokenPredicate.withdraw(
+            token,
+            destinationTokenId,
+            receiver,
+            amount
+        );
     }
 
     function syncState(bytes calldata data) external {
