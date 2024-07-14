@@ -18,11 +18,9 @@ interface IERC20TokenPredicate is IStateReceiver {
     //     bytes calldata data
     // ) external;
 
-    function withdraw(IERC20Token childToken, uint256 amount) external;
-
-    function withdrawTo(
+    function withdraw(
         IERC20Token childToken,
-        address receiver,
+        string calldata receiver,
         uint256 amount
     ) external;
 }

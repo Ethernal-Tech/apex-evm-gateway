@@ -42,7 +42,7 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
         address indexed rootToken,
         address indexed token,
         address sender,
-        address indexed receiver,
+        string receiver,
         uint256 amount
     );
     event TokenMapped(address indexed rootToken, address indexed token);
@@ -85,9 +85,7 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
         );
 
         if (bytes32(data[:32]) == DEPOSIT_SIG) {
-            _beforeTokenDeposit();
             _deposit(data[32:]);
-            _afterTokenDeposit();
         } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
             _mapToken(data);
         } else {
@@ -100,26 +98,12 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
      * @param token Address of the token being withdrawn
      * @param amount Amount to withdraw
      */
-    function withdraw(IERC20Token token, uint256 amount) external {
-        _beforeTokenWithdraw();
-        _withdraw(token, msg.sender, amount);
-        _afterTokenWithdraw();
-    }
-
-    /**
-     * @notice Function to withdraw tokens from the withdrawer to another address on the root chain
-     * @param token Address of the token being withdrawn
-     * @param receiver Address of the receiver on the root chain
-     * @param amount Amount to withdraw
-     */
-    function withdrawTo(
+    function withdraw(
         IERC20Token token,
-        address receiver,
+        string calldata receiver,
         uint256 amount
     ) external {
-        _beforeTokenWithdraw();
-        _withdraw(token, receiver, amount);
-        _afterTokenWithdraw();
+        _withdraw(token, msg.sender, receiver, amount);
     }
 
     /**
@@ -152,19 +136,10 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
         }
     }
 
-    // solhint-disable no-empty-blocks
-    function _beforeTokenDeposit() internal virtual {}
-
-    // slither-disable-next-line dead-code
-    function _beforeTokenWithdraw() internal virtual {}
-
-    function _afterTokenDeposit() internal virtual {}
-
-    function _afterTokenWithdraw() internal virtual {}
-
     function _withdraw(
         IERC20Token token,
-        address receiver,
+        address caller,
+        string calldata receiver,
         uint256 amount
     ) private {
         require(
@@ -183,16 +158,13 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
         // a mapped token should never have predicate unset
         assert(token.predicate() == address(this));
 
-        require(
-            token.burn(msg.sender, amount),
-            "ERC20TokenPredicate: BURN_FAILED"
-        );
+        require(token.burn(caller, amount), "ERC20TokenPredicate: BURN_FAILED");
         gateway.syncState(
-            rootERC20Predicate,
             abi.encode(WITHDRAW_SIG, rootToken, msg.sender, receiver, amount)
         );
 
         // slither-disable-next-line reentrancy-events
+
         emit Withdraw(rootToken, address(token), msg.sender, receiver, amount);
     }
 

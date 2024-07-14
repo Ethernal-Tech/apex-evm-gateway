@@ -244,7 +244,7 @@ contract ERC1155TokenPredicate is
             "ERC1155TokenPredicate: BURN_FAILED"
         );
         l2StateSender.syncState(
-            rootERC1155Predicate,
+            // rootERC1155Predicate,
             abi.encode(
                 WITHDRAW_SIG,
                 rootToken,
@@ -294,7 +294,7 @@ contract ERC1155TokenPredicate is
         );
 
         l2StateSender.syncState(
-            rootERC1155Predicate,
+            // rootERC1155Predicate,
             abi.encode(
                 WITHDRAW_BATCH_SIG,
                 rootToken,

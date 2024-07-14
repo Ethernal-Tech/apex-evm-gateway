@@ -2,22 +2,15 @@
 pragma solidity 0.8.24;
 
 import "./IStateSender.sol";
+import "./IERC20Token.sol";
+import "./IGatewayStructs.sol";
 
-interface IGateway is IStateSender {
-    struct RegisteredToken {
-        address tokenAddress;
-        uint8 id;
-    }
+interface IGateway is IStateSender, IGatewayStructs {
+    function deposit(bytes[] calldata data) external;
 
-    struct Receiver {
-        uint256 amount;
-        string destinationAddress;
-    }
-
-    function deposit(
-        address _tokenAddress,
-        Receiver[] calldata receivers
-    ) external view;
-
-    function withdraw() external view;
+    function withdraw(
+        IERC20Token token,
+        string calldata receiver,
+        uint256 amount
+    ) external;
 }

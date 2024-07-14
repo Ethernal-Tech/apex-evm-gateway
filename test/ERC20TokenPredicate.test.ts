@@ -5,10 +5,10 @@ import {
   ERC20TokenPredicate__factory,
   Gateway,
   Gateway__factory,
-  L2StateSender,
-  L2StateSender__factory,
-  StateReceiver,
-  StateReceiver__factory,
+  // L2StateSender,
+  // L2StateSender__factory,
+  // StateReceiver,
+  // StateReceiver__factory,
   ERC20Token,
   ERC20Token__factory,
   NativeERC20,
@@ -45,8 +45,8 @@ describe("ERC20TokenPredicate", () => {
     systemERC20TokenPredicate: ERC20TokenPredicate,
     stateReceiverERC20TokenPredicate: ERC20TokenPredicate,
     gateway: Gateway,
-    l2StateSender: L2StateSender,
-    stateReceiver: StateReceiver,
+    // l2StateSender: L2StateSender,
+    // stateReceiver: StateReceiver,
     rootERC20Predicate: string,
     eRC20Token: ERC20Token,
     nativeERC20: NativeERC20,
@@ -62,15 +62,15 @@ describe("ERC20TokenPredicate", () => {
 
     await gateway.deployed();
 
-    const L2StateSender: L2StateSender__factory = await ethers.getContractFactory("L2StateSender");
-    l2StateSender = await L2StateSender.deploy();
+    // const L2StateSender: L2StateSender__factory = await ethers.getContractFactory("L2StateSender");
+    // l2StateSender = await L2StateSender.deploy();
 
-    await l2StateSender.deployed();
+    // await l2StateSender.deployed();
 
-    const StateReceiver: StateReceiver__factory = await ethers.getContractFactory("StateReceiver");
-    stateReceiver = await StateReceiver.deploy();
+    // const StateReceiver: StateReceiver__factory = await ethers.getContractFactory("StateReceiver");
+    // stateReceiver = await StateReceiver.deploy();
 
-    await stateReceiver.deployed();
+    // await stateReceiver.deployed();
 
     rootERC20Predicate = ethers.Wallet.createRandom().address;
 
@@ -268,6 +268,7 @@ describe("ERC20TokenPredicate", () => {
     totalSupply -= randomAmount;
     const depositTx = await eRC20TokenPredicate.withdraw(
       nativeERC20.address,
+      "someone",
       ethers.utils.parseUnits(String(randomAmount))
     );
     const depositReceipt = await depositTx.wait();
@@ -275,26 +276,26 @@ describe("ERC20TokenPredicate", () => {
     expect(depositEvent?.args?.rootToken).to.equal(nativeERC20RootToken);
     expect(depositEvent?.args?.token).to.equal(nativeERC20.address);
     expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
-    expect(depositEvent?.args?.receiver).to.equal(accounts[0].address);
+    expect(depositEvent?.args?.receiver).to.equal("someone");
     expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
   });
 
-  it("withdraw tokens from child chain with same address", async () => {
-    const randomAmount = Math.floor(Math.random() * (totalSupply - 10) + 1);
-    totalSupply -= randomAmount;
-    const depositTx = await eRC20TokenPredicate.withdrawTo(
-      nativeERC20.address,
-      accounts[1].address,
-      ethers.utils.parseUnits(String(randomAmount))
-    );
-    const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt.events?.find((log: any) => log.event === "Withdraw");
-    expect(depositEvent?.args?.rootToken).to.equal(nativeERC20RootToken);
-    expect(depositEvent?.args?.token).to.equal(nativeERC20.address);
-    expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
-    expect(depositEvent?.args?.receiver).to.equal(accounts[1].address);
-    expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
-  });
+  // it("withdraw tokens from child chain with same address", async () => {
+  //   const randomAmount = Math.floor(Math.random() * (totalSupply - 10) + 1);
+  //   totalSupply -= randomAmount;
+  //   const depositTx = await eRC20TokenPredicate.withdrawTo(
+  //     nativeERC20.address,
+  //     accounts[1].address,
+  //     ethers.utils.parseUnits(String(randomAmount))
+  //   );
+  //   const depositReceipt = await depositTx.wait();
+  //   const depositEvent = depositReceipt.events?.find((log: any) => log.event === "Withdraw");
+  //   expect(depositEvent?.args?.rootToken).to.equal(nativeERC20RootToken);
+  //   expect(depositEvent?.args?.token).to.equal(nativeERC20.address);
+  //   expect(depositEvent?.args?.sender).to.equal(accounts[0].address);
+  //   expect(depositEvent?.args?.receiver).to.equal(accounts[1].address);
+  //   expect(depositEvent?.args?.amount).to.equal(ethers.utils.parseUnits(String(randomAmount)));
+  // });
 
   it("fail deposit tokens: only gateway", async () => {
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(
@@ -364,13 +365,13 @@ describe("ERC20TokenPredicate", () => {
   });
 
   it("fail withdraw tokens of unknown child token: not a contract", async () => {
-    await expect(eRC20TokenPredicate.withdraw(ethers.Wallet.createRandom().address, 1)).to.be.revertedWith(
+    await expect(eRC20TokenPredicate.withdraw(ethers.Wallet.createRandom().address, "someone", 1)).to.be.revertedWith(
       "ERC20TokenPredicate: NOT_CONTRACT"
     );
   });
 
   it("fail deposit tokens of unknown child token: wrong deposit token", async () => {
-    eRC20TokenPredicate.connect(await ethers.getSigner(stateReceiver.address));
+    eRC20TokenPredicate.connect(await ethers.getSigner(gateway.address));
     const stateSyncData = ethers.utils.defaultAbiCoder.encode(
       ["bytes32", "address", "address", "address", "address", "uint256"],
       [
@@ -411,7 +412,7 @@ describe("ERC20TokenPredicate", () => {
     const rootToken = ethers.Wallet.createRandom().address;
     const token = await (await ethers.getContractFactory("ERC20Token")).deploy();
     await token.initialize(rootToken, "TEST", "TEST", 18);
-    await expect(stateReceiverERC20TokenPredicate.withdraw(token.address, 1)).to.be.revertedWith(
+    await expect(stateReceiverERC20TokenPredicate.withdraw(token.address, "someone", 1)).to.be.revertedWith(
       "ERC20TokenPredicate: UNMAPPED_TOKEN"
     );
   });
@@ -448,7 +449,7 @@ describe("ERC20TokenPredicate", () => {
     fakeNativeERC20.rootToken.returns(nativeERC20RootToken);
     fakeNativeERC20.predicate.returns(stateReceiverERC20TokenPredicate.address);
     fakeNativeERC20.burn.returns(false);
-    await expect(stateReceiverERC20TokenPredicate.withdraw(nativeERC20.address, 1)).to.be.revertedWith(
+    await expect(stateReceiverERC20TokenPredicate.withdraw(nativeERC20.address, "someone", 1)).to.be.revertedWith(
       "ERC20TokenPredicate: BURN_FAILED"
     );
   });
