@@ -10,7 +10,6 @@ import "./Validators.sol";
 
 contract Gateway is IGateway {
     ERC20TokenPredicate private eRC20TokenPredicate;
-    RegisteredToken[] public registeredTokens;
     Validators private validators;
     uint256 public constant MAX_LENGTH = 2048;
     address private relayer;
@@ -49,6 +48,10 @@ contract Gateway is IGateway {
         if (data.length > MAX_LENGTH) revert ExceedsMaxLength();
 
         emit StateChange(data);
+    }
+
+    function getRegisteredTokens() external view returns (uint8[] memory) {
+        return eRC20TokenPredicate.getRegisteredTokens();
     }
 
     function setValidatorsChainData(

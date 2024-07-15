@@ -5,11 +5,6 @@ import "./IStateSender.sol";
 import "./IERC20Token.sol";
 
 interface IGatewayStructs {
-    struct RegisteredToken {
-        address tokenAddress;
-        uint8 id;
-    }
-
     struct ValidatorAddressChainData {
         address addr;
         ValidatorChainData data;

@@ -29,6 +29,7 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
     bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
     bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
 
+    uint8[] public registeredTokens;
     mapping(uint8 => address) public sourceTokenToToken;
 
     event Deposit(
@@ -183,9 +184,14 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
         );
         sourceTokenToToken[_sourceTokenId] = address(token);
         token.initialize(_sourceTokenId, name, symbol, decimals);
+        registeredTokens.push(_sourceTokenId);
 
         // slither-disable-next-line reentrancy-events
         emit TokenMapped(_sourceTokenId, address(token));
+    }
+
+    function getRegisteredTokens() external view returns (uint8[] memory) {
+        return registeredTokens;
     }
 
     // slither-disable-next-line unused-state,naming-convention
