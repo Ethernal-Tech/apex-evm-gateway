@@ -17,13 +17,13 @@ interface IGatewayStructs {
     }
 
     struct ReceiverDeposit {
-        uint8 tokenId;
+        uint8 sourceChainId;
         address receiver;
         uint256 amount;
     }
 
     struct ReceiverWithdraw {
-        address receiver;
+        string receiver;
         uint256 amount;
     }
 
