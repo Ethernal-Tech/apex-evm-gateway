@@ -25,7 +25,6 @@ contract NativeERC20Mintable is
 
     uint256 private _totalSupply;
     address private _predicate;
-    address private _rootToken;
     string private _name;
     string private _symbol;
     uint8 private _decimals;
@@ -50,7 +49,6 @@ contract NativeERC20Mintable is
     function initialize(
         address predicate_,
         address owner_,
-        address rootToken_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_,
@@ -60,7 +58,6 @@ contract NativeERC20Mintable is
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
         // slither-disable-next-line missing-zero-check
-        _rootToken = rootToken_; // root token should be set to zero where no root token exists
         _name = name_;
         _symbol = symbol_;
         // slither-disable-next-line events-maths
@@ -278,14 +275,6 @@ contract NativeERC20Mintable is
      */
     function predicate() public view virtual returns (address) {
         return _predicate;
-    }
-
-    /**
-     * @notice Returns corresponding root token address for the child native token
-     * @return address Returns the root token address
-     */
-    function rootToken() public view virtual returns (address) {
-        return _rootToken;
     }
 
     /**

@@ -7,7 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./interfaces/IERC20TokenPredicate.sol";
 import "./interfaces/IERC20Token.sol";
+import "./interfaces/INativeERC20.sol";
 import "./interfaces/IGateway.sol";
+import "./interfaces/IGatewayStructs.sol";
 import "./System.sol";
 
 /**
@@ -21,30 +23,9 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
 
     /// @custom:security write-protection="onlySystemCall()"
     IGateway public gateway;
-    /// @custom:security write-protection="onlySystemCall()"
-    uint8 public sourceTokenId;
-    /// @custom:security write-protection="onlySystemCall()"
-    address public tokenTemplate;
-    bytes32 public constant DEPOSIT_SIG = keccak256("DEPOSIT");
-    bytes32 public constant WITHDRAW_SIG = keccak256("WITHDRAW");
-    bytes32 public constant MAP_TOKEN_SIG = keccak256("MAP_TOKEN");
 
-    uint8[] public registeredTokens;
-    mapping(uint8 => address) public sourceTokenToToken;
-
-    event Deposit(
-        uint8 indexed sourceTokenId,
-        address indexed token,
-        address indexed receiver,
-        uint256 amount
-    );
-    event Withdraw(
-        uint8 indexed sourceTokenId,
-        address indexed token,
-        string receiver,
-        uint256 amount
-    );
-    event TokenMapped(uint8 indexed sourceTokenId, address indexed token);
+    /// @custom:security write-protection="onlySystemCall()"
+    INativeERC20 public nativeToken;
 
     /**
      * @notice Initialization function for ERC2Token0Predicate
@@ -64,136 +45,91 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
      * @param data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
-    function onStateReceive(bytes calldata data) external {
-        require(
-            msg.sender == address(gateway),
-            "ERC20TokenPredicate: ONLY_GATEWAY_ALLOWED"
-        );
-
-        if (bytes32(data[:32]) == DEPOSIT_SIG) {
-            _deposit(data[32:]);
-        } else if (bytes32(data[:32]) == MAP_TOKEN_SIG) {
-            _mapToken(data);
-        } else {
-            revert("ERC20TokenPredicate: INVALID_SIGNATURE");
-        }
+    function deposit(bytes calldata data) external onlyGateway {
+        _deposit(data);
     }
 
     /**
-     * @notice Function to withdraw tokens from the withdrawer to receiver on the source chain
-     * @param token Address of the token being withdrawn
-     * @param destinationTokenId ID of the token/source chain
-     * @param receiver address of the receiver on the source chain
-     * @param amount Amount to withdraw
+     * @notice Function to withdraw tokens from the withdrawer to receiver on the destination chain
+     * @param _destinationChainId id of the destination chain
+     * @param _receivers array of ReceiverWithdraw structs on the destination chain
+     * @param _feeAmount amount to cover the fees
      */
     function withdraw(
-        IERC20Token token,
-        uint8 destinationTokenId,
-        string calldata receiver,
-        uint256 amount
+        uint8 _destinationChainId,
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _feeAmount
     ) external {
-        _withdraw(token, destinationTokenId, msg.sender, receiver, amount);
+        _withdraw(_destinationChainId, _receivers, _feeAmount);
     }
 
     /**
      * @notice Internal initialization function for ERC20TokenPredicate
-     * @param newGateway Address of Gatewey to receive deposit information from
-     * @param newTokenTemplate Address of token implementation to deploy clones of
+     * @param _gateway Address of Gatewey to receive deposit information from
+     * @param _nativeToken Address of token implementation to deploy clones of
      * @dev Can be called multiple times.
      */
-    function _initialize(
-        address newGateway,
-        address newTokenTemplate
-    ) internal {
+    function _initialize(address _gateway, address _nativeToken) internal {
         require(
-            newGateway != address(0) && newTokenTemplate != address(0),
+            _gateway != address(0) && _nativeToken != address(0),
             "ERC20TokenPredicate: BAD_INITIALIZATION"
         );
-        gateway = IGateway(newGateway);
-        tokenTemplate = newTokenTemplate;
+        gateway = IGateway(_gateway);
+        nativeToken = INativeERC20(_nativeToken);
     }
 
     function _withdraw(
-        IERC20Token token,
-        uint8 destinationToken,
-        address caller,
-        string calldata receiver,
-        uint256 amount
+        uint8 _destinationChainId,
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _feeAmount
     ) private {
-        require(
-            address(token).code.length != 0,
-            "ERC20TokenPredicate: NOT_CONTRACT"
-        );
+        uint256 _amountLength = _receivers.length;
+
+        uint256 amountSum;
+
+        for (uint256 i; i < _amountLength; i++) {
+            amountSum += _receivers[i].amount;
+        }
 
         require(
-            sourceTokenToToken[destinationToken] == address(token),
-            "ERC20TokenPredicate: UNMAPPED_TOKEN"
+            nativeToken.burn(msg.sender, amountSum),
+            "ERC20TokenPredicate: BURN_FAILED"
         );
 
-        require(token.burn(caller, amount), "ERC20TokenPredicate: BURN_FAILED");
-        gateway.syncState(
-            abi.encode(WITHDRAW_SIG, destinationToken, receiver, amount)
+        gateway.withdrawEvent(
+            abi.encode(_destinationChainId, msg.sender, _receivers, _feeAmount)
         );
-
-        // slither-disable-next-line reentrancy-events
-
-        emit Withdraw(destinationToken, address(token), receiver, amount);
     }
 
-    function _deposit(bytes calldata data) private {
-        (uint8 _sourceTokenId, address receiver, uint256 amount) = abi.decode(
-            data,
-            (uint8, address, uint256)
-        );
+    function _deposit(bytes calldata _data) private {
+        (, uint256 ttlExpired, ReceiverDeposit[] memory _receivers) = abi
+            .decode(_data, (uint64, uint64, ReceiverDeposit[]));
 
-        IERC20Token token = IERC20Token(sourceTokenToToken[_sourceTokenId]);
+        if (ttlExpired < block.timestamp) {
+            gateway.ttlEvent(_data);
+            return;
+        }
 
-        require(
-            address(token) != address(0),
-            "ERC20TokenPredicate: UNMAPPED_TOKEN"
-        );
-        assert(address(token).code.length != 0);
+        uint256 _receiversLength = _receivers.length;
 
-        require(
-            IERC20Token(token).mint(receiver, amount),
-            "ERC20TokenPredicate: MINT_FAILED"
-        );
+        for (uint256 i; i < _receiversLength; i++) {
+            require(
+                INativeERC20(nativeToken).mint(
+                    _receivers[i].receiver,
+                    _receivers[i].amount
+                ),
+                "ERC20TokenPredicate: MINT_FAILED"
+            );
+        }
 
-        // slither-disable-next-line reentrancy-events
-        emit Deposit(sourceTokenId, address(token), receiver, amount);
-    }
-
-    /**
-     * @notice Function to be used for mapping a root token to a token
-     * @dev Allows fsourceTOkenIdor 1-to-1 mappings for any root token to a token
-     */
-    function _mapToken(bytes calldata data) private {
-        (
-            ,
-            uint8 _sourceTokenId,
-            string memory name,
-            string memory symbol,
-            uint8 decimals
-        ) = abi.decode(data, (bytes32, uint8, string, string, uint8));
-        assert(sourceTokenToToken[_sourceTokenId] == address(0)); // invariant since root predicate performs the same check
-        IERC20Token token = IERC20Token(
-            Clones.cloneDeterministic(
-                tokenTemplate,
-                keccak256(abi.encodePacked(_sourceTokenId))
-            )
-        );
-        sourceTokenToToken[_sourceTokenId] = address(token);
-        token.initialize(_sourceTokenId, name, symbol, decimals);
-        registeredTokens.push(_sourceTokenId);
-
-        // slither-disable-next-line reentrancy-events
-        emit TokenMapped(_sourceTokenId, address(token));
-    }
-
-    function getRegisteredTokens() external view returns (uint8[] memory) {
-        return registeredTokens;
+        gateway.depositEvent(_data);
     }
 
     // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gap;
+
+    modifier onlyGateway() {
+        if (msg.sender == address(gateway)) revert NotGateway();
+        _;
+    }
 }

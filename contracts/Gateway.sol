@@ -20,38 +20,51 @@ contract Gateway is IGateway {
         owner = msg.sender;
     }
 
-    function deposit(bytes[] calldata data) external onlyRelayer {
-        //TO DO: validate signatures precompile
-        uint256 dataLength = data.length;
-        for (uint i; i < dataLength; i++)
-            eRC20TokenPredicate.onStateReceive(data[i]);
+    function deposit(
+        bytes calldata _signature,
+        bytes calldata _bitmap,
+        bytes calldata _data
+    ) external onlyRelayer {
+        bytes32 _hash = keccak256(_data);
+        (bool valid, ) = validators.isBlsSignatureValid(
+            _hash,
+            _signature,
+            _bitmap
+        );
+
+        if (!valid) revert InvalidSignature();
+
+        eRC20TokenPredicate.deposit(_data);
     }
 
     function withdraw(
-        IERC20Token token,
-        uint8 destinationTokenId,
-        string calldata receiver,
-        uint256 amount
+        uint8 _destinationChainId,
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _feeAmount
     ) external {
         eRC20TokenPredicate.withdraw(
-            token,
-            destinationTokenId,
-            receiver,
-            amount
+            _destinationChainId,
+            _receivers,
+            _feeAmount
         );
     }
 
-    function syncState(bytes calldata data) external {
-        // check receiver
-        if (msg.sender == relayer) revert InvalidReceiver();
-        // check data length
-        if (data.length > MAX_LENGTH) revert ExceedsMaxLength();
-
-        emit StateChange(data);
+    function depositEvent(
+        bytes calldata _data
+    ) external onlyPredicate maxLengthExceeded(_data) {
+        emit Deposit(_data);
     }
 
-    function getRegisteredTokens() external view returns (uint8[] memory) {
-        return eRC20TokenPredicate.getRegisteredTokens();
+    function withdrawEvent(
+        bytes calldata _data
+    ) external onlyPredicate maxLengthExceeded(_data) {
+        emit Withdraw(_data);
+    }
+
+    function ttlEvent(
+        bytes calldata _data
+    ) external onlyPredicate maxLengthExceeded(_data) {
+        emit TTLExpired(_data);
     }
 
     function setValidatorsChainData(
@@ -67,13 +80,23 @@ contract Gateway is IGateway {
         validators.addValidatorChainData(_addr, _data);
     }
 
-    modifier onlyRelayer() {
-        if (msg.sender == relayer) revert NotRelayer();
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert NotOwner();
         _;
     }
 
-    modifier onlyOwner() {
-        if (msg.sender == owner) revert NotOwner();
+    modifier onlyRelayer() {
+        if (msg.sender != relayer) revert NotRelayer();
+        _;
+    }
+
+    modifier onlyPredicate() {
+        if (msg.sender != address(eRC20TokenPredicate)) revert NotPredicate();
+        _;
+    }
+
+    modifier maxLengthExceeded(bytes calldata _data) {
+        if (_data.length > MAX_LENGTH) revert ExceedsMaxLength();
         _;
     }
 }

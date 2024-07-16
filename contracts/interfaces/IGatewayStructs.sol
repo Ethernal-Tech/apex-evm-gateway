@@ -16,12 +16,27 @@ interface IGatewayStructs {
         uint256[4] key;
     }
 
-    event StateChange(bytes data);
+    struct ReceiverDeposit {
+        uint8 tokenId;
+        address receiver;
+        uint256 amount;
+    }
 
+    struct ReceiverWithdraw {
+        address receiver;
+        uint256 amount;
+    }
+
+    event Deposit(bytes data);
+    event Withdraw(bytes data);
+    event TTLExpired(bytes data);
+
+    error NotOwner();
     error NotRelayer();
     error NotGateway();
-    error NotOwner();
-    error InvalidReceiver();
+    error NotPredicate();
     error ExceedsMaxLength();
+    error InvalidReceiver();
+    error InvalidSignature();
     error InvalidData(string data);
 }

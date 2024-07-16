@@ -3,8 +3,9 @@ pragma solidity 0.8.24;
 
 import "./IStateReceiver.sol";
 import "./IERC20Token.sol";
+import "./IGatewayStructs.sol";
 
-interface IERC20TokenPredicate is IStateReceiver {
+interface IERC20TokenPredicate is IGatewayStructs, IStateReceiver {
     function initialize(
         address newGataway,
         address newChildTokenTemplate
@@ -17,9 +18,8 @@ interface IERC20TokenPredicate is IStateReceiver {
     // ) external;
 
     function withdraw(
-        IERC20Token token,
-        uint8 destinationTokenId,
-        string calldata receiver,
-        uint256 amount
+        uint8 _destinationChainId,
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _feeAmount
     ) external;
 }

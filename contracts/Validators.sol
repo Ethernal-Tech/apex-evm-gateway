@@ -32,63 +32,44 @@ contract Validators is
         _disableInitializers();
     }
 
-    function initialize(address[] calldata _validators) public initializer {
+    function initialize() public initializer {
         __UUPSUpgradeable_init();
-        for (uint8 i; i < _validators.length; i++) {
-            addressValidatorIndex[_validators[i]] = i + 1;
-            validatorsAddresses.push(_validators[i]);
-        }
-        validatorsCount = uint8(_validators.length);
     }
 
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(address _gatewayAddress) external onlyOwner {
+    function setDependencies(
+        address _gatewayAddress,
+        ValidatorAddressChainData[] calldata _validatorAddressChainData
+    ) external onlyOwner {
         gatewayAddress = _gatewayAddress;
-    }
-
-    function isValidator(address _addr) public view returns (bool) {
-        return addressValidatorIndex[_addr] != 0;
-    }
-
-    function getValidatorIndex(address _addr) public view returns (uint8) {
-        return addressValidatorIndex[_addr];
+        setValidatorsChainData(_validatorAddressChainData);
+        validatorsCount = uint8(_validatorAddressChainData.length);
     }
 
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,
-        uint256[4] memory _verifyingKey
-    ) public view returns (bool) {
+        bytes calldata _bitmap
+    ) public view returns (bool callSuccess, bytes memory returnData) {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls,calls-loop
-        (bool callSuccess, bytes memory returnData) = VALIDATOR_BLS_PRECOMPILE
-            .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
+        (callSuccess, returnData) = VALIDATOR_BLS_PRECOMPILE.staticcall{
+            gas: VALIDATOR_BLS_PRECOMPILE_GAS
+        }(
             abi.encodePacked(
-                uint8(0),
-                abi.encode(_hash, _signature, _verifyingKey)
+                uint8(1),
+                abi.encode(_hash, _signature, chainData, _bitmap)
             )
         );
-        bool verified = abi.decode(returnData, (bool));
-        return callSuccess && verified;
-    }
-
-    function isBlsSignatureValidByValidatorAddress(
-        bytes32 _hash,
-        bytes calldata _signature,
-        address _validatorAddr
-    ) public view returns (bool) {
-        uint256 indx = addressValidatorIndex[_validatorAddr] - 1;
-        uint256[4] memory key = chainData[indx].key;
-        return isBlsSignatureValid(_hash, _signature, key);
     }
 
     function setValidatorsChainData(
         ValidatorAddressChainData[] calldata _chainDatas
-    ) external onlyGateway {
+    ) public onlyGateway {
         if (validatorsCount != _chainDatas.length) {
             revert InvalidData("validators count");
         }

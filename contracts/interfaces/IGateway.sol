@@ -6,12 +6,15 @@ import "./IERC20Token.sol";
 import "./IGatewayStructs.sol";
 
 interface IGateway is IStateSender, IGatewayStructs {
-    function deposit(bytes[] calldata data) external;
+    function deposit(
+        bytes calldata _signature,
+        bytes calldata _bitmap,
+        bytes calldata _data
+    ) external;
 
     function withdraw(
-        IERC20Token token,
-        uint8 destinationTokenId,
-        string calldata receiver,
-        uint256 amount
+        uint8 _destinationChainId,
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _feeAmount
     ) external;
 }
