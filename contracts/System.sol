@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import "./interfaces/Errors.sol";
-
 contract System {
     // pre-compiled contracts
     // slither-disable too-many-digits
@@ -29,11 +27,6 @@ contract System {
     // genesis contracts
     address public constant NATIVE_TOKEN_CONTRACT =
         0x0000000000000000000000000000000000001010;
-
-    modifier onlySystemCall() {
-        if (msg.sender != SYSTEM) revert Unauthorized("SYSTEMCALL");
-        _;
-    }
 
     // slither-disable-next-line unused-state,naming-convention
     uint256[50] private __gap;

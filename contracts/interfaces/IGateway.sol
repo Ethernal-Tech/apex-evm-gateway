@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.24;
+pragma solidity ^0.8.24;
 
-import "./IStateSender.sol";
-import "./IERC20Token.sol";
 import "./IGatewayStructs.sol";
 
-interface IGateway is IStateSender, IGatewayStructs {
+interface IGateway is IGatewayStructs {
     function deposit(
         bytes calldata _signature,
         bytes calldata _bitmap,
@@ -17,4 +15,10 @@ interface IGateway is IStateSender, IGatewayStructs {
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount
     ) external;
+
+    function depositEvent(bytes calldata data) external;
+
+    function withdrawEvent(bytes calldata data) external;
+
+    function ttlEvent(bytes calldata data) external;
 }

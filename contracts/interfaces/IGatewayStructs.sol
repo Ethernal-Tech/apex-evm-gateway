@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.24;
-
-import "./IStateSender.sol";
-import "./IERC20Token.sol";
+pragma solidity ^0.8.24;
 
 interface IGatewayStructs {
     struct ValidatorAddressChainData {
