@@ -43,16 +43,14 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      */
     function initialize(
         address predicate_,
-        address rootToken_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
-    ) external virtual initializer onlySystemCall {
+    ) external virtual initializer {
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
         // slither-disable-next-line missing-zero-check
-        _rootToken = rootToken_; // root token should be set to zero where no root token exists
         _name = name_;
         _symbol = symbol_;
         // slither-disable-next-line events-maths
@@ -260,13 +258,6 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
      */
     function predicate() public view virtual override returns (address) {
         return _predicate;
-    }
-
-    /**
-     * @inheritdoc INativeERC20
-     */
-    function rootToken() public view virtual override returns (address) {
-        return _rootToken;
     }
 
     /**

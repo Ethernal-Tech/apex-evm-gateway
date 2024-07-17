@@ -21,10 +21,7 @@ import "./System.sol";
 contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
     using SafeERC20 for IERC20;
 
-    /// @custom:security write-protection="onlySystemCall()"
     IGateway public gateway;
-
-    /// @custom:security write-protection="onlySystemCall()"
     INativeERC20 public nativeToken;
 
     /**
@@ -36,7 +33,7 @@ contract ERC20TokenPredicate is IERC20TokenPredicate, Initializable, System {
     function initialize(
         address newGateway,
         address newTokenTemplate
-    ) public virtual onlySystemCall initializer {
+    ) public virtual initializer {
         _initialize(newGateway, newTokenTemplate);
     }
 

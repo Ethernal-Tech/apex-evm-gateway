@@ -17,7 +17,6 @@ interface INativeERC20 is IERC20MetadataUpgradeable {
      */
     function initialize(
         address predicate_,
-        address rootToken_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_,
@@ -29,12 +28,6 @@ interface INativeERC20 is IERC20MetadataUpgradeable {
      * @return address Returns the address of the predicate
      */
     function predicate() external view returns (address);
-
-    /**
-     * @notice Returns corresponding root token address for the child native token
-     * @return address Returns the root token address
-     */
-    function rootToken() external view returns (address);
 
     /**
      * @notice Mints an amount of tokens to a particular address

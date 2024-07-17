@@ -53,7 +53,7 @@ contract NativeERC20Mintable is
         string calldata symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
-    ) external virtual initializer onlySystemCall {
+    ) external virtual initializer {
         require(owner_ != address(0), "NativeERC20: Invalid owner address");
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;

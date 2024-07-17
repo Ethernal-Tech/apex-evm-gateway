@@ -20,6 +20,16 @@ contract Gateway is IGateway {
         owner = msg.sender;
     }
 
+    function setDependencies(
+        ERC20TokenPredicate _eRC20TokenPredicate,
+        Validators _validators,
+        address _relayer
+    ) external onlyOwner {
+        eRC20TokenPredicate = _eRC20TokenPredicate;
+        validators = _validators;
+        relayer = _relayer;
+    }
+
     function deposit(
         bytes calldata _signature,
         bytes calldata _bitmap,

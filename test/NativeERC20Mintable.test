@@ -9,6 +9,8 @@ import {
   ERC20TokenPredicate__factory,
   MockNativeERC20Transfer,
   MockNativeERC20Transfer__factory,
+  Gateway,
+  Gateway__factory,
 } from "../typechain-types";
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
 
@@ -20,6 +22,7 @@ describe("NativeERC20Mintable", () => {
     zeroAddressNativeERC20: NativeERC20Mintable,
     eRC20TokenPredicate: ERC20TokenPredicate,
     mockNativeERC20Transfer: MockNativeERC20Transfer,
+    gateway: Gateway,
     balance: BigNumber,
     totalSupply: number,
     accounts: any[]; // we use any so we can access address directly from object
@@ -33,10 +36,18 @@ describe("NativeERC20Mintable", () => {
 
     await eRC20TokenPredicate.deployed();
 
+    const Gateway: Gateway__factory = await ethers.getContractFactory("Gateway");
+    gateway = await Gateway.deploy();
+
+    await gateway.deployed();
+
     const NativeERC20: NativeERC20Mintable__factory = await ethers.getContractFactory("NativeERC20Mintable");
     nativeERC20 = await NativeERC20.deploy();
 
     await nativeERC20.deployed();
+
+    console.log("OWNER IS", await nativeERC20.owner());
+    console.log("ADRESS 0", accounts[0].address);
 
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -55,7 +66,26 @@ describe("NativeERC20Mintable", () => {
 
     nativeERC20 = nativeERC20.attach("0x0000000000000000000000000000000000001010");
 
-    systemNativeERC20 = nativeERC20.connect(await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"));
+    async function impersonateAsContractAndMintFunds(contractAddress: string) {
+      const hre = require("hardhat");
+      const address = await contractAddress.toLowerCase();
+      // impersonate as an contract on specified address
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [address],
+      });
+
+      const signer = await ethers.getSigner(address);
+      // minting 100000000000000000000 tokens to signer
+      await ethers.provider.send("hardhat_setBalance", [signer.address, "0x56BC75E2D63100000"]);
+
+      return signer;
+    }
+
+    const gatewayContract = await impersonateAsContractAndMintFunds(gateway.address);
+
+    // systemNativeERC20 = nativeERC20.connect(await ethers.getSigner("0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE"));
+    systemNativeERC20 = nativeERC20.connect(accounts[0]);
 
     await hre.network.provider.send("hardhat_setCode", [
       "0x0000000000000000000000000000000000002020",
@@ -70,86 +100,36 @@ describe("NativeERC20Mintable", () => {
     await mockNativeERC20Transfer.deployed();
 
     totalSupply = 0;
-  });
-
-  it("fail initialization: systemcall", async () => {
-    await expect(
-      nativeERC20.initialize(
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-        "TEST",
-        "TEST",
-        18,
-        0
-      )
-    )
-      .to.be.revertedWithCustomError(nativeERC20, "Unauthorized")
-      .withArgs("SYSTEMCALL");
-  });
-
-  it("fail initialization: systemcall", async () => {
-    await expect(
-      nativeERC20.initialize(
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-        "TEST",
-        "TEST",
-        18,
-        0
-      )
-    )
-      .to.be.revertedWithCustomError(nativeERC20, "Unauthorized")
-      .withArgs("SYSTEMCALL");
+    ``;
   });
 
   it("fail initialization: invalid owner", async () => {
     await expect(
-      systemNativeERC20.initialize(
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-        "TEST",
-        "TEST",
-        18,
-        0
-      )
+      systemNativeERC20.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero, "TEST", "TEST", 18, 0)
     ).to.be.revertedWith("NativeERC20: Invalid owner address");
   });
 
   it("initialize and validate initialization", async () => {
+    const owner = await nativeERC20.owner();
+    console.log(owner);
+    console.log(accounts[0].address);
+
     await expect(
-      systemNativeERC20.initialize(
-        eRC20TokenPredicate.address,
-        accounts[1].address,
-        ethers.constants.AddressZero,
-        "TEST",
-        "TEST",
-        18,
-        0
-      )
+      nativeERC20
+        .connect(accounts[0])
+        .initialize(accounts[1].address, ethers.constants.AddressZero, "TEST", "TEST", 18, 0)
     ).to.not.be.reverted;
     expect(await nativeERC20.name()).to.equal("TEST");
     expect(await nativeERC20.symbol()).to.equal("TEST");
     expect(await nativeERC20.decimals()).to.equal(18);
     expect(await nativeERC20.totalSupply()).to.equal(0);
     expect(await nativeERC20.predicate()).to.equal(eRC20TokenPredicate.address);
-    expect(await nativeERC20.rootToken()).to.equal(ethers.constants.AddressZero);
     expect(await nativeERC20.owner()).to.equal(accounts[1].address);
   });
 
   it("reinitialization fail", async () => {
     await expect(
-      nativeERC20.initialize(
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-        ethers.constants.AddressZero,
-        "",
-        "",
-        0,
-        0
-      )
+      nativeERC20.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero, "", "", 0, 0)
     ).to.be.revertedWith("Initializable: contract is already initialized");
   });
 
