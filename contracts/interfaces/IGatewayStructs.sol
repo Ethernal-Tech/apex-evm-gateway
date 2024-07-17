@@ -32,7 +32,8 @@ interface IGatewayStructs {
     error NotRelayer();
     error NotGateway();
     error NotPredicate();
-    error NotPredicateOrMinter();
+    error NotPredicateOrOwner();
+    error NotGatewayOrOwner();
     error ExceedsMaxLength();
     error InvalidReceiver();
     error InvalidSignature();

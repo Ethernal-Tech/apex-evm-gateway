@@ -29,8 +29,14 @@ contract Validators is
         _disableInitializers();
     }
 
-    function initialize() public initializer {
+    function initialize(address[] calldata _validators) public initializer {
+        __Ownable_init();
         __UUPSUpgradeable_init();
+        for (uint8 i; i < _validators.length; i++) {
+            addressValidatorIndex[_validators[i]] = i + 1;
+            validatorsAddresses.push(_validators[i]);
+        }
+        validatorsCount = uint8(_validators.length);
     }
 
     function _authorizeUpgrade(
@@ -39,11 +45,10 @@ contract Validators is
 
     function setDependencies(
         address _gatewayAddress,
-        ValidatorAddressChainData[] calldata _validatorAddressChainData
+        ValidatorAddressChainData[] calldata _chainDatas
     ) external onlyOwner {
         gatewayAddress = _gatewayAddress;
-        setValidatorsChainData(_validatorAddressChainData);
-        validatorsCount = uint8(_validatorAddressChainData.length);
+        setValidatorsChainData(_chainDatas);
     }
 
     function isBlsSignatureValid(
@@ -66,7 +71,7 @@ contract Validators is
 
     function setValidatorsChainData(
         ValidatorAddressChainData[] calldata _chainDatas
-    ) public onlyGateway {
+    ) public onlyGatewayOrOwner {
         if (validatorsCount != _chainDatas.length) {
             revert InvalidData("validators count");
         }
@@ -106,7 +111,13 @@ contract Validators is
     }
 
     modifier onlyGateway() {
-        if (msg.sender != gatewayAddress) revert NotRelayer();
+        if (msg.sender != gatewayAddress) revert NotGateway();
+        _;
+    }
+
+    modifier onlyGatewayOrOwner() {
+        if (msg.sender != gatewayAddress && msg.sender != owner())
+            revert NotGatewayOrOwner();
         _;
     }
 }

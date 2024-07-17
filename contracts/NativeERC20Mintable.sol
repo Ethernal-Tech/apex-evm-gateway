@@ -190,7 +190,7 @@ contract NativeERC20Mintable is
     function mint(
         address account,
         uint256 amount
-    ) external virtual onlyPredicateOrMinter returns (bool) {
+    ) external virtual onlyPredicateOrOwner returns (bool) {
         _mint(account, amount);
 
         return true;
@@ -206,7 +206,7 @@ contract NativeERC20Mintable is
     function burn(
         address account,
         uint256 amount
-    ) external virtual onlyPredicateOrMinter returns (bool) {
+    ) external virtual onlyPredicateOrOwner returns (bool) {
         _burn(account, amount);
 
         return true;
@@ -414,9 +414,9 @@ contract NativeERC20Mintable is
         }
     }
 
-    modifier onlyPredicateOrMinter() {
+    modifier onlyPredicateOrOwner() {
         if (msg.sender != _predicate && msg.sender != owner())
-            revert NotPredicateOrMinter();
+            revert NotPredicateOrOwner();
 
         _;
     }
