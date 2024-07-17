@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/INativeERC20.sol";
+import "./interfaces/IGatewayStructs.sol";
 import "./System.sol";
 
 /**
@@ -13,7 +16,14 @@ import "./System.sol";
     @dev The contract exposes ERC20-like functions that are compatible with the native token
  */
 // solhint-disable reason-string
-contract NativeERC20 is Context, Initializable, System, INativeERC20 {
+contract NativeERC20 is
+    Initializable,
+    System,
+    INativeERC20,
+    IGatewayStructs,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     mapping(address => mapping(address => uint256)) private _allowances;
 
     uint256 private _totalSupply;
@@ -23,30 +33,27 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
     string private _symbol;
     uint8 private _decimals;
 
-    modifier onlyPredicate() {
-        require(
-            msg.sender == _predicate,
-            "NativeERC20: Only predicate can call"
-        );
-
-        _;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
-    /**
-     * @dev Sets the values for {predicate}, {name} and {symbol}.
-     *
-     * The default value of {decimals} is 18.
-     *
-     * All three of these values are immutable: they can only be set once during
-     * initialization.
-     */
-    function initialize(
+    function initialize() public initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+    }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
+
+    function setDependencies(
         address predicate_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
-    ) external virtual initializer {
+    ) external onlyOwner {
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
         // slither-disable-next-line missing-zero-check
@@ -395,5 +402,10 @@ contract NativeERC20 is Context, Initializable, System, INativeERC20 {
                 _approve(owner, spender, currentAllowance - amount);
             }
         }
+    }
+
+    modifier onlyPredicate() {
+        if (msg.sender != _predicate) revert NotPredicate();
+        _;
     }
 }

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./interfaces/IGatewayStructs.sol";
 import "./System.sol";
 
 /**
@@ -14,11 +16,12 @@ import "./System.sol";
  */
 // solhint-disable reason-string
 contract NativeERC20Mintable is
-    Context,
     Initializable,
     System,
-    Ownable2Step,
-    IERC20Metadata
+    IERC20Metadata,
+    IGatewayStructs,
+    OwnableUpgradeable,
+    UUPSUpgradeable
 {
     mapping(address => mapping(address => uint256)) private _allowances;
 
@@ -28,31 +31,28 @@ contract NativeERC20Mintable is
     string private _symbol;
     uint8 private _decimals;
 
-    modifier onlyPredicateOrMinter() {
-        require(
-            msg.sender == _predicate || msg.sender == owner(),
-            "NativeERC20: Only predicate or owner can call"
-        );
-
-        _;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
 
-    /**
-     * @dev Sets the values for {predicate}, {name} and {symbol}.
-     *
-     * The default value of {decimals} is 18.
-     *
-     * All three of these values are immutable: they can only be set once during
-     * initialization.
-     */
-    function initialize(
+    function initialize() public initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+    }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
+
+    function setDependencies(
         address predicate_,
         address owner_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
-    ) external virtual initializer {
+    ) external onlyOwner {
         require(owner_ != address(0), "NativeERC20: Invalid owner address");
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
@@ -412,5 +412,12 @@ contract NativeERC20Mintable is
                 _approve(owner, spender, currentAllowance - amount);
             }
         }
+    }
+
+    modifier onlyPredicateOrMinter() {
+        if (msg.sender != _predicate && msg.sender != owner())
+            revert NotPredicateOrMinter();
+
+        _;
     }
 }

@@ -14,8 +14,6 @@ contract Validators is
     UUPSUpgradeable,
     System
 {
-    // slither-disable too-many-digits
-
     address private gatewayAddress;
 
     ValidatorChainData[] private chainData;

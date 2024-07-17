@@ -10,20 +10,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20Metadat
  */
 interface INativeERC20 is IERC20MetadataUpgradeable {
     /**
-     * @dev Sets the values for {rootToken}, {name}, {symbol} and {decimals}.
-     *
-     * All these values are immutable: they can only be set once during
-     * initialization.
-     */
-    function initialize(
-        address predicate_,
-        string calldata name_,
-        string calldata symbol_,
-        uint8 decimals_,
-        uint256 tokenSupply_
-    ) external;
-
-    /**
      * @notice Returns predicate address controlling the child token
      * @return address Returns the address of the predicate
      */
