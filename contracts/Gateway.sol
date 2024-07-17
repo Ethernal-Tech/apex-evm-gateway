@@ -1,32 +1,49 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
-import "./interfaces/IStateSender.sol";
-import "./interfaces/IStateReceiver.sol";
 import "./ERC20TokenPredicate.sol";
 import "./Validators.sol";
 
-contract Gateway is IGateway {
+contract Gateway is
+    IGateway,
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable
+{
     ERC20TokenPredicate private eRC20TokenPredicate;
     Validators private validators;
     uint256 public constant MAX_LENGTH = 2048;
     address private relayer;
-    address private owner;
 
-    //TODO: make upgradable
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        owner = msg.sender;
+        _disableInitializers();
     }
 
+    function initialize() public initializer {
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+    }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal override onlyOwner {}
+
     function setDependencies(
-        ERC20TokenPredicate _eRC20TokenPredicate,
-        Validators _validators,
+        address _eRC20TokenPredicate,
+        address _validators,
         address _relayer
     ) external onlyOwner {
-        eRC20TokenPredicate = _eRC20TokenPredicate;
-        validators = _validators;
+        if (_eRC20TokenPredicate == address(0) || _validators == address(0))
+            revert InvalidAddress();
+        eRC20TokenPredicate = ERC20TokenPredicate(_eRC20TokenPredicate);
+        validators = Validators(_validators);
         relayer = _relayer;
     }
 
@@ -88,11 +105,6 @@ contract Gateway is IGateway {
         ValidatorChainData calldata _data
     ) external onlyOwner {
         validators.addValidatorChainData(_addr, _data);
-    }
-
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotOwner();
-        _;
     }
 
     modifier onlyRelayer() {

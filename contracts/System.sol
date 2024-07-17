@@ -14,6 +14,9 @@ contract System {
         0x0200000000000000000000000000000000000004;
     address public constant BLOCKLIST_PRECOMPILE =
         0x0300000000000000000000000000000000000004;
+    address public constant VALIDATOR_BLS_PRECOMPILE =
+        0x0000000000000000000000000000000000002060;
+    uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 50000;
 
     // internal addrs
     address public constant SYSTEM = 0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE;

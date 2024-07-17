@@ -5,17 +5,16 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/IGatewayStructs.sol";
+import "./System.sol";
 
 contract Validators is
     IGatewayStructs,
     Initializable,
     OwnableUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    System
 {
     // slither-disable too-many-digits
-    address constant VALIDATOR_BLS_PRECOMPILE =
-        0x0000000000000000000000000000000000002060;
-    uint256 constant VALIDATOR_BLS_PRECOMPILE_GAS = 50000;
 
     address private gatewayAddress;
 

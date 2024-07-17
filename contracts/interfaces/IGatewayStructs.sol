@@ -38,5 +38,6 @@ interface IGatewayStructs {
     error ExceedsMaxLength();
     error InvalidReceiver();
     error InvalidSignature();
+    error InvalidAddress();
     error InvalidData(string data);
 }

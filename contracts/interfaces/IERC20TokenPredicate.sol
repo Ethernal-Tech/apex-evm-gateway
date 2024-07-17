@@ -6,11 +6,6 @@ import "./IERC20Token.sol";
 import "./IGatewayStructs.sol";
 
 interface IERC20TokenPredicate is IGatewayStructs, IStateReceiver {
-    function initialize(
-        address newGataway,
-        address newChildTokenTemplate
-    ) external;
-
     // function onStateReceive(
     //     uint256 /* id */,
     //     address sender,
