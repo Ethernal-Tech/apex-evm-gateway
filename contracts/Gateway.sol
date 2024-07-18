@@ -41,7 +41,7 @@ contract Gateway is
         address _relayer
     ) external onlyOwner {
         if (_eRC20TokenPredicate == address(0) || _validators == address(0))
-            revert InvalidAddress();
+            revert ZeroAddress();
         eRC20TokenPredicate = ERC20TokenPredicate(_eRC20TokenPredicate);
         validators = Validators(_validators);
         relayer = _relayer;

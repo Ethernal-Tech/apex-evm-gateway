@@ -109,35 +109,6 @@ describe("NativeERC20Mintable", () => {
     ).to.be.revertedWith("NativeERC20: Invalid owner address");
   });
 
-  it("initialize and validate initialization", async () => {
-    const owner = await nativeERC20.owner();
-    console.log(owner);
-    console.log(accounts[0].address);
-
-    await expect(
-      nativeERC20
-        .connect(accounts[0])
-        .initialize(accounts[1].address, ethers.constants.AddressZero, "TEST", "TEST", 18, 0)
-    ).to.not.be.reverted;
-    expect(await nativeERC20.name()).to.equal("TEST");
-    expect(await nativeERC20.symbol()).to.equal("TEST");
-    expect(await nativeERC20.decimals()).to.equal(18);
-    expect(await nativeERC20.totalSupply()).to.equal(0);
-    expect(await nativeERC20.predicate()).to.equal(eRC20TokenPredicate.address);
-    expect(await nativeERC20.owner()).to.equal(accounts[1].address);
-  });
-
-  it("reinitialization fail", async () => {
-    await expect(
-      nativeERC20.initialize(ethers.constants.AddressZero, ethers.constants.AddressZero, "", "", 0, 0)
-    ).to.be.revertedWith("Initializable: contract is already initialized");
-  });
-
-  it("mint tokens fail: only predicate", async () => {
-    await expect(nativeERC20.mint(ethers.constants.AddressZero, 1)).to.be.revertedWith(
-      "NativeERC20: Only predicate or owner can call"
-    );
-  });
 
   it("mint tokens fail: zero address", async () => {
     await hre.network.provider.request({

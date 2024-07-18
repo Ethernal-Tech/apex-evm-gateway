@@ -46,7 +46,7 @@ contract ERC20TokenPredicate is
         address _nativeToken
     ) external onlyOwner {
         if (_gateway == address(0) || _nativeToken == address(0))
-            revert InvalidAddress();
+            revert ZeroAddress();
         gateway = IGateway(_gateway);
         nativeToken = INativeERC20(_nativeToken);
     }
@@ -74,21 +74,6 @@ contract ERC20TokenPredicate is
         _withdraw(_destinationChainId, _receivers, _feeAmount);
     }
 
-    /**
-     * @notice Internal initialization function for ERC20TokenPredicate
-     * @param _gateway Address of Gatewey to receive deposit information from
-     * @param _nativeToken Address of token implementation to deploy clones of
-     * @dev Can be called multiple times.
-     */
-    function _initialize(address _gateway, address _nativeToken) internal {
-        require(
-            _gateway != address(0) && _nativeToken != address(0),
-            "ERC20TokenPredicate: BAD_INITIALIZATION"
-        );
-        gateway = IGateway(_gateway);
-        nativeToken = INativeERC20(_nativeToken);
-    }
-
     function _withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
@@ -101,11 +86,7 @@ contract ERC20TokenPredicate is
         for (uint256 i; i < _amountLength; i++) {
             amountSum += _receivers[i].amount;
         }
-
-        require(
-            nativeToken.burn(msg.sender, amountSum),
-            "ERC20TokenPredicate: BURN_FAILED"
-        );
+        if (!nativeToken.burn(msg.sender, amountSum)) revert BurnFailed();
 
         gateway.withdrawEvent(
             abi.encode(_destinationChainId, msg.sender, _receivers, _feeAmount)
@@ -124,13 +105,12 @@ contract ERC20TokenPredicate is
         uint256 _receiversLength = _receivers.length;
 
         for (uint256 i; i < _receiversLength; i++) {
-            require(
-                INativeERC20(nativeToken).mint(
+            if (
+                !INativeERC20(nativeToken).mint(
                     _receivers[i].receiver,
                     _receivers[i].amount
-                ),
-                "ERC20TokenPredicate: MINT_FAILED"
-            );
+                )
+            ) revert MintFailed();
         }
 
         gateway.depositEvent(_data);

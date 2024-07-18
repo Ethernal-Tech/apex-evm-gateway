@@ -168,10 +168,8 @@ contract NativeERC20 is
     ) external virtual returns (bool) {
         address owner = _msgSender();
         uint256 currentAllowance = allowance(owner, spender);
-        require(
-            currentAllowance >= subtractedValue,
-            "ERC20: decreased allowance below zero"
-        );
+        if (currentAllowance < subtractedValue) revert InsufficientAllowance();
+
         unchecked {
             _approve(owner, spender, currentAllowance - subtractedValue);
         }
@@ -285,17 +283,14 @@ contract NativeERC20 is
         address to,
         uint256 amount
     ) internal virtual {
-        require(from != address(0), "ERC20: transfer from the zero address");
-        require(to != address(0), "ERC20: transfer to the zero address");
+        if (from == address(0) || to == address(0)) revert ZeroAddress();
 
         // slither-disable-next-line reentrancy-events,low-level-calls
         (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
             abi.encode(from, to, amount)
         ); // solhint-disable-line avoid-low-level-calls
-        require(
-            success && abi.decode(result, (bool)),
-            "PRECOMPILE_CALL_FAILED"
-        );
+        if (!(success && abi.decode(result, (bool))))
+            revert PrecompileCallFailed();
 
         emit Transfer(from, to, amount);
     }
@@ -310,7 +305,7 @@ contract NativeERC20 is
      * - `account` cannot be the zero address.
      */
     function _mint(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: mint to the zero address");
+        if (account == address(0)) revert ZeroAddress();
 
         _totalSupply += amount;
 
@@ -318,10 +313,8 @@ contract NativeERC20 is
         (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
             abi.encode(address(0), account, amount)
         ); // solhint-disable-line avoid-low-level-calls
-        require(
-            success && abi.decode(result, (bool)),
-            "PRECOMPILE_CALL_FAILED"
-        );
+        if (!(success && abi.decode(result, (bool))))
+            revert PrecompileCallFailed();
 
         emit Transfer(address(0), account, amount);
     }
@@ -338,7 +331,7 @@ contract NativeERC20 is
      * - `account` must have at least `amount` tokens.
      */
     function _burn(address account, uint256 amount) internal virtual {
-        require(account != address(0), "ERC20: burn from the zero address");
+        if (account == address(0)) revert ZeroAddress();
 
         _totalSupply -= amount;
 
@@ -346,10 +339,8 @@ contract NativeERC20 is
         (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
             abi.encode(account, address(0), amount)
         ); // solhint-disable-line avoid-low-level-calls
-        require(
-            success && abi.decode(result, (bool)),
-            "PRECOMPILE_CALL_FAILED"
-        );
+        if (!(success && abi.decode(result, (bool))))
+            revert PrecompileCallFailed();
 
         emit Transfer(account, address(0), amount);
     }
@@ -372,8 +363,7 @@ contract NativeERC20 is
         address spender,
         uint256 amount
     ) internal virtual {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        if (owner == address(0) || spender == address(0)) revert ZeroAddress();
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
@@ -394,10 +384,8 @@ contract NativeERC20 is
     ) internal virtual {
         uint256 currentAllowance = allowance(owner, spender);
         if (currentAllowance != type(uint256).max) {
-            require(
-                currentAllowance >= amount,
-                "ERC20: insufficient allowance"
-            );
+            if (currentAllowance < amount) revert InsufficientAllowance();
+
             unchecked {
                 _approve(owner, spender, currentAllowance - amount);
             }

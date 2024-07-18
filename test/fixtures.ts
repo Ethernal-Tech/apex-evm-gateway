@@ -1,5 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumber, BigNumberish } from "ethers";
+import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
 
 export async function deployGatewayFixtures() {
   // Contracts are deployed using the first signer/account by default
@@ -107,6 +108,11 @@ export async function deployGatewayFixtures() {
   ];
 
   await validatorsc.setDependencies(gateway.address, validatorAddressCardanoData);
+
+  await hre.network.provider.send("hardhat_setCode", [
+    "0x0000000000000000000000000000000000002020",
+    alwaysTrueBytecode, // native transfer pre-compile
+  ]);
 
   return {
     hre,
