@@ -53,7 +53,8 @@ contract NativeERC20Mintable is
         uint8 decimals_,
         uint256 tokenSupply_
     ) external onlyOwner {
-        if (owner_ == address(0)) revert ZeroAddress();
+        if (owner_ == address(0) || predicate_ == address(0))
+            revert ZeroAddress();
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
         // slither-disable-next-line missing-zero-check

@@ -6,6 +6,22 @@ import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixt
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
 
 describe("NativeERC20Mintable Contract", function () {
+  it("Initialize should fail if Owner or Predicate is Zero Address", async () => {
+    const { owner, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+
+    await expect(
+      nativeERC20Mintable
+        .connect(owner)
+        .setDependencies(eRC20TokenPredicate.address, ethers.constants.AddressZero, "TEST", "TEST", 18, 0)
+    ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
+
+    await expect(
+      nativeERC20Mintable
+        .connect(owner)
+        .setDependencies(ethers.constants.AddressZero, owner.address, "TEST", "TEST", 18, 0)
+    ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
+  });
+
   it("initialize and validate initialization", async () => {
     const { owner, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 

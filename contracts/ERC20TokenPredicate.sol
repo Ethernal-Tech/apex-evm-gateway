@@ -95,9 +95,9 @@ contract ERC20TokenPredicate is
 
     function _deposit(bytes calldata _data) private {
         (, uint256 ttlExpired, ReceiverDeposit[] memory _receivers) = abi
-            .decode(_data, (uint64, uint64, ReceiverDeposit[]));
+            .decode(_data, (uint8, uint256, ReceiverDeposit[]));
 
-        if (ttlExpired < block.timestamp) {
+        if (ttlExpired < block.number) {
             gateway.ttlEvent(_data);
             return;
         }
@@ -120,7 +120,7 @@ contract ERC20TokenPredicate is
     uint256[50] private __gap;
 
     modifier onlyGateway() {
-        if (msg.sender == address(gateway)) revert NotGateway();
+        if (msg.sender != address(gateway)) revert NotGateway();
         _;
     }
 }
