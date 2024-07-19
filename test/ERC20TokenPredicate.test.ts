@@ -93,22 +93,28 @@ describe("ERC20TokenPredicate Contract", function () {
     expect(depositEvent?.args?.data).to.equal(data);
   });
 
-  // it("Withdraw sucess", async () => {
-  //   const { gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+  it("Withdraw sucess", async () => {
+    const { gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-  //   await nativeERC20Mintable.mint(gateway.address, 1000000);
+    await nativeERC20Mintable.mint(gateway.address, 1000000);
 
-  //   const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
 
-  //   const receiverWithdraw = [
-  //     {
-  //       receiver: "something",
-  //       amount: 100,
-  //     },
-  //   ];
+    const receiverWithdraw = [
+      {
+        receiver: "something",
+        amount: 100,
+      },
+    ];
 
-  //   await expect(
-  //     eRC20TokenPredicate.connect(gatewayContract).withdraw(1, receiverWithdraw, 100)
-  //   ).to.be.revertedWithCustomError(eRC20TokenPredicate, "PrecompileCallFailed");
-  // });
+    const withdrawTx = await eRC20TokenPredicate.connect(gatewayContract).withdraw(1, receiverWithdraw, 100);
+    const withdrawReceipt = await withdrawTx.wait();
+    const withdrawEvent = withdrawReceipt?.events?.find((log) => log.event === "Withdraw");
+
+    expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
+    expect(withdrawEvent?.args?.sender).to.equal(gateway.address);
+    expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+    expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
+    expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+  });
 });
