@@ -74,25 +74,6 @@ contract ERC20TokenPredicate is
         _withdraw(_destinationChainId, _receivers, _feeAmount);
     }
 
-    function _withdraw(
-        uint8 _destinationChainId,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
-    ) private {
-        uint256 _amountLength = _receivers.length;
-
-        uint256 amountSum;
-
-        for (uint256 i; i < _amountLength; i++) {
-            amountSum += _receivers[i].amount;
-        }
-        if (!nativeToken.burn(msg.sender, amountSum)) revert BurnFailed();
-
-        gateway.withdrawEvent(
-            abi.encode(_destinationChainId, msg.sender, _receivers, _feeAmount)
-        );
-    }
-
     function _deposit(bytes calldata _data) private {
         (, uint256 ttlExpired, ReceiverDeposit[] memory _receivers) = abi
             .decode(_data, (uint8, uint256, ReceiverDeposit[]));
@@ -105,15 +86,33 @@ contract ERC20TokenPredicate is
         uint256 _receiversLength = _receivers.length;
 
         for (uint256 i; i < _receiversLength; i++) {
-            if (
-                !INativeERC20(nativeToken).mint(
-                    _receivers[i].receiver,
-                    _receivers[i].amount
-                )
-            ) revert MintFailed();
+            !INativeERC20(nativeToken).mint(
+                _receivers[i].receiver,
+                _receivers[i].amount
+            );
         }
 
         gateway.depositEvent(_data);
+    }
+
+    function _withdraw(
+        uint8 _destinationChainId,
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _feeAmount
+    ) private {
+        uint256 _amountLength = _receivers.length;
+
+        uint256 amountSum;
+
+        for (uint256 i; i < _amountLength; i++) {
+            amountSum += _receivers[i].amount;
+        }
+
+        if (!nativeToken.burn(msg.sender, amountSum)) revert BurnFailed();
+
+        gateway.withdrawEvent(
+            abi.encode(_destinationChainId, msg.sender, _receivers, _feeAmount)
+        );
     }
 
     // slither-disable-next-line unused-state,naming-convention

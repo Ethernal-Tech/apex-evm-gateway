@@ -208,7 +208,6 @@ contract NativeERC20Mintable is
         uint256 amount
     ) external virtual onlyPredicateOrOwner returns (bool) {
         _burn(account, amount);
-
         return true;
     }
 
@@ -346,11 +345,12 @@ contract NativeERC20Mintable is
         if (account == address(0)) revert ZeroAddress();
 
         _totalSupply -= amount;
-
         // slither-disable-next-line reentrancy-events,low-level-calls
         (bool success, bytes memory result) = NATIVE_TRANSFER_PRECOMPILE.call(
             abi.encode(account, address(0), amount)
-        ); // solhint-disable-line avoid-low-level-calls
+        );
+
+        // solhint-disable-line avoid-low-level-calls
         if (!(success && abi.decode(result, (bool))))
             revert PrecompileCallFailed();
 

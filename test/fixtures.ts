@@ -114,18 +114,6 @@ export async function deployGatewayFixtures() {
     alwaysTrueBytecode, // native transfer pre-compile
   ]);
 
-  const receiverDeposit1 = {
-    sourceChainId: 1,
-    receiver: ethers.Wallet.createRandom().address,
-    amount: 100,
-  };
-
-  const receiverDeposit2 = {
-    sourceChainId: 1,
-    receiver: ethers.Wallet.createRandom().address,
-    amount: 100,
-  };
-
   // const dataDeposit = ethers.utils.defaultAbiCoder.encode(0, [receiverDeposit1, receiverDeposit2]);
 
   return {
@@ -140,8 +128,6 @@ export async function deployGatewayFixtures() {
     validatorsc,
     validatorCardanoData,
     validatorAddressCardanoData,
-    receiverDeposit1,
-    receiverDeposit2,
   };
 }
 

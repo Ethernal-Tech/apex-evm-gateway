@@ -40,7 +40,6 @@ interface IGatewayStructs {
     error ZeroAddress();
     error InvalidData(string data);
     error BurnFailed();
-    error MintFailed();
     error InsufficientAllowance();
     error PrecompileCallFailed();
     error DecresedAllowenceBelowZero();

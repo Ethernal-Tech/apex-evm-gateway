@@ -72,4 +72,82 @@ describe("ERC20TokenPredicate Contract", function () {
     expect(ttlEvent?.args?.data).to.equal(data);
     expect(depositEvent?.args?.data).to.be.undefined;
   });
+
+  it("Deposit fails when Precopile Fails", async () => {
+    const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+    const abiCoder = new ethers.utils.AbiCoder();
+    const address = ethers.Wallet.createRandom().address;
+    const data = abiCoder.encode(
+      ["uint8", "uint256", "tuple(uint8, address, uint256)[]"],
+      [1, blockNumber + 100, [[1, address, 100]]]
+    );
+
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+
+    await hre.network.provider.send("hardhat_setCode", [
+      "0x0000000000000000000000000000000000002020",
+      alwaysFalseBytecode,
+    ]);
+
+    await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data)).to.be.revertedWithCustomError(
+      eRC20TokenPredicate,
+      "PrecompileCallFailed"
+    );
+
+    await hre.network.provider.send("hardhat_setCode", [
+      "0x0000000000000000000000000000000000002020",
+      alwaysTrueBytecode,
+    ]);
+  });
+
+  it("Deposit success", async () => {
+    const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+    const abiCoder = new ethers.utils.AbiCoder();
+    const address = ethers.Wallet.createRandom().address;
+    const data = abiCoder.encode(
+      ["uint8", "uint256", "tuple(uint8, address, uint256)[]"],
+      [1, blockNumber + 100, [[1, address, 100]]]
+    );
+
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+
+    const depositTx = await eRC20TokenPredicate.connect(gatewayContract).deposit(data);
+    const depositReceipt = await depositTx.wait();
+    const depositEvent = depositReceipt?.events?.find((log) => log.event === "Deposit");
+
+    expect(depositEvent?.args?.data).to.equal(data);
+  });
+
+  it("Withdraw fails when Precopile Fails", async () => {
+    const { gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+
+    await nativeERC20Mintable.mint(gateway.address, 1000000);
+
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+
+    await hre.network.provider.send("hardhat_setCode", [
+      "0x0000000000000000000000000000000000002020",
+      alwaysFalseBytecode,
+    ]);
+
+    const receiverWithdraw = [
+      {
+        receiver: "something",
+        amount: 100,
+      },
+    ];
+
+    await expect(
+      eRC20TokenPredicate.connect(gatewayContract).withdraw(1, receiverWithdraw, 100)
+    ).to.be.revertedWithCustomError(eRC20TokenPredicate, "PrecompileCallFailed");
+
+    await hre.network.provider.send("hardhat_setCode", [
+      "0x0000000000000000000000000000000000002020",
+      alwaysTrueBytecode,
+    ]);
+  });
 });
