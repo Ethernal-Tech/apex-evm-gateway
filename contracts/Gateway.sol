@@ -83,9 +83,12 @@ contract Gateway is
     }
 
     function withdrawEvent(
-        bytes calldata _data
-    ) external onlyPredicate maxLengthExceeded(_data) {
-        emit Withdraw(_data);
+        uint8 _destinationChainId,
+        address _sender,
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _feeAmount
+    ) external onlyPredicate {
+        emit Withdraw(_destinationChainId, _sender, _receivers, _feeAmount);
     }
 
     function ttlEvent(

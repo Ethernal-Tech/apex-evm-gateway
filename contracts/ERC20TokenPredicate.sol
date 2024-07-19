@@ -108,10 +108,13 @@ contract ERC20TokenPredicate is
             amountSum += _receivers[i].amount;
         }
 
-        if (!nativeToken.burn(msg.sender, amountSum)) revert BurnFailed();
+        nativeToken.burn(msg.sender, amountSum);
 
         gateway.withdrawEvent(
-            abi.encode(_destinationChainId, msg.sender, _receivers, _feeAmount)
+            _destinationChainId,
+            msg.sender,
+            _receivers,
+            _feeAmount
         );
     }
 

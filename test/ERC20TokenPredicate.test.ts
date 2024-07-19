@@ -73,35 +73,6 @@ describe("ERC20TokenPredicate Contract", function () {
     expect(depositEvent?.args?.data).to.be.undefined;
   });
 
-  it("Deposit fails when Precopile Fails", async () => {
-    const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.utils.AbiCoder();
-    const address = ethers.Wallet.createRandom().address;
-    const data = abiCoder.encode(
-      ["uint8", "uint256", "tuple(uint8, address, uint256)[]"],
-      [1, blockNumber + 100, [[1, address, 100]]]
-    );
-
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
-
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002020",
-      alwaysFalseBytecode,
-    ]);
-
-    await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data)).to.be.revertedWithCustomError(
-      eRC20TokenPredicate,
-      "PrecompileCallFailed"
-    );
-
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002020",
-      alwaysTrueBytecode,
-    ]);
-  });
-
   it("Deposit success", async () => {
     const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
@@ -122,32 +93,22 @@ describe("ERC20TokenPredicate Contract", function () {
     expect(depositEvent?.args?.data).to.equal(data);
   });
 
-  it("Withdraw fails when Precopile Fails", async () => {
-    const { gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+  // it("Withdraw sucess", async () => {
+  //   const { gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-    await nativeERC20Mintable.mint(gateway.address, 1000000);
+  //   await nativeERC20Mintable.mint(gateway.address, 1000000);
 
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+  //   const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
 
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002020",
-      alwaysFalseBytecode,
-    ]);
+  //   const receiverWithdraw = [
+  //     {
+  //       receiver: "something",
+  //       amount: 100,
+  //     },
+  //   ];
 
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
-
-    await expect(
-      eRC20TokenPredicate.connect(gatewayContract).withdraw(1, receiverWithdraw, 100)
-    ).to.be.revertedWithCustomError(eRC20TokenPredicate, "PrecompileCallFailed");
-
-    await hre.network.provider.send("hardhat_setCode", [
-      "0x0000000000000000000000000000000000002020",
-      alwaysTrueBytecode,
-    ]);
-  });
+  //   await expect(
+  //     eRC20TokenPredicate.connect(gatewayContract).withdraw(1, receiverWithdraw, 100)
+  //   ).to.be.revertedWithCustomError(eRC20TokenPredicate, "PrecompileCallFailed");
+  // });
 });

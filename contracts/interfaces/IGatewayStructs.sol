@@ -25,7 +25,12 @@ interface IGatewayStructs {
     }
 
     event Deposit(bytes data);
-    event Withdraw(bytes data);
+    event Withdraw(
+        uint8 destinationChainId,
+        address sender,
+        ReceiverWithdraw[] receivers,
+        uint256 feeAmount
+    );
     event TTLExpired(bytes data);
 
     error NotOwner();
