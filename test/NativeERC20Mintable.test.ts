@@ -22,6 +22,16 @@ describe("NativeERC20Mintable Contract", function () {
     ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
   });
 
+  it("initialize will fail if not called by owner", async () => {
+    const { owner, receiver, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+
+    await expect(
+      nativeERC20Mintable
+        .connect(receiver)
+        .setDependencies(eRC20TokenPredicate.address, owner.address, "TEST", "TEST", 18, 0)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+  });
+
   it("initialize and validate initialization", async () => {
     const { owner, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 

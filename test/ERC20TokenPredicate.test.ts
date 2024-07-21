@@ -1,9 +1,7 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import * as hre from "hardhat";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixtures";
-import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
 
 describe("ERC20TokenPredicate Contract", function () {
   it("Initialize should fail if Gateway or NetiveToken is Zero Address", async () => {
@@ -16,6 +14,14 @@ describe("ERC20TokenPredicate Contract", function () {
     await expect(
       eRC20TokenPredicate.connect(owner).setDependencies(gateway.address, ethers.constants.AddressZero)
     ).to.to.be.revertedWithCustomError(eRC20TokenPredicate, "ZeroAddress");
+  });
+
+  it("initialize should faild if not called by owner", async () => {
+    const { relayer, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+
+    await expect(
+      eRC20TokenPredicate.connect(relayer).setDependencies(gateway.address, nativeERC20Mintable.address)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
   it("initialize and validate initialization", async () => {

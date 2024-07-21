@@ -16,10 +16,10 @@ contract Gateway is
     OwnableUpgradeable,
     UUPSUpgradeable
 {
-    ERC20TokenPredicate private eRC20TokenPredicate;
-    Validators private validators;
+    ERC20TokenPredicate public eRC20TokenPredicate;
+    Validators public validators;
+    address public relayer;
     uint256 public constant MAX_LENGTH = 2048;
-    address private relayer;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -40,8 +40,11 @@ contract Gateway is
         address _validators,
         address _relayer
     ) external onlyOwner {
-        if (_eRC20TokenPredicate == address(0) || _validators == address(0))
-            revert ZeroAddress();
+        if (
+            _eRC20TokenPredicate == address(0) ||
+            _validators == address(0) ||
+            _relayer == address(0)
+        ) revert ZeroAddress();
         eRC20TokenPredicate = ERC20TokenPredicate(_eRC20TokenPredicate);
         validators = Validators(_validators);
         relayer = _relayer;
