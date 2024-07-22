@@ -47,14 +47,18 @@ contract Validators is
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(address _gatewayAddress) external onlyOwner {
+    function setDependencies(
+        address _gatewayAddress,
+        ValidatorAddressChainData[] calldata _chainDatas
+    ) external onlyOwner {
         if (_gatewayAddress == address(0)) revert ZeroAddress();
         gatewayAddress = _gatewayAddress;
+        setValidatorsChainData(_chainDatas);
     }
 
     function setValidatorsChainData(
         ValidatorAddressChainData[] calldata _chainDatas
-    ) external onlyGatewayOrOwner {
+    ) public onlyGatewayOrOwner {
         uint256 _length = _chainDatas.length;
         if (validatorsCount != _length) {
             revert InvalidData("validators count");

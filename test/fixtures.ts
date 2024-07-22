@@ -107,7 +107,7 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  await validatorsc.setDependencies(gateway.address);
+  await validatorsc.setDependencies(gateway.address, validatorAddressCardanoData);
 
   await hre.network.provider.send("hardhat_setCode", [
     "0x0000000000000000000000000000000000002020",

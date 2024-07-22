@@ -19,19 +19,38 @@ describe("Validators Contract", function () {
   });
 
   it("SetDependencies should fail if a validator is Zero Address", async () => {
-    const { owner, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, validatorsc, validatorAddressCardanoData } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      validatorsc.connect(owner).setDependencies(ethers.constants.AddressZero)
+      validatorsc.connect(owner).setDependencies(ethers.constants.AddressZero, validatorAddressCardanoData)
     ).to.be.revertedWithCustomError(validatorsc, "ZeroAddress");
   });
 
   it("SetDependencies and validate initialization", async () => {
-    const { owner, gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, validators, validatorsc, validatorAddressCardanoData } = await loadFixture(
+      deployGatewayFixtures
+    );
 
-    await expect(validatorsc.connect(owner).setDependencies(gateway.address)).not.to.be.reverted;
+    await expect(validatorsc.connect(owner).setDependencies(gateway.address, validatorAddressCardanoData)).not.to.be
+      .reverted;
 
     expect(await validatorsc.gatewayAddress()).to.be.equal(gateway.address);
+
+    const chainData = await validatorsc.getChainData();
+
+    for (let i = 0; i < validators.length; i++) {
+      for (let j = 0; j < 4; j++) {
+        expect(chainData[i].key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
+      }
+    }
+
+    for (let i = 0; i < validators.length; i++) {
+      let _data = await validatorsc.getChainDataPerAddress(validatorAddressCardanoData[i].addr);
+      let _key = _data.key;
+      for (let j = 0; j < 4; j++) {
+        expect(_key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
+      }
+    }
   });
 
   it("setValidatorsChainData should fail if not called by Gateway or Owner", async function () {
