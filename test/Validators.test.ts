@@ -79,11 +79,25 @@ describe("Validators Contract", function () {
   });
 
   it("setValidatorsChainData success", async function () {
-    const { gateway, validatorsc, owner, validators, validatorCardanoData } = await loadFixture(deployGatewayFixtures);
+    const { validatorsc, owner, validators, validatorAddressCardanoData } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(
-    //   validatorsc.connect(owner).setValidatorsChainData(validatorAddressCardanoDataShort)
-    // ).to.be.revertedWithCustomError(gateway, "InvalidData");
+    await expect(validatorsc.connect(owner).setValidatorsChainData(validatorAddressCardanoData)).not.to.be.reverted;
+
+    const chainData = await validatorsc.getChainData();
+
+    for (let i = 0; i < validators.length; i++) {
+      for (let j = 0; j < 4; j++) {
+        expect(chainData[i].key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
+      }
+    }
+
+    for (let i = 0; i < validators.length; i++) {
+      let _data = await validatorsc.getChainDataPerAddress(validatorAddressCardanoData[i].addr);
+      let _key = _data.key;
+      for (let j = 0; j < 4; j++) {
+        expect(_key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
+      }
+    }
   });
 
   it("addValidatorChainData should fail if not called by Gateway", async function () {
@@ -100,17 +114,21 @@ describe("Validators Contract", function () {
     ).to.be.revertedWithCustomError(gateway, "NotGateway");
   });
 
-  it("addValidatorChainData should fail if not called by Gateway", async function () {
-    const { gateway, validatorsc, owner, validators, validatorCardanoData } = await loadFixture(deployGatewayFixtures);
+  it("addValidatorChainData success", async function () {
+    const { validatorsc, gateway, validators, validatorAddressCardanoData } = await loadFixture(deployGatewayFixtures);
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
 
     await expect(
-      validatorsc.connect(gatewayContract).addValidatorChainData(validators[0].address, validatorCardanoData)
+      validatorsc
+        .connect(gatewayContract)
+        .addValidatorChainData(validatorAddressCardanoData[0].addr, validatorAddressCardanoData[0].data)
     ).not.to.be.reverted;
 
-    await expect(
-      validatorsc.connect(owner).addValidatorChainData(owner.address, validatorCardanoData)
-    ).to.be.revertedWithCustomError(gateway, "NotGateway");
+    let _data = await validatorsc.getChainDataPerAddress(validatorAddressCardanoData[0].addr);
+    let _key = _data.key;
+    for (let i = 0; i < 4; i++) {
+      expect(_key[i]).to.equal(validatorAddressCardanoData[0].data.key[i]);
+    }
   });
 });

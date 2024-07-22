@@ -87,7 +87,6 @@ contract Validators is
         if (cnt != validatorsAddressesLength) {
             return;
         }
-
         delete chainData;
         for (uint i; i < validatorsAddressesLength; i++) {
             chainData.push(chainDataPerAddress[validatorsAddresses[i]]);
@@ -124,6 +123,20 @@ contract Validators is
         returns (ValidatorChainData[] memory)
     {
         return chainData;
+    }
+
+    function getChainData()
+        external
+        view
+        returns (ValidatorChainData[] memory)
+    {
+        return chainData;
+    }
+
+    function getChainDataPerAddress(
+        address _addr
+    ) external view returns (ValidatorChainData memory) {
+        return chainDataPerAddress[_addr];
     }
 
     modifier onlyGateway() {
