@@ -51,6 +51,33 @@ describe("Validators Contract", function () {
     ).to.be.revertedWithCustomError(gateway, "NotGatewayOrOwner");
   });
 
+  it("setValidatorsChainData should fail data does not match number of validators", async function () {
+    const { gateway, validatorsc, owner, validators, validatorCardanoData } = await loadFixture(deployGatewayFixtures);
+
+    const validatorAddressCardanoDataShort = [
+      {
+        addr: validators[0].address,
+        data: validatorCardanoData,
+      },
+      {
+        addr: validators[1].address,
+        data: validatorCardanoData,
+      },
+      {
+        addr: validators[2].address,
+        data: validatorCardanoData,
+      },
+      {
+        addr: validators[3].address,
+        data: validatorCardanoData,
+      },
+    ];
+
+    await expect(
+      validatorsc.connect(owner).setValidatorsChainData(validatorAddressCardanoDataShort)
+    ).to.be.revertedWithCustomError(gateway, "InvalidData");
+  });
+
   it("addValidatorChainData should fail if not called by Gateway", async function () {
     const { gateway, validatorsc, owner, validators, validatorCardanoData } = await loadFixture(deployGatewayFixtures);
 

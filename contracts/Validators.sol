@@ -75,14 +75,6 @@ contract Validators is
         _updateValidatorChainData();
     }
 
-    function getValidatorsChainData()
-        external
-        view
-        returns (ValidatorChainData[] memory)
-    {
-        return chainData;
-    }
-
     function _updateValidatorChainData() internal {
         // chainDataPerAddress must be set for all the validator addresses
         uint cnt = 0;
@@ -126,7 +118,7 @@ contract Validators is
         return validatorsAddresses;
     }
 
-    function getChainData()
+    function getValidatorsChainData()
         external
         view
         returns (ValidatorChainData[] memory)
