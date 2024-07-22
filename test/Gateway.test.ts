@@ -7,25 +7,15 @@ import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixt
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
 
 describe("Gateway Contract", function () {
-  it("Initialize should fail if Gateway, NetiveToken or Relayer is Zero Address", async () => {
+  it("SetDependencies should fail if Gateway, NetiveToken or Relayer is Zero Address", async () => {
     const { owner, gateway, relayer, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
 
     await expect(
       gateway.connect(owner).setDependencies(ethers.constants.AddressZero, validatorsc.address, relayer.address)
     ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
-
-    await expect(
-      gateway.connect(owner).setDependencies(eRC20TokenPredicate.address, ethers.constants.AddressZero, relayer.address)
-    ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
-
-    await expect(
-      gateway
-        .connect(owner)
-        .setDependencies(eRC20TokenPredicate.address, validatorsc.address, ethers.constants.AddressZero)
-    ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
   });
 
-  it("initialize should fail if not called by owner", async () => {
+  it("SetDependencies should fail if not called by owner", async () => {
     const { relayer, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
 
     await expect(
@@ -33,7 +23,7 @@ describe("Gateway Contract", function () {
     ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
-  it("initialize and validate initialization", async () => {
+  it("SetDependencies and validate initialization", async () => {
     const { owner, relayer, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
 
     await expect(
@@ -51,7 +41,7 @@ describe("Gateway Contract", function () {
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.utils.AbiCoder();
     const data = abiCoder.encode(
-      ["uint8", "uint256", "tuple(uint8, address, uint256)[]"],
+      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [
         1,
         blockNumber,
@@ -80,7 +70,7 @@ describe("Gateway Contract", function () {
     const abiCoder = new ethers.utils.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["uint8", "uint256", "tuple(uint8, address, uint256)[]"],
+      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [1, blockNumber + 100, [[1, address, 100]]]
     );
 

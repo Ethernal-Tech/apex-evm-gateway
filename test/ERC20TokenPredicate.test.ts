@@ -1,10 +1,11 @@
+import { alwaysRevertBytecode } from "./constants";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixtures";
 
 describe("ERC20TokenPredicate Contract", function () {
-  it("Initialize should fail if Gateway or NetiveToken is Zero Address", async () => {
+  it("SetDependencies should fail if Gateway or NetiveToken is Zero Address", async () => {
     const { owner, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
@@ -16,7 +17,7 @@ describe("ERC20TokenPredicate Contract", function () {
     ).to.to.be.revertedWithCustomError(eRC20TokenPredicate, "ZeroAddress");
   });
 
-  it("initialize should faild if not called by owner", async () => {
+  it("SetDependencies should faild if not called by owner", async () => {
     const { relayer, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
@@ -24,7 +25,7 @@ describe("ERC20TokenPredicate Contract", function () {
     ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
-  it("initialize and validate initialization", async () => {
+  it("SetDependencies and validate initialization", async () => {
     const { owner, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(eRC20TokenPredicate.connect(owner).setDependencies(gateway.address, nativeERC20Mintable.address)).to
@@ -40,7 +41,7 @@ describe("ERC20TokenPredicate Contract", function () {
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.utils.AbiCoder();
     const data = abiCoder.encode(
-      ["uint8", "uint256", "tuple(uint8, address, uint256)[]"],
+      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [
         1,
         blockNumber,
@@ -57,14 +58,14 @@ describe("ERC20TokenPredicate Contract", function () {
     );
   });
 
-  it("Deposit should emit TTLExpired if TTL expired", async () => {
+  it("Deposit should fail if batch is already executed", async () => {
     const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.utils.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["uint8", "uint256", "tuple(uint8, address, uint256)[]"],
+      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [1, blockNumber - 1, [[1, address, 100]]]
     );
 
@@ -79,6 +80,26 @@ describe("ERC20TokenPredicate Contract", function () {
     expect(depositEvent?.args?.data).to.be.undefined;
   });
 
+  it("Deposit should emit TTLExpired if TTL expired", async () => {
+    const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+    const abiCoder = new ethers.utils.AbiCoder();
+    const address = ethers.Wallet.createRandom().address;
+    const data = abiCoder.encode(
+      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
+      [1, blockNumber + 100, [[1, address, 100]]]
+    );
+
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+
+    await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data)).not.to.be.rejected;
+    await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data)).to.be.revertedWithCustomError(
+      eRC20TokenPredicate,
+      "BatchAlreadyExecuted"
+    );
+  });
+
   it("Deposit success", async () => {
     const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
@@ -86,7 +107,7 @@ describe("ERC20TokenPredicate Contract", function () {
     const abiCoder = new ethers.utils.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["uint8", "uint256", "tuple(uint8, address, uint256)[]"],
+      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [1, blockNumber + 100, [[1, address, 100]]]
     );
 

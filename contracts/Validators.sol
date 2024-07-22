@@ -14,7 +14,7 @@ contract Validators is
     UUPSUpgradeable,
     System
 {
-    address private gatewayAddress;
+    address public gatewayAddress;
 
     ValidatorChainData[] private chainData;
     // current validators set addresses
@@ -33,6 +33,7 @@ contract Validators is
         __Ownable_init();
         __UUPSUpgradeable_init();
         for (uint8 i; i < _validators.length; i++) {
+            if (_validators[i] == address(0)) revert ZeroAddress();
             addressValidatorIndex[_validators[i]] = i + 1;
             validatorsAddresses.push(_validators[i]);
         }
@@ -47,6 +48,7 @@ contract Validators is
         address _gatewayAddress,
         ValidatorAddressChainData[] calldata _chainDatas
     ) external onlyOwner {
+        if (_gatewayAddress == address(0)) revert ZeroAddress();
         gatewayAddress = _gatewayAddress;
         setValidatorsChainData(_chainDatas);
     }
@@ -108,6 +110,14 @@ contract Validators is
 
         uint8 indx = addressValidatorIndex[_addr] - 1;
         chainData[indx] = _data;
+    }
+
+    function getChainData()
+        external
+        view
+        returns (ValidatorChainData[] memory)
+    {
+        return chainData;
     }
 
     modifier onlyGateway() {

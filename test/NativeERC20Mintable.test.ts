@@ -6,7 +6,7 @@ import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixt
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
 
 describe("NativeERC20Mintable Contract", function () {
-  it("Initialize should fail if Owner or Predicate is Zero Address", async () => {
+  it("SetDependencies should fail if Owner or Predicate is Zero Address", async () => {
     const { owner, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
@@ -22,7 +22,7 @@ describe("NativeERC20Mintable Contract", function () {
     ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
   });
 
-  it("initialize will fail if not called by owner", async () => {
+  it("SetDependencies will fail if not called by owner", async () => {
     const { owner, receiver, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
@@ -32,7 +32,7 @@ describe("NativeERC20Mintable Contract", function () {
     ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
-  it("initialize and validate initialization", async () => {
+  it("SetDependencies and validate initialization", async () => {
     const { owner, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(

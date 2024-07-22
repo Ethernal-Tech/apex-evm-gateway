@@ -47,4 +47,5 @@ interface IGatewayStructs {
     error InsufficientAllowance();
     error PrecompileCallFailed();
     error DecresedAllowenceBelowZero();
+    error BatchAlreadyExecuted();
 }

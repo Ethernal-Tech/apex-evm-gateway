@@ -114,7 +114,10 @@ export async function deployGatewayFixtures() {
     alwaysTrueBytecode, // native transfer pre-compile
   ]);
 
-  // const dataDeposit = ethers.utils.defaultAbiCoder.encode(0, [receiverDeposit1, receiverDeposit2]);
+  await hre.network.provider.send("hardhat_setCode", [
+    "0x0000000000000000000000000000000000002060",
+    alwaysTrueBytecode,
+  ]);
 
   return {
     hre,

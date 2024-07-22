@@ -31,6 +31,7 @@ contract ERC20TokenPredicate is
 
     IGateway public gateway;
     INativeERC20 public nativeToken;
+    mapping(uint64 => bool) public usedBatches;
 
     function initialize() public initializer {
         __Ownable_init();
@@ -75,8 +76,16 @@ contract ERC20TokenPredicate is
     }
 
     function _deposit(bytes calldata _data) private {
-        (, uint256 ttlExpired, ReceiverDeposit[] memory _receivers) = abi
-            .decode(_data, (uint8, uint256, ReceiverDeposit[]));
+        (
+            uint64 batchId,
+            uint64 ttlExpired,
+            ReceiverDeposit[] memory _receivers
+        ) = abi.decode(_data, (uint64, uint64, ReceiverDeposit[]));
+
+        if (usedBatches[batchId]) {
+            revert BatchAlreadyExecuted();
+        }
+        usedBatches[batchId] = true;
 
         if (ttlExpired < block.number) {
             gateway.ttlEvent(_data);
