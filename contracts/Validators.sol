@@ -16,11 +16,15 @@ contract Validators is
 {
     address public gatewayAddress;
 
+    // BlockchainId -> validator address -> ValidatorChainData
+    mapping(address => ValidatorChainData) private chainDataPerAddress;
+    // BlockchainId -> ValidatorChainData[]
     ValidatorChainData[] private chainData;
-    // current validators set addresses
-    address[] private validatorsAddresses;
-    // validator address index(+1) in chainData mapping
-    mapping(address => uint8) private addressValidatorIndex;
+
+    // keep validatorsArrayAddresses because maybe
+    address[] public validatorsAddresses;
+    // mapping in case they could be added/removed
+    mapping(address => uint8) public addressValidatorIndex;
 
     uint8 public validatorsCount;
 
@@ -33,7 +37,6 @@ contract Validators is
         __Ownable_init();
         __UUPSUpgradeable_init();
         for (uint8 i; i < _validators.length; i++) {
-            if (_validators[i] == address(0)) revert ZeroAddress();
             addressValidatorIndex[_validators[i]] = i + 1;
             validatorsAddresses.push(_validators[i]);
         }
@@ -44,20 +47,66 @@ contract Validators is
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(
-        address _gatewayAddress,
-        ValidatorAddressChainData[] calldata _chainDatas
-    ) external onlyOwner {
+    function setDependencies(address _gatewayAddress) external onlyOwner {
         if (_gatewayAddress == address(0)) revert ZeroAddress();
         gatewayAddress = _gatewayAddress;
-        setValidatorsChainData(_chainDatas);
+    }
+
+    function setValidatorsChainData(
+        ValidatorAddressChainData[] calldata _chainDatas
+    ) external onlyGatewayOrOwner {
+        uint256 _length = _chainDatas.length;
+        if (validatorsCount != _length) {
+            revert InvalidData("validators count");
+        }
+        // set validator chain data for each validator
+        for (uint i; i < _length; i++) {
+            ValidatorAddressChainData calldata dt = _chainDatas[i];
+            chainDataPerAddress[dt.addr] = dt.data;
+        }
+        _updateValidatorChainData();
+    }
+
+    function addValidatorChainData(
+        address _addr,
+        ValidatorChainData calldata _data
+    ) external onlyGateway {
+        chainDataPerAddress[_addr] = _data;
+        _updateValidatorChainData();
+    }
+
+    function getValidatorsChainData()
+        external
+        view
+        returns (ValidatorChainData[] memory)
+    {
+        return chainData;
+    }
+
+    function _updateValidatorChainData() internal {
+        // chainDataPerAddress must be set for all the validator addresses
+        uint cnt = 0;
+        uint256 validatorsAddressesLength = validatorsAddresses.length;
+        for (uint i; i < validatorsAddressesLength; i++) {
+            if (chainDataPerAddress[validatorsAddresses[i]].key[0] != 0) {
+                cnt++;
+            }
+        }
+        if (cnt != validatorsAddressesLength) {
+            return;
+        }
+
+        delete chainData;
+        for (uint i; i < validatorsAddressesLength; i++) {
+            chainData.push(chainDataPerAddress[validatorsAddresses[i]]);
+        }
     }
 
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,
         bytes calldata _bitmap
-    ) public view returns (bool callSuccess, bytes memory returnData) {
+    ) external view returns (bool callSuccess, bytes memory returnData) {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls,calls-loop
@@ -69,47 +118,12 @@ contract Validators is
                 abi.encode(_hash, _signature, chainData, _bitmap)
             )
         );
+
+        return (callSuccess, returnData);
     }
 
-    function setValidatorsChainData(
-        ValidatorAddressChainData[] calldata _chainDatas
-    ) public onlyGatewayOrOwner {
-        if (validatorsCount != _chainDatas.length) {
-            revert InvalidData("validators count");
-        }
-
-        // recreate array with n elements
-        delete chainData;
-        for (uint i; i < validatorsCount; i++) {
-            chainData.push();
-        }
-
-        // set validator chain data for each validator
-        for (uint i; i < validatorsCount; i++) {
-            ValidatorAddressChainData calldata dt = _chainDatas[i];
-            uint8 indx = addressValidatorIndex[dt.addr];
-            if (indx == 0) {
-                revert InvalidData("invalid address");
-            }
-
-            chainData[indx - 1] = dt.data;
-        }
-    }
-
-    function addValidatorChainData(
-        address _addr,
-        ValidatorChainData calldata _data
-    ) external onlyGateway {
-        if (chainData.length == 0) {
-            // recreate array with n elements
-            delete chainData;
-            for (uint i; i < validatorsCount; i++) {
-                chainData.push();
-            }
-        }
-
-        uint8 indx = addressValidatorIndex[_addr] - 1;
-        chainData[indx] = _data;
+    function getValidatorsAddresses() external view returns (address[] memory) {
+        return validatorsAddresses;
     }
 
     function getChainData()

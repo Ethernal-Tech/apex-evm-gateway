@@ -48,4 +48,5 @@ interface IGatewayStructs {
     error PrecompileCallFailed();
     error DecresedAllowenceBelowZero();
     error BatchAlreadyExecuted();
+    error ValidatorNotRegistered();
 }
