@@ -97,7 +97,7 @@ contract Validators is
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,
-        bytes calldata _bitmap
+        uint256 _bitmap
     ) external view returns (bool callSuccess, bytes memory returnData) {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls

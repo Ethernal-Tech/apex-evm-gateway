@@ -52,7 +52,7 @@ contract Gateway is
 
     function deposit(
         bytes calldata _signature,
-        bytes calldata _bitmap,
+        uint256 _bitmap,
         bytes calldata _data
     ) external onlyRelayer {
         bytes32 _hash = keccak256(_data);

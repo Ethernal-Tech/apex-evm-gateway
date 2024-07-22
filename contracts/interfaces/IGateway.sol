@@ -6,7 +6,7 @@ import "./IGatewayStructs.sol";
 interface IGateway is IGatewayStructs {
     function deposit(
         bytes calldata _signature,
-        bytes calldata _bitmap,
+        uint256 _bitmap,
         bytes calldata _data
     ) external;
 
