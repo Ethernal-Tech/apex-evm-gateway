@@ -43,14 +43,6 @@ describe("Validators Contract", function () {
         expect(chainData[i].key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
       }
     }
-
-    for (let i = 0; i < validators.length; i++) {
-      let _data = await validatorsc.getChainDataPerAddress(validatorAddressCardanoData[i].addr);
-      let _key = _data.key;
-      for (let j = 0; j < 4; j++) {
-        expect(_key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
-      }
-    }
   });
 
   it("setValidatorsChainData should fail if not called by Gateway or Owner", async function () {
@@ -109,14 +101,6 @@ describe("Validators Contract", function () {
         expect(chainData[i].key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
       }
     }
-
-    for (let i = 0; i < validators.length; i++) {
-      let _data = await validatorsc.getChainDataPerAddress(validatorAddressCardanoData[i].addr);
-      let _key = _data.key;
-      for (let j = 0; j < 4; j++) {
-        expect(_key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
-      }
-    }
   });
 
   it("addValidatorChainData should fail if not called by Gateway", async function () {
@@ -144,8 +128,11 @@ describe("Validators Contract", function () {
         .addValidatorChainData(validatorAddressCardanoData[0].addr, validatorAddressCardanoData[0].data)
     ).not.to.be.reverted;
 
-    let _data = await validatorsc.getChainDataPerAddress(validatorAddressCardanoData[0].addr);
-    let _key = _data.key;
+    const chainData = await validatorsc.getChainData();
+    const idx = (await validatorsc.addressValidatorIndex(validatorAddressCardanoData[0].addr)) - 1;
+    const data = chainData[idx];
+
+    let _key = data.key;
     for (let i = 0; i < 4; i++) {
       expect(_key[i]).to.equal(validatorAddressCardanoData[0].data.key[i]);
     }
