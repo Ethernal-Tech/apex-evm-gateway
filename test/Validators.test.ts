@@ -36,7 +36,7 @@ describe("Validators Contract", function () {
 
     expect(await validatorsc.gatewayAddress()).to.be.equal(gateway.address);
 
-    const chainData = await validatorsc.getChainData();
+    const chainData = await validatorsc.getValidatorsChainData();
 
     for (let i = 0; i < validators.length; i++) {
       for (let j = 0; j < 4; j++) {
@@ -94,47 +94,12 @@ describe("Validators Contract", function () {
 
     await expect(validatorsc.connect(owner).setValidatorsChainData(validatorAddressCardanoData)).not.to.be.reverted;
 
-    const chainData = await validatorsc.getChainData();
+    const chainData = await validatorsc.getValidatorsChainData();
 
     for (let i = 0; i < validators.length; i++) {
       for (let j = 0; j < 4; j++) {
         expect(chainData[i].key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
       }
-    }
-  });
-
-  it("addValidatorChainData should fail if not called by Gateway", async function () {
-    const { gateway, validatorsc, owner, validators, validatorCardanoData } = await loadFixture(deployGatewayFixtures);
-
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
-
-    await expect(
-      validatorsc.connect(gatewayContract).addValidatorChainData(validators[0].address, validatorCardanoData)
-    ).not.to.be.reverted;
-
-    await expect(
-      validatorsc.connect(owner).addValidatorChainData(validators[0].address, validatorCardanoData)
-    ).to.be.revertedWithCustomError(gateway, "NotGateway");
-  });
-
-  it("addValidatorChainData success", async function () {
-    const { validatorsc, gateway, validators, validatorAddressCardanoData } = await loadFixture(deployGatewayFixtures);
-
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
-
-    await expect(
-      validatorsc
-        .connect(gatewayContract)
-        .addValidatorChainData(validatorAddressCardanoData[0].addr, validatorAddressCardanoData[0].data)
-    ).not.to.be.reverted;
-
-    const chainData = await validatorsc.getChainData();
-    const idx = (await validatorsc.addressValidatorIndex(validatorAddressCardanoData[0].addr)) - 1;
-    const data = chainData[idx];
-
-    let _key = data.key;
-    for (let i = 0; i < 4; i++) {
-      expect(_key[i]).to.equal(validatorAddressCardanoData[0].data.key[i]);
     }
   });
 });

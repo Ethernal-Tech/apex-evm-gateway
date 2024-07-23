@@ -79,22 +79,6 @@ contract Validators is
         }
     }
 
-    function addValidatorChainData(
-        address _addr,
-        ValidatorChainData calldata _data
-    ) external onlyGateway {
-        if (chainData.length == 0) {
-            // recreate array with n elements
-            delete chainData;
-            for (uint i; i < validatorsCount; i++) {
-                chainData.push();
-            }
-        }
-
-        uint8 indx = addressValidatorIndex[_addr] - 1;
-        chainData[indx] = _data;
-    }
-
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,
@@ -120,14 +104,6 @@ contract Validators is
     }
 
     function getValidatorsChainData()
-        external
-        view
-        returns (ValidatorChainData[] memory)
-    {
-        return chainData;
-    }
-
-    function getChainData()
         external
         view
         returns (ValidatorChainData[] memory)

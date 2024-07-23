@@ -106,13 +106,6 @@ contract Gateway is
         validators.setValidatorsChainData(_chainDatas);
     }
 
-    function addValidatorChainData(
-        address _addr,
-        ValidatorChainData calldata _data
-    ) external onlyOwner {
-        validators.addValidatorChainData(_addr, _data);
-    }
-
     modifier onlyRelayer() {
         if (msg.sender != relayer) revert NotRelayer();
         _;
