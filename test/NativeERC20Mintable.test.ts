@@ -12,13 +12,11 @@ describe("NativeERC20Mintable Contract", function () {
     await expect(
       nativeERC20Mintable
         .connect(owner)
-        .setDependencies(eRC20TokenPredicate.address, ethers.constants.AddressZero, "TEST", "TEST", 18, 0)
+        .setDependencies(eRC20TokenPredicate.target, ethers.ZeroAddress, "TEST", "TEST", 18, 0)
     ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
 
     await expect(
-      nativeERC20Mintable
-        .connect(owner)
-        .setDependencies(ethers.constants.AddressZero, owner.address, "TEST", "TEST", 18, 0)
+      nativeERC20Mintable.connect(owner).setDependencies(ethers.ZeroAddress, owner.address, "TEST", "TEST", 18, 0)
     ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
   });
 
@@ -28,8 +26,8 @@ describe("NativeERC20Mintable Contract", function () {
     await expect(
       nativeERC20Mintable
         .connect(receiver)
-        .setDependencies(eRC20TokenPredicate.address, owner.address, "TEST", "TEST", 18, 0)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
+        .setDependencies(eRC20TokenPredicate.target, owner.address, "TEST", "TEST", 18, 0)
+    ).to.be.revertedWithCustomError(eRC20TokenPredicate, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
@@ -38,13 +36,13 @@ describe("NativeERC20Mintable Contract", function () {
     await expect(
       nativeERC20Mintable
         .connect(owner)
-        .setDependencies(eRC20TokenPredicate.address, owner.address, "TEST", "TEST", 18, 0)
+        .setDependencies(eRC20TokenPredicate.target, owner.address, "TEST", "TEST", 18, 0)
     ).to.not.be.reverted;
     expect(await nativeERC20Mintable.name()).to.equal("TEST");
     expect(await nativeERC20Mintable.symbol()).to.equal("TEST");
     expect(await nativeERC20Mintable.decimals()).to.equal(18);
     expect(await nativeERC20Mintable.totalSupply()).to.equal(0);
-    expect(await nativeERC20Mintable.predicate()).to.equal(eRC20TokenPredicate.address);
+    expect(await nativeERC20Mintable.predicate()).to.equal(eRC20TokenPredicate.target);
     expect(await nativeERC20Mintable.owner()).to.equal(owner.address);
   });
 
@@ -60,10 +58,10 @@ describe("NativeERC20Mintable Contract", function () {
   it("Mint will fail if minting to Zero Address", async function () {
     const { nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-    const eRC20TokenPredicateContract = await impersonateAsContractAndMintFunds(await eRC20TokenPredicate.address);
+    const eRC20TokenPredicateContract = await impersonateAsContractAndMintFunds(await eRC20TokenPredicate.getAddress());
 
     await expect(
-      nativeERC20Mintable.connect(eRC20TokenPredicateContract).mint(ethers.constants.AddressZero, 100)
+      nativeERC20Mintable.connect(eRC20TokenPredicateContract).mint(ethers.ZeroAddress, 100)
     ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
   });
 
@@ -111,9 +109,9 @@ describe("NativeERC20Mintable Contract", function () {
     const mintReceipt = await mintTx.wait();
     const transferEvent = mintReceipt?.events?.find((log) => log.event === "Transfer");
 
-    expect(await nativeERC20Mintable.totalSupply()).to.equal(totalSupplyBefore.add(randomAmount));
+    expect(await nativeERC20Mintable.totalSupply()).to.equal(totalSupplyBefore + BigInt(randomAmount));
 
-    expect(transferEvent?.args?.from).to.equal(ethers.constants.AddressZero);
+    expect(transferEvent?.args?.from).to.equal(ethers.ZeroAddress);
     expect(transferEvent?.args?.to).to.equal(receiver.address);
     expect(transferEvent?.args?.value).to.equal(randomAmount);
   });
@@ -121,19 +119,20 @@ describe("NativeERC20Mintable Contract", function () {
   it("Transfer will fail from Zero Address", async function () {
     const { nativeERC20Mintable } = await loadFixture(deployGatewayFixtures);
 
-    const addressZeroFunded = await impersonateAsContractAndMintFunds(ethers.constants.AddressZero);
+    const addressZeroFunded = await impersonateAsContractAndMintFunds(ethers.ZeroAddress);
 
     await expect(
-      nativeERC20Mintable.connect(addressZeroFunded).transfer(ethers.constants.AddressZero, 100)
+      nativeERC20Mintable.connect(addressZeroFunded).transfer(ethers.ZeroAddress, 100)
     ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
   });
 
   it("Transfer will fail to Zero Address", async function () {
     const { nativeERC20Mintable, owner } = await loadFixture(deployGatewayFixtures);
 
-    await expect(
-      nativeERC20Mintable.connect(owner).transfer(ethers.constants.AddressZero, 100)
-    ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
+    await expect(nativeERC20Mintable.connect(owner).transfer(ethers.ZeroAddress, 100)).to.be.revertedWithCustomError(
+      nativeERC20Mintable,
+      "ZeroAddress"
+    );
   });
 
   it("Transfer token success", async function () {
@@ -153,9 +152,10 @@ describe("NativeERC20Mintable Contract", function () {
   it("Approve fails if to is Zero Address", async function () {
     const { nativeERC20Mintable, owner } = await loadFixture(deployGatewayFixtures);
 
-    await expect(
-      nativeERC20Mintable.connect(owner).approve(ethers.constants.AddressZero, 100)
-    ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
+    await expect(nativeERC20Mintable.connect(owner).approve(ethers.ZeroAddress, 100)).to.be.revertedWithCustomError(
+      nativeERC20Mintable,
+      "ZeroAddress"
+    );
   });
 
   it("TransferFrom fails if not appoved", async function () {
@@ -169,7 +169,7 @@ describe("NativeERC20Mintable Contract", function () {
   it("Approve fails if from is Zero Address", async function () {
     const { nativeERC20Mintable, receiver } = await loadFixture(deployGatewayFixtures);
 
-    const addressZeroFunded = await impersonateAsContractAndMintFunds(ethers.constants.AddressZero);
+    const addressZeroFunded = await impersonateAsContractAndMintFunds(ethers.ZeroAddress);
 
     await expect(
       nativeERC20Mintable.connect(addressZeroFunded).approve(receiver.address, 100)
@@ -179,9 +179,10 @@ describe("NativeERC20Mintable Contract", function () {
   it("Approve fails if to is Zero Address", async function () {
     const { nativeERC20Mintable, owner } = await loadFixture(deployGatewayFixtures);
 
-    await expect(
-      nativeERC20Mintable.connect(owner).approve(ethers.constants.AddressZero, 100)
-    ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
+    await expect(nativeERC20Mintable.connect(owner).approve(ethers.ZeroAddress, 100)).to.be.revertedWithCustomError(
+      nativeERC20Mintable,
+      "ZeroAddress"
+    );
   });
 
   it("Approve success", async function () {
@@ -347,9 +348,10 @@ describe("NativeERC20Mintable Contract", function () {
 
     await nativeERC20Mintable.mint(owner.address, randomAmount);
 
-    await expect(
-      nativeERC20Mintable.connect(owner).burn(ethers.constants.AddressZero, 100)
-    ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
+    await expect(nativeERC20Mintable.connect(owner).burn(ethers.ZeroAddress, 100)).to.be.revertedWithCustomError(
+      nativeERC20Mintable,
+      "ZeroAddress"
+    );
   });
 
   it("Burn success", async function () {
@@ -364,7 +366,7 @@ describe("NativeERC20Mintable Contract", function () {
     const burnEvent = burnReceipt?.events?.find((log) => log.event === "Transfer");
 
     expect(burnEvent?.args?.from).to.equal(owner.address);
-    expect(burnEvent?.args?.to).to.equal(ethers.constants.AddressZero);
+    expect(burnEvent?.args?.to).to.equal(ethers.ZeroAddress);
     expect(burnEvent?.args?.value).to.equal(100);
   });
 });

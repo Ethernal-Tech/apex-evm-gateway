@@ -1,4 +1,3 @@
-import { alwaysRevertBytecode } from "./constants";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
@@ -9,11 +8,11 @@ describe("ERC20TokenPredicate Contract", function () {
     const { owner, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      eRC20TokenPredicate.connect(owner).setDependencies(ethers.constants.AddressZero, nativeERC20Mintable.address)
+      eRC20TokenPredicate.connect(owner).setDependencies(ethers.ZeroAddress, nativeERC20Mintable.target)
     ).to.to.be.revertedWithCustomError(eRC20TokenPredicate, "ZeroAddress");
 
     await expect(
-      eRC20TokenPredicate.connect(owner).setDependencies(gateway.address, ethers.constants.AddressZero)
+      eRC20TokenPredicate.connect(owner).setDependencies(gateway.target, ethers.ZeroAddress)
     ).to.to.be.revertedWithCustomError(eRC20TokenPredicate, "ZeroAddress");
   });
 
@@ -21,25 +20,25 @@ describe("ERC20TokenPredicate Contract", function () {
     const { relayer, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      eRC20TokenPredicate.connect(relayer).setDependencies(gateway.address, nativeERC20Mintable.address)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
+      eRC20TokenPredicate.connect(relayer).setDependencies(gateway.target, nativeERC20Mintable.target)
+    ).to.be.revertedWithCustomError(eRC20TokenPredicate, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
     const { owner, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-    await expect(eRC20TokenPredicate.connect(owner).setDependencies(gateway.address, nativeERC20Mintable.address)).to
-      .not.be.reverted;
+    await expect(eRC20TokenPredicate.connect(owner).setDependencies(gateway.target, nativeERC20Mintable.target)).to.not
+      .be.reverted;
 
-    expect(await eRC20TokenPredicate.gateway()).to.equal(gateway.address);
-    expect(await eRC20TokenPredicate.nativeToken()).to.equal(nativeERC20Mintable.address);
+    expect(await eRC20TokenPredicate.gateway()).to.equal(gateway.target);
+    expect(await eRC20TokenPredicate.nativeToken()).to.equal(nativeERC20Mintable.target);
   });
 
   it("Deposit should fail if not called by Gateway", async () => {
     const { receiver, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.utils.AbiCoder();
+    const abiCoder = new ethers.AbiCoder();
     const data = abiCoder.encode(
       ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [
@@ -62,19 +61,21 @@ describe("ERC20TokenPredicate Contract", function () {
     const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.utils.AbiCoder();
+    const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
       ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [1, blockNumber - 1, [[1, address, 100]]]
     );
 
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
     const ttlTx = await eRC20TokenPredicate.connect(gatewayContract).deposit(data);
     const ttlReceipt = await ttlTx.wait();
-    const ttlEvent = ttlReceipt?.events?.find((log) => log.event === "TTLExpired");
-    const depositEvent = ttlReceipt?.events?.find((log) => log.event === "Deposit");
+    console.log("LOGS", ttlReceipt.logs);
+    const ttlEvent = ttlReceipt.logs.find(name === "TTLExpired");
+    // const ttlEvent = ttlReceipt?.events?.find((logs) => logs.event === "TTLExpired");
+    const depositEvent = ttlReceipt?.events?.find((logs) => logs.event === "Deposit");
 
     expect(ttlEvent?.args?.data).to.equal(data);
     expect(depositEvent?.args?.data).to.be.undefined;
@@ -84,14 +85,14 @@ describe("ERC20TokenPredicate Contract", function () {
     const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.utils.AbiCoder();
+    const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
       ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [1, blockNumber + 100, [[1, address, 100]]]
     );
 
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
     await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data)).not.to.be.rejected;
     await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data)).to.be.revertedWithCustomError(
@@ -104,14 +105,14 @@ describe("ERC20TokenPredicate Contract", function () {
     const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.utils.AbiCoder();
+    const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
       ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
       [1, blockNumber + 100, [[1, address, 100]]]
     );
 
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.target);
 
     const depositTx = await eRC20TokenPredicate.connect(gatewayContract).deposit(data);
     const depositReceipt = await depositTx.wait();
@@ -123,9 +124,9 @@ describe("ERC20TokenPredicate Contract", function () {
   it("Withdraw sucess", async () => {
     const { gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-    await nativeERC20Mintable.mint(gateway.address, 1000000);
+    await nativeERC20Mintable.mint(gateway.target, 1000000);
 
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
     const receiverWithdraw = [
       {
@@ -139,7 +140,7 @@ describe("ERC20TokenPredicate Contract", function () {
     const withdrawEvent = withdrawReceipt?.events?.find((log) => log.event === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
-    expect(withdrawEvent?.args?.sender).to.equal(gateway.address);
+    expect(withdrawEvent?.args?.sender).to.equal(gateway.target);
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);

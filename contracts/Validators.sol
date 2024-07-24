@@ -31,7 +31,7 @@ contract Validators is
     }
 
     function initialize(address[] calldata _validators) public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         for (uint8 i; i < _validators.length; i++) {
             addressValidatorIndex[_validators[i]] = i + 1;

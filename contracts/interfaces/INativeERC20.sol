@@ -3,12 +3,12 @@
 
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /**
  * @dev Interface of INativeERC20
  */
-interface INativeERC20 is IERC20MetadataUpgradeable {
+interface INativeERC20 is IERC20Metadata {
     /**
      * @notice Returns predicate address controlling the child token
      * @return address Returns the address of the predicate

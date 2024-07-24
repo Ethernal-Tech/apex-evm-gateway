@@ -34,7 +34,7 @@ contract ERC20TokenPredicate is
     mapping(uint64 => bool) public usedBatches;
 
     function initialize() public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
     }
 

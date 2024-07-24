@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { BigNumber, BigNumberish } from "ethers";
+import { BigNumberish } from "ethers";
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
 
 export async function deployGatewayFixtures() {
@@ -29,12 +29,12 @@ export async function deployGatewayFixtures() {
   const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
 
   const eRC20TokenPredicateProxy = await ERC20TokenPredicateProxy.deploy(
-    await eRC20TokenPredicateLogic.address,
+    eRC20TokenPredicateLogic.target,
     ERC20TokenPredicate.interface.encodeFunctionData("initialize", [])
   );
 
   const nativeERC20MintableProxy = await NativeERC20MintableProxy.deploy(
-    await nativeERC20MintableLogic.address,
+    nativeERC20MintableLogic.target,
     NativeERC20Mintable.interface.encodeFunctionData("initialize", [])
   );
 
@@ -47,41 +47,36 @@ export async function deployGatewayFixtures() {
   ];
 
   const validatorsProxy = await ValidatorscProxy.deploy(
-    await validatorscLogic.address,
+    validatorscLogic.target,
     Validators.interface.encodeFunctionData("initialize", [validatorsAddresses])
   );
 
   const gatewayProxy = await GatewayProxy.deploy(
-    await gatewayLogic.address,
+    gatewayLogic.target,
     Gateway.interface.encodeFunctionData("initialize", [])
   );
 
   //casting proxy contracts to contract logic
   const ERC20TokenPredicateDeployed = await ethers.getContractFactory("ERC20TokenPredicate");
-  const eRC20TokenPredicate = ERC20TokenPredicateDeployed.attach(eRC20TokenPredicateProxy.address);
+  const eRC20TokenPredicate = ERC20TokenPredicateDeployed.attach(eRC20TokenPredicateProxy.target);
 
   const NativeERC20MintableDeployed = await ethers.getContractFactory("NativeERC20Mintable");
-  const nativeERC20Mintable = NativeERC20MintableDeployed.attach(nativeERC20MintableProxy.address);
+  const nativeERC20Mintable = NativeERC20MintableDeployed.attach(nativeERC20MintableProxy.target);
 
   const ValidatorsDeployed = await ethers.getContractFactory("Validators");
-  const validatorsc = ValidatorsDeployed.attach(validatorsProxy.address);
+  const validatorsc = ValidatorsDeployed.attach(validatorsProxy.target);
 
   const GatewayDeployed = await ethers.getContractFactory("Gateway");
-  const gateway = GatewayDeployed.attach(gatewayProxy.address);
+  const gateway = GatewayDeployed.attach(gatewayProxy.target);
 
-  await gateway.setDependencies(eRC20TokenPredicate.address, validatorsc.address, relayer.address);
+  await gateway.setDependencies(eRC20TokenPredicate.target, validatorsc.target, relayer.address);
 
-  await eRC20TokenPredicate.setDependencies(gateway.address, nativeERC20Mintable.address);
+  await eRC20TokenPredicate.setDependencies(gateway.target, nativeERC20Mintable.target);
 
-  await nativeERC20Mintable.setDependencies(eRC20TokenPredicate.address, owner.address, "TEST", "TEST", 18, 0);
+  await nativeERC20Mintable.setDependencies(eRC20TokenPredicate.target, owner.address, "TEST", "TEST", 18, 0);
 
   const validatorCardanoData = {
-    key: [BigNumber.from("0x1"), BigNumber.from("0x2"), BigNumber.from("0x3"), BigNumber.from("0x4")] as [
-      BigNumberish,
-      BigNumberish,
-      BigNumberish,
-      BigNumberish
-    ],
+    key: ["0x1", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
   };
 
   const validatorAddressCardanoData = [
@@ -107,7 +102,7 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  await validatorsc.setDependencies(gateway.address, validatorAddressCardanoData);
+  await validatorsc.setDependencies(gateway.target, validatorAddressCardanoData);
 
   await hre.network.provider.send("hardhat_setCode", [
     "0x0000000000000000000000000000000000002020",

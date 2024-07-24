@@ -33,6 +33,7 @@ interface IGatewayStructs {
     );
     event TTLExpired(bytes data);
 
+    error NotOwner();
     error NotRelayer();
     error NotGateway();
     error NotPredicate();
