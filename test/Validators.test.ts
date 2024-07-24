@@ -26,43 +26,7 @@ describe("Validators Contract", function () {
     ).to.be.revertedWithCustomError(validatorsc, "ZeroAddress");
   });
 
-  it("SetDependencies and validate initialization", async () => {
-    const { owner, gateway, validators, validatorsc, validatorAddressCardanoData } = await loadFixture(
-      deployGatewayFixtures
-    );
-
-    await expect(validatorsc.connect(owner).setDependencies(gateway.address, validatorAddressCardanoData)).not.to.be
-      .reverted;
-
-    expect(await validatorsc.gatewayAddress()).to.be.equal(gateway.address);
-
-    const chainData = await validatorsc.getValidatorsChainData();
-
-    for (let i = 0; i < validators.length; i++) {
-      for (let j = 0; j < 4; j++) {
-        expect(chainData[i].key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
-      }
-    }
-  });
-
-  it("setValidatorsChainData should fail if not called by Gateway or Owner", async function () {
-    const { gateway, validatorsc, owner, receiver, validatorAddressCardanoData } = await loadFixture(
-      deployGatewayFixtures
-    );
-
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.address);
-
-    await expect(validatorsc.connect(gatewayContract).setValidatorsChainData(validatorAddressCardanoData)).not.to.be
-      .reverted;
-
-    await expect(validatorsc.connect(owner).setValidatorsChainData(validatorAddressCardanoData)).not.to.be.reverted;
-
-    await expect(
-      validatorsc.connect(receiver).setValidatorsChainData(validatorAddressCardanoData)
-    ).to.be.revertedWithCustomError(gateway, "NotGatewayOrOwner");
-  });
-
-  it("setValidatorsChainData should fail data does not match number of validators", async function () {
+  it("SetDependencies should fail data does not match number of validators", async function () {
     const { gateway, validatorsc, owner, validators, validatorCardanoData } = await loadFixture(deployGatewayFixtures);
 
     const validatorAddressCardanoDataShort = [
@@ -85,14 +49,19 @@ describe("Validators Contract", function () {
     ];
 
     await expect(
-      validatorsc.connect(owner).setValidatorsChainData(validatorAddressCardanoDataShort)
+      validatorsc.connect(owner).setDependencies(gateway.address, validatorAddressCardanoDataShort)
     ).to.be.revertedWithCustomError(gateway, "InvalidData");
   });
 
-  it("setValidatorsChainData success", async function () {
-    const { validatorsc, owner, validators, validatorAddressCardanoData } = await loadFixture(deployGatewayFixtures);
+  it("SetDependencies and validate initialization", async () => {
+    const { owner, gateway, validators, validatorsc, validatorAddressCardanoData } = await loadFixture(
+      deployGatewayFixtures
+    );
 
-    await expect(validatorsc.connect(owner).setValidatorsChainData(validatorAddressCardanoData)).not.to.be.reverted;
+    await expect(validatorsc.connect(owner).setDependencies(gateway.address, validatorAddressCardanoData)).not.to.be
+      .reverted;
+
+    expect(await validatorsc.gatewayAddress()).to.be.equal(gateway.address);
 
     const chainData = await validatorsc.getValidatorsChainData();
 

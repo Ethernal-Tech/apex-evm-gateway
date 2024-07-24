@@ -16,11 +16,10 @@ contract Validators is
 {
     address public gatewayAddress;
 
-    // BlockchainId -> ValidatorChainData[]
     ValidatorChainData[] private chainData;
 
-    // keep validatorsArrayAddresses because maybe
     address[] public validatorsAddresses;
+
     // mapping in case they could be added/removed
     mapping(address => uint8) public addressValidatorIndex;
 
@@ -51,12 +50,12 @@ contract Validators is
     ) external onlyOwner {
         if (_gatewayAddress == address(0)) revert ZeroAddress();
         gatewayAddress = _gatewayAddress;
-        setValidatorsChainData(_chainDatas);
+        _setValidatorsChainData(_chainDatas);
     }
 
-    function setValidatorsChainData(
+    function _setValidatorsChainData(
         ValidatorAddressChainData[] calldata _chainDatas
-    ) public onlyGatewayOrOwner {
+    ) internal {
         if (validatorsCount != _chainDatas.length) {
             revert InvalidData("validators count");
         }

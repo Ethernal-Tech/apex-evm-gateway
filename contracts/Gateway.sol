@@ -100,12 +100,6 @@ contract Gateway is
         emit TTLExpired(_data);
     }
 
-    function setValidatorsChainData(
-        ValidatorAddressChainData[] calldata _chainDatas
-    ) external onlyOwner {
-        validators.setValidatorsChainData(_chainDatas);
-    }
-
     modifier onlyRelayer() {
         if (msg.sender != relayer) revert NotRelayer();
         _;
