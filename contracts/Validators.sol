@@ -114,10 +114,4 @@ contract Validators is
         if (msg.sender != gatewayAddress) revert NotGateway();
         _;
     }
-
-    modifier onlyGatewayOrOwner() {
-        if (msg.sender != gatewayAddress && msg.sender != owner())
-            revert NotGatewayOrOwner();
-        _;
-    }
 }
