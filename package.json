@@ -6,7 +6,6 @@
     "hardhat": "^2.22.6"
   },
   "dependencies": {
-    "@defi-wonderland/smock": "^2.4.0",
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.3"
   }
