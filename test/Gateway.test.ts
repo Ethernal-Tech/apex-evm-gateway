@@ -1,6 +1,5 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import * as hre from "hardhat";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
 
@@ -80,7 +79,7 @@ describe("Gateway Contract", function () {
         data
       );
     const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt?.events?.find((log) => log.event === "Deposit");
+    const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
 
     expect(depositEvent?.args?.data).to.equal(data);
   });
@@ -99,7 +98,7 @@ describe("Gateway Contract", function () {
 
     const withdrawTx = await gateway.connect(relayer).withdraw(1, receiverWithdraw, 100);
     const withdrawReceipt = await withdrawTx.wait();
-    const withdrawEvent = withdrawReceipt?.events?.find((log) => log.event === "Withdraw");
+    const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
     expect(withdrawEvent?.args?.sender).to.equal(gateway.target);

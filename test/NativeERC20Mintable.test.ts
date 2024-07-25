@@ -107,7 +107,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const mintTx = await nativeERC20Mintable.mint(receiver.address, randomAmount);
     const mintReceipt = await mintTx.wait();
-    const transferEvent = mintReceipt?.events?.find((log) => log.event === "Transfer");
+    const transferEvent = mintReceipt.logs.find((log) => log.fragment.name === "Transfer");
 
     expect(await nativeERC20Mintable.totalSupply()).to.equal(totalSupplyBefore + BigInt(randomAmount));
 
@@ -142,7 +142,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const transferTx = await nativeERC20Mintable.transfer(receiver.address, randomAmount);
     const transferReceipt = await transferTx.wait();
-    const transferEvent = transferReceipt?.events?.find((log) => log.event === "Transfer");
+    const transferEvent = transferReceipt.logs.find((log) => log.fragment.name === "Transfer");
 
     expect(transferEvent?.args?.from).to.equal(owner.address);
     expect(transferEvent?.args?.to).to.equal(receiver.address);
@@ -192,7 +192,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const approveTx = await nativeERC20Mintable.approve(receiver.address, balance);
     const approveReceipt = await approveTx.wait();
-    const approveEvent = approveReceipt?.events?.find((log) => log.event === "Approval");
+    const approveEvent = approveReceipt.logs.find((log) => log.fragment.name === "Approval");
 
     expect(approveEvent?.args?.owner).to.equal(owner.address);
     expect(approveEvent?.args?.spender).to.equal(receiver.address);
@@ -208,7 +208,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const approveTx = await nativeERC20Mintable.approve(receiver.address, balanceOwnerBefore);
     const approveReceipt = await approveTx.wait();
-    const approveEvent = approveReceipt?.events?.find((log) => log.event === "Approval");
+    const approveEvent = approveReceipt.logs.find((log) => log.fragment.name === "Approval");
 
     expect(approveEvent?.args?.owner).to.equal(owner.address);
     expect(approveEvent?.args?.spender).to.equal(receiver.address);
@@ -220,7 +220,7 @@ describe("NativeERC20Mintable Contract", function () {
       .connect(receiver)
       .transferFrom(owner.address, receiver.address, balanceOwnerBefore);
     const transferReceipt = await transferTx.wait();
-    const transferEvent = transferReceipt?.events?.find((log) => log.event === "Transfer");
+    const transferEvent = transferReceipt.logs.find((log) => log.fragment.name === "Transfer");
 
     expect(transferEvent?.args?.from).to.equal(owner.address);
     expect(transferEvent?.args?.to).to.equal(receiver.address);
@@ -234,7 +234,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const approveTx = await nativeERC20Mintable.approve(receiver.address, 1000000000000);
     const approveReceipt = await approveTx.wait();
-    const approveEvent = approveReceipt?.events?.find((log) => log.event === "Approval");
+    const approveEvent = approveReceipt.logs.find((log) => log.fragment.name === "Approval");
 
     expect(approveEvent?.args?.owner).to.equal(owner.address);
     expect(approveEvent?.args?.spender).to.equal(receiver.address);
@@ -242,7 +242,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const approveIncreaseTx = await nativeERC20Mintable.increaseAllowance(receiver.address, 1000000000000);
     const approveIncreaseReceipt = await approveIncreaseTx.wait();
-    const approveIncreaseEvent = approveIncreaseReceipt?.events?.find((log) => log.event === "Approval");
+    const approveIncreaseEvent = approveIncreaseReceipt.logs.find((log) => log.fragment.name === "Approval");
 
     expect(approveIncreaseEvent?.args?.owner).to.equal(owner.address);
     expect(approveIncreaseEvent?.args?.spender).to.equal(receiver.address);
@@ -254,7 +254,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const approveTx = await nativeERC20Mintable.approve(receiver.address, 1000000000000);
     const approveReceipt = await approveTx.wait();
-    const approveEvent = approveReceipt?.events?.find((log) => log.event === "Approval");
+    const approveEvent = approveReceipt.logs.find((log) => log.fragment.name === "Approval");
 
     expect(approveEvent?.args?.owner).to.equal(owner.address);
     expect(approveEvent?.args?.spender).to.equal(receiver.address);
@@ -271,7 +271,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const approveTx = await nativeERC20Mintable.approve(receiver.address, 1000000000000);
     const approveReceipt = await approveTx.wait();
-    const approveEvent = approveReceipt?.events?.find((log) => log.event === "Approval");
+    const approveEvent = approveReceipt.logs.find((log) => log.fragment.name === "Approval");
 
     expect(approveEvent?.args?.owner).to.equal(owner.address);
     expect(approveEvent?.args?.spender).to.equal(receiver.address);
@@ -279,7 +279,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const approveDecreaseTx = await nativeERC20Mintable.decreaseAllowance(receiver.address, 1000000000000);
     const approveDecreaseReceipt = await approveDecreaseTx.wait();
-    const approveDecreaseEvent = approveDecreaseReceipt?.events?.find((log) => log.event === "Approval");
+    const approveDecreaseEvent = approveDecreaseReceipt.logs.find((log) => log.fragment.name === "Approval");
 
     expect(approveDecreaseEvent?.args?.owner).to.equal(owner.address);
     expect(approveDecreaseEvent?.args?.spender).to.equal(receiver.address);
@@ -363,7 +363,7 @@ describe("NativeERC20Mintable Contract", function () {
 
     const burnTx = await nativeERC20Mintable.connect(owner).burn(owner.address, 100);
     const burnReceipt = await burnTx.wait();
-    const burnEvent = burnReceipt?.events?.find((log) => log.event === "Transfer");
+    const burnEvent = burnReceipt.logs.find((log) => log.fragment.name === "Transfer");
 
     expect(burnEvent?.args?.from).to.equal(owner.address);
     expect(burnEvent?.args?.to).to.equal(ethers.ZeroAddress);

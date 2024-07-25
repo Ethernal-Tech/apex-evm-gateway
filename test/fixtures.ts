@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumberish } from "ethers";
-import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
+import { alwaysTrueBytecode } from "./constants";
 
 export async function deployGatewayFixtures() {
   // Contracts are deployed using the first signer/account by default

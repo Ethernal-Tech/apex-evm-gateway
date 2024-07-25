@@ -72,10 +72,8 @@ describe("ERC20TokenPredicate Contract", function () {
 
     const ttlTx = await eRC20TokenPredicate.connect(gatewayContract).deposit(data);
     const ttlReceipt = await ttlTx.wait();
-    console.log("LOGS", ttlReceipt.logs);
-    const ttlEvent = ttlReceipt.logs.find(name === "TTLExpired");
-    // const ttlEvent = ttlReceipt?.events?.find((logs) => logs.event === "TTLExpired");
-    const depositEvent = ttlReceipt?.events?.find((logs) => logs.event === "Deposit");
+    const ttlEvent = ttlReceipt.logs.find((log) => log.fragment.name === "TTLExpired");
+    const depositEvent = ttlReceipt.logs.find((log) => log.fragment.name === "Deposit");
 
     expect(ttlEvent?.args?.data).to.equal(data);
     expect(depositEvent?.args?.data).to.be.undefined;
@@ -116,7 +114,7 @@ describe("ERC20TokenPredicate Contract", function () {
 
     const depositTx = await eRC20TokenPredicate.connect(gatewayContract).deposit(data);
     const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt?.events?.find((log) => log.event === "Deposit");
+    const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
 
     expect(depositEvent?.args?.data).to.equal(data);
   });
@@ -137,7 +135,7 @@ describe("ERC20TokenPredicate Contract", function () {
 
     const withdrawTx = await eRC20TokenPredicate.connect(gatewayContract).withdraw(1, receiverWithdraw, 100);
     const withdrawReceipt = await withdrawTx.wait();
-    const withdrawEvent = withdrawReceipt?.events?.find((log) => log.event === "Withdraw");
+    const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
     expect(withdrawEvent?.args?.sender).to.equal(gateway.target);
