@@ -271,7 +271,7 @@ contract NativeERC20Mintable is
      * @notice Returns predicate address controlling the child token
      * @return address Returns the address of the predicate
      */
-    function predicate() public view virtual returns (address) {
+    function predicate() external view virtual returns (address) {
         return _predicate;
     }
 
