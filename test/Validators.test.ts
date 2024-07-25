@@ -1,7 +1,7 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixtures";
+import { deployGatewayFixtures } from "./fixtures";
 
 describe("Validators Contract", function () {
   it("Validate initialization", async () => {
@@ -22,7 +22,7 @@ describe("Validators Contract", function () {
     const { owner, validatorsc, validatorAddressCardanoData } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      validatorsc.connect(owner).setDependencies(ethers.constants.AddressZero, validatorAddressCardanoData)
+      validatorsc.connect(owner).setDependencies(ethers.ZeroAddress, validatorAddressCardanoData)
     ).to.be.revertedWithCustomError(validatorsc, "ZeroAddress");
   });
 
@@ -49,7 +49,7 @@ describe("Validators Contract", function () {
     ];
 
     await expect(
-      validatorsc.connect(owner).setDependencies(gateway.address, validatorAddressCardanoDataShort)
+      validatorsc.connect(owner).setDependencies(gateway.target, validatorAddressCardanoDataShort)
     ).to.be.revertedWithCustomError(gateway, "InvalidData");
   });
 
@@ -58,10 +58,10 @@ describe("Validators Contract", function () {
       deployGatewayFixtures
     );
 
-    await expect(validatorsc.connect(owner).setDependencies(gateway.address, validatorAddressCardanoData)).not.to.be
+    await expect(validatorsc.connect(owner).setDependencies(gateway.target, validatorAddressCardanoData)).not.to.be
       .reverted;
 
-    expect(await validatorsc.gatewayAddress()).to.be.equal(gateway.address);
+    expect(await validatorsc.gatewayAddress()).to.be.equal(gateway.target);
 
     const chainData = await validatorsc.getValidatorsChainData();
 

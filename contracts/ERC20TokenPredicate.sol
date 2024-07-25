@@ -34,7 +34,7 @@ contract ERC20TokenPredicate is
     mapping(uint64 => bool) public usedBatches;
 
     function initialize() public initializer {
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
     }
 
@@ -54,28 +54,10 @@ contract ERC20TokenPredicate is
 
     /**
      * @notice Function to be used for token deposits
-     * @param data Data sent by the sender
+     * @param _data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
-    function deposit(bytes calldata data) external onlyGateway {
-        _deposit(data);
-    }
-
-    /**
-     * @notice Function to withdraw tokens from the withdrawer to receiver on the destination chain
-     * @param _destinationChainId id of the destination chain
-     * @param _receivers array of ReceiverWithdraw structs on the destination chain
-     * @param _feeAmount amount to cover the fees
-     */
-    function withdraw(
-        uint8 _destinationChainId,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
-    ) external {
-        _withdraw(_destinationChainId, _receivers, _feeAmount);
-    }
-
-    function _deposit(bytes calldata _data) private {
+    function deposit(bytes calldata _data) external onlyGateway {
         (
             uint64 batchId,
             uint64 ttlExpired,
@@ -104,11 +86,17 @@ contract ERC20TokenPredicate is
         gateway.depositEvent(_data);
     }
 
-    function _withdraw(
+    /**
+     * @notice Function to withdraw tokens from the withdrawer to receiver on the destination chain
+     * @param _destinationChainId id of the destination chain
+     * @param _receivers array of ReceiverWithdraw structs on the destination chain
+     * @param _feeAmount amount to cover the fees
+     */
+    function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount
-    ) private {
+    ) external {
         uint256 _amountLength = _receivers.length;
 
         uint256 amountSum;
