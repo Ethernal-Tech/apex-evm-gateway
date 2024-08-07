@@ -1,0 +1,31 @@
+{
+    "ValidatorAddressChainData": [
+        {
+            "addr": "0x1234567890abcdef1234567890abcdef12345678",
+            "data": {
+                "key": [1, 2, 3, 4]
+            }
+        },
+        {
+            "addr": "0xabcdef1234567890abcdef1234567890abcdef12",
+            "data": {
+                "key": [5, 6, 7, 8]
+            }
+        }
+    ],
+    "addresses": [
+        "x1234567890abcdef1234567890abcdef12345678",
+        "0xabcdef1234567890abcdef1234567890abcdef12"
+    ],
+    "Gateway":{
+        "relayer": ""
+    },
+    "NativeERC20Mintable":{
+        "owner":"0x1234567890abcdef1234567890abcdef12345678",
+        "name":"AP",
+        "symbol":"A",
+        "decimals":0,
+        "tokenSupply":0
+    }
+
+}
