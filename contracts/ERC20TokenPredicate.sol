@@ -58,22 +58,19 @@ contract ERC20TokenPredicate is
      * @dev Can be extended to include other signatures for more functionality
      */
     function deposit(bytes calldata _data) external onlyGateway {
-        (
-            uint64 batchId,
-            uint64 ttlExpired,
-            ReceiverDeposit[] memory _receivers
-        ) = abi.decode(_data, (uint64, uint64, ReceiverDeposit[]));
+        Deposits memory _deposits = abi.decode(_data, (Deposits));
 
-        if (usedBatches[batchId]) {
+        if (usedBatches[_deposits.batchId]) {
             revert BatchAlreadyExecuted();
         }
-        usedBatches[batchId] = true;
+        usedBatches[_deposits.batchId] = true;
 
-        if (ttlExpired < block.number) {
+        if (_deposits.ttlExpired < block.number) {
             gateway.ttlEvent(_data);
             return;
         }
 
+        ReceiverDeposit[] memory _receivers = _deposits._receivers;
         uint256 _receiversLength = _receivers.length;
 
         for (uint256 i; i < _receiversLength; i++) {
