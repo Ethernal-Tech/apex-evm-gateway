@@ -68,7 +68,7 @@ describe("Gateway Contract", function () {
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
       ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber - 1, [[1, address, 100]]]]
+      [[1, blockNumber + 100, [[1, address, 100]]]]
     );
 
     const depositTx = await gateway

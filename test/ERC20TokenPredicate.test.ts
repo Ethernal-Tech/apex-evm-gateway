@@ -107,14 +107,13 @@ describe("ERC20TokenPredicate Contract", function () {
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
       ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber - 1, [[1, address, 100]]]]
+      [[1, blockNumber + 100, [[1, address, 100]]]]
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.target);
 
     const depositTx = await eRC20TokenPredicate.connect(gatewayContract).deposit(data);
     const depositReceipt = await depositTx.wait();
-    console.log(depositReceipt);
     const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
 
     expect(depositEvent?.args?.data).to.equal(data);
