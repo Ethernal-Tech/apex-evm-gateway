@@ -13,6 +13,12 @@ interface IGatewayStructs {
         uint256[4] key;
     }
 
+    struct Deposits {
+        uint64 batchId;
+        uint64 ttlExpired;
+        ReceiverDeposit[] _receivers;
+    }
+
     struct ReceiverDeposit {
         uint8 sourceChainId;
         address receiver;
