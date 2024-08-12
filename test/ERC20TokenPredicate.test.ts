@@ -58,14 +58,14 @@ describe("ERC20TokenPredicate Contract", function () {
   });
 
   it("Deposit should fail if batch is already executed", async () => {
-    const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { gateway, eRC20TokenPredicate, depositsData } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
-      [1, blockNumber - 1, [[1, address, 100]]]
+      ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber - 1, [[1, address, 100]]]]
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
@@ -86,8 +86,8 @@ describe("ERC20TokenPredicate Contract", function () {
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
-      [1, blockNumber + 100, [[1, address, 100]]]
+      ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber - 1, [[1, address, 100]]]]
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
@@ -106,8 +106,8 @@ describe("ERC20TokenPredicate Contract", function () {
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
-      [1, blockNumber + 100, [[1, address, 100]]]
+      ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber + 100, [[1, address, 100]]]]
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.target);
