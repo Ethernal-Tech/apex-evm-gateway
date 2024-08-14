@@ -115,7 +115,7 @@ contract ERC20TokenPredicate is
 
         gateway.withdrawEvent(
             _destinationChainId,
-            msg.sender,
+            _caller,
             _receivers,
             _feeAmount
         );
