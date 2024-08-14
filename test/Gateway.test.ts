@@ -4,80 +4,48 @@ import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
 
 describe("Gateway Contract", function () {
-  it("SetDependencies should fail if Gateway, NetiveToken or Relayer is Zero Address", async () => {
-    const { owner, gateway, relayer, validatorsc } = await loadFixture(deployGatewayFixtures);
+  it("SetDependencies should fail if Gateway or NetiveToken are Zero Address", async () => {
+    const { owner, gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      gateway.connect(owner).setDependencies(ethers.ZeroAddress, validatorsc.target, relayer.address)
+      gateway.connect(owner).setDependencies(ethers.ZeroAddress, validatorsc.target)
     ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
   });
 
   it("SetDependencies should fail if not called by owner", async () => {
-    const { relayer, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      gateway.connect(relayer).setDependencies(eRC20TokenPredicate.target, validatorsc.target, relayer.address)
+      gateway.connect(receiver).setDependencies(eRC20TokenPredicate.target, validatorsc.target)
     ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
-    const { owner, relayer, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
 
-    await expect(
-      gateway.connect(owner).setDependencies(eRC20TokenPredicate.target, validatorsc.target, relayer.address)
-    ).to.not.be.reverted;
+    await expect(gateway.connect(owner).setDependencies(eRC20TokenPredicate.target, validatorsc.target)).to.not.be
+      .reverted;
 
     expect(await gateway.eRC20TokenPredicate()).to.equal(eRC20TokenPredicate.target);
     expect(await gateway.validators()).to.equal(validatorsc.target);
-    expect(await gateway.relayer()).to.equal(relayer.address);
-  });
-
-  it("Deposit should fail if not called by Relayer", async () => {
-    const { owner, gateway } = await loadFixture(deployGatewayFixtures);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.AbiCoder();
-    const data = abiCoder.encode(
-      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
-      [
-        1,
-        blockNumber,
-        [
-          [1, ethers.Wallet.createRandom().address, 100],
-          [1, ethers.Wallet.createRandom().address, 200],
-        ],
-      ]
-    );
-
-    await expect(
-      gateway
-        .connect(owner)
-        .deposit(
-          "0x7465737400000000000000000000000000000000000000000000000000000000",
-          "0x7465737400000000000000000000000000000000000000000000000000000000",
-          data
-        )
-    ).to.be.revertedWithCustomError(gateway, "NotRelayer");
   });
 
   it("Deposit success", async () => {
-    const { relayer, gateway } = await loadFixture(deployGatewayFixtures);
+    const { gateway } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber + 100, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
     );
 
-    const depositTx = await gateway
-      .connect(relayer)
-      .deposit(
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        data
-      );
+    const depositTx = await gateway.deposit(
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      data
+    );
     const depositReceipt = await depositTx.wait();
     const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
 
@@ -85,9 +53,21 @@ describe("Gateway Contract", function () {
   });
 
   it("Withdraw sucess", async () => {
-    const { relayer, gateway, nativeERC20Mintable } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
 
-    await nativeERC20Mintable.mint(gateway.target, 1000000);
+    const blockNumber = await ethers.provider.getBlockNumber();
+    const abiCoder = new ethers.AbiCoder();
+    const address = ethers.Wallet.createRandom().address;
+    const data = abiCoder.encode(
+      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
+    );
+
+    await gateway.deposit(
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      data
+    );
 
     const receiverWithdraw = [
       {
@@ -96,12 +76,12 @@ describe("Gateway Contract", function () {
       },
     ];
 
-    const withdrawTx = await gateway.connect(relayer).withdraw(1, receiverWithdraw, 100);
+    const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
-    expect(withdrawEvent?.args?.sender).to.equal(gateway.target);
+    expect(withdrawEvent?.args?.sender).to.equal(receiver);
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);

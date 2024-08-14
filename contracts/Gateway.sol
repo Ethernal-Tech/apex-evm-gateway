@@ -18,7 +18,6 @@ contract Gateway is
 {
     ERC20TokenPredicate public eRC20TokenPredicate;
     Validators public validators;
-    address public relayer;
     uint256 public constant MAX_LENGTH = 2048;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -37,24 +36,19 @@ contract Gateway is
 
     function setDependencies(
         address _eRC20TokenPredicate,
-        address _validators,
-        address _relayer
+        address _validators
     ) external {
-        if (
-            _eRC20TokenPredicate == address(0) ||
-            _validators == address(0) ||
-            _relayer == address(0)
-        ) revert ZeroAddress();
+        if (_eRC20TokenPredicate == address(0) || _validators == address(0))
+            revert ZeroAddress();
         eRC20TokenPredicate = ERC20TokenPredicate(_eRC20TokenPredicate);
         validators = Validators(_validators);
-        relayer = _relayer;
     }
 
     function deposit(
         bytes calldata _signature,
         uint256 _bitmap,
         bytes calldata _data
-    ) external onlyRelayer {
+    ) external {
         bytes32 _hash = keccak256(_data);
         (bool valid, ) = validators.isBlsSignatureValid(
             _hash,
@@ -64,7 +58,7 @@ contract Gateway is
 
         if (!valid) revert InvalidSignature();
 
-        eRC20TokenPredicate.deposit(_data);
+        eRC20TokenPredicate.deposit(_data, msg.sender);
     }
 
     function withdraw(
@@ -75,7 +69,8 @@ contract Gateway is
         eRC20TokenPredicate.withdraw(
             _destinationChainId,
             _receivers,
-            _feeAmount
+            _feeAmount,
+            msg.sender
         );
     }
 
@@ -98,11 +93,6 @@ contract Gateway is
         bytes calldata _data
     ) external onlyPredicate maxLengthExceeded(_data) {
         emit TTLExpired(_data);
-    }
-
-    modifier onlyRelayer() {
-        if (msg.sender != relayer) revert NotRelayer();
-        _;
     }
 
     modifier onlyPredicate() {

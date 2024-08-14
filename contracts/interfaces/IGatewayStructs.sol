@@ -16,11 +16,11 @@ interface IGatewayStructs {
     struct Deposits {
         uint64 batchId;
         uint64 ttlExpired;
-        ReceiverDeposit[] _receivers;
+        uint256 feeAmount;
+        ReceiverDeposit[] receivers;
     }
 
     struct ReceiverDeposit {
-        uint8 sourceChainId;
         address receiver;
         uint256 amount;
     }
@@ -40,7 +40,6 @@ interface IGatewayStructs {
     event TTLExpired(bytes data);
 
     error NotOwner();
-    error NotRelayer();
     error NotGateway();
     error NotPredicate();
     error NotPredicateOrOwner();
