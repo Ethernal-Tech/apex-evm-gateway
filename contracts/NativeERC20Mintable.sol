@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/IGatewayStructs.sol";
 import "./System.sol";
 import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 /**
     @title NativeERC20Mintable
