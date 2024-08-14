@@ -1,31 +1,27 @@
 {
-    "ValidatorAddressChainData": [
-        {
-            "addr": "0x1234567890abcdef1234567890abcdef12345678",
-            "data": {
-                "key": [1, 2, 3, 4]
-            }
-        },
-        {
-            "addr": "0xabcdef1234567890abcdef1234567890abcdef12",
-            "data": {
-                "key": [5, 6, 7, 8]
-            }
-        }
-    ],
-    "addresses": [
-        "0x1234567890abcdef1234567890abcdef12345678",
-        "0xabcdef1234567890abcdef1234567890abcdef12"
-    ],
-    "Gateway":{
-        "relayer": ""
+  "ValidatorAddressChainData": [
+    {
+      "addr": "0x1234567890abcdef1234567890abcdef12345678",
+      "data": {
+        "key": [1, 2, 3, 4]
+      }
     },
-    "NativeERC20Mintable":{
-        "owner":"0x1234567890abcdef1234567890abcdef12345678",
-        "name":"AP",
-        "symbol":"A",
-        "decimals":0,
-        "tokenSupply":0
+    {
+      "addr": "0xabcdef1234567890abcdef1234567890abcdef12",
+      "data": {
+        "key": [5, 6, 7, 8]
+      }
     }
-
+  ],
+  "addresses": ["0x1234567890abcdef1234567890abcdef12345678", "0xabcdef1234567890abcdef1234567890abcdef12"],
+  "Gateway": {
+    "relayer": "0x1234567890abcdef1234567890abcdef12345678"
+  },
+  "NativeERC20Mintable": {
+    "owner": "0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38",
+    "name": "AP",
+    "symbol": "A",
+    "decimals": 0,
+    "tokenSupply": 0
+  }
 }
