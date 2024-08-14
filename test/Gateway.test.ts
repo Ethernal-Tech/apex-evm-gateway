@@ -53,9 +53,21 @@ describe("Gateway Contract", function () {
   });
 
   it("Withdraw sucess", async () => {
-    const { gateway, nativeERC20Mintable } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
 
-    await nativeERC20Mintable.mint(gateway.target, 1000000);
+    const blockNumber = await ethers.provider.getBlockNumber();
+    const abiCoder = new ethers.AbiCoder();
+    const address = ethers.Wallet.createRandom().address;
+    const data = abiCoder.encode(
+      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
+    );
+
+    await gateway.deposit(
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      data
+    );
 
     const receiverWithdraw = [
       {
@@ -64,12 +76,12 @@ describe("Gateway Contract", function () {
       },
     ];
 
-    const withdrawTx = await gateway.withdraw(1, receiverWithdraw, 100);
+    const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
-    expect(withdrawEvent?.args?.sender).to.equal(gateway.target);
+    expect(withdrawEvent?.args?.sender).to.equal(receiver);
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);

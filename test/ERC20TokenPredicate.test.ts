@@ -135,7 +135,7 @@ describe("ERC20TokenPredicate Contract", function () {
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
-    expect(withdrawEvent?.args?.sender).to.equal(gateway.target);
+    expect(withdrawEvent?.args?.sender).to.equal(address);
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
