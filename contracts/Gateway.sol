@@ -39,7 +39,7 @@ contract Gateway is
         address _eRC20TokenPredicate,
         address _validators,
         address _relayer
-    ) external onlyOwner {
+    ) external {
         if (
             _eRC20TokenPredicate == address(0) ||
             _validators == address(0) ||

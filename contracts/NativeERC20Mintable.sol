@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/IGatewayStructs.sol";
 import "./System.sol";
+import "hardhat/console.sol";
 
 /**
     @title NativeERC20Mintable
@@ -52,7 +53,7 @@ contract NativeERC20Mintable is
         string calldata symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
-    ) external onlyOwner {
+    ) external {
         if (owner_ == address(0) || predicate_ == address(0))
             revert ZeroAddress();
         // slither-disable-next-line missing-zero-check,events-access

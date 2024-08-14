@@ -47,7 +47,7 @@ contract Validators is
     function setDependencies(
         address _gatewayAddress,
         ValidatorAddressChainData[] calldata _chainDatas
-    ) external onlyOwner {
+    ) external {
         if (_gatewayAddress == address(0)) revert ZeroAddress();
         gatewayAddress = _gatewayAddress;
         _setValidatorsChainData(_chainDatas);
