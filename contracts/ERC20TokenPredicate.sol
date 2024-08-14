@@ -57,28 +57,34 @@ contract ERC20TokenPredicate is
      * @param _data Data sent by the sender
      * @dev Can be extended to include other signatures for more functionality
      */
-    function deposit(bytes calldata _data) external onlyGateway {
+    function deposit(
+        bytes calldata _data,
+        address _relayer
+    ) external onlyGateway {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
         if (usedBatches[_deposits.batchId]) {
             revert BatchAlreadyExecuted();
         }
-        usedBatches[_deposits.batchId] = true;
 
         if (_deposits.ttlExpired < block.number) {
             gateway.ttlEvent(_data);
             return;
         }
 
-        ReceiverDeposit[] memory _receivers = _deposits._receivers;
+        usedBatches[_deposits.batchId] = true;
+
+        ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;
 
         for (uint256 i; i < _receiversLength; i++) {
-            !INativeERC20(nativeToken).mint(
+            INativeERC20(nativeToken).mint(
                 _receivers[i].receiver,
                 _receivers[i].amount
             );
         }
+
+        INativeERC20(nativeToken).mint(_relayer, _deposits.feeAmount);
 
         gateway.depositEvent(_data);
     }
@@ -92,7 +98,8 @@ contract ERC20TokenPredicate is
     function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
+        uint256 _feeAmount,
+        address _caller
     ) external {
         uint256 _amountLength = _receivers.length;
 
@@ -102,7 +109,9 @@ contract ERC20TokenPredicate is
             amountSum += _receivers[i].amount;
         }
 
-        nativeToken.burn(msg.sender, amountSum);
+        amountSum = amountSum + _feeAmount;
+
+        nativeToken.burn(_caller, amountSum);
 
         gateway.withdrawEvent(
             _destinationChainId,

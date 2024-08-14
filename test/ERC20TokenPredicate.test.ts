@@ -17,10 +17,10 @@ describe("ERC20TokenPredicate Contract", function () {
   });
 
   it("SetDependencies should faild if not called by owner", async () => {
-    const { relayer, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      eRC20TokenPredicate.connect(relayer).setDependencies(gateway.target, nativeERC20Mintable.target)
+      eRC20TokenPredicate.connect(receiver).setDependencies(gateway.target, nativeERC20Mintable.target)
     ).to.be.revertedWithCustomError(eRC20TokenPredicate, "OwnableUnauthorizedAccount");
   });
 
@@ -37,40 +37,34 @@ describe("ERC20TokenPredicate Contract", function () {
   it("Deposit should fail if not called by Gateway", async () => {
     const { receiver, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
+    const address = ethers.Wallet.createRandom().address;
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
     const data = abiCoder.encode(
-      ["uint64", "uint64", "tuple(uint8, address, uint256)[]"],
-      [
-        1,
-        blockNumber,
-        [
-          [1, ethers.Wallet.createRandom().address, 100],
-          [1, ethers.Wallet.createRandom().address, 200],
-        ],
-      ]
+      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
     );
 
-    await expect(eRC20TokenPredicate.connect(receiver).deposit(data)).to.be.revertedWithCustomError(
+    await expect(eRC20TokenPredicate.connect(receiver).deposit(data, address)).to.be.revertedWithCustomError(
       eRC20TokenPredicate,
       "NotGateway"
     );
   });
 
   it("Deposit should fail if batch is already executed", async () => {
-    const { gateway, eRC20TokenPredicate, depositsData } = await loadFixture(deployGatewayFixtures);
+    const { gateway, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber - 1, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
-    const ttlTx = await eRC20TokenPredicate.connect(gatewayContract).deposit(data);
+    const ttlTx = await eRC20TokenPredicate.connect(gatewayContract).deposit(data, address);
     const ttlReceipt = await ttlTx.wait();
     const ttlEvent = ttlReceipt.logs.find((log) => log.fragment.name === "TTLExpired");
     const depositEvent = ttlReceipt.logs.find((log) => log.fragment.name === "Deposit");
@@ -86,14 +80,14 @@ describe("ERC20TokenPredicate Contract", function () {
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber - 1, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber - 1, 1, [[1, address, 100]]]]
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
-    await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data)).not.to.be.rejected;
-    await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data)).to.be.revertedWithCustomError(
+    await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data, address)).not.to.be.rejected;
+    await expect(eRC20TokenPredicate.connect(gatewayContract).deposit(data, address)).to.be.revertedWithCustomError(
       eRC20TokenPredicate,
       "BatchAlreadyExecuted"
     );
@@ -106,8 +100,8 @@ describe("ERC20TokenPredicate Contract", function () {
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber + 100, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.target);
