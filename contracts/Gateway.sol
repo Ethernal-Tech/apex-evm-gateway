@@ -36,14 +36,10 @@ contract Gateway is
 
     function setDependencies(
         address _eRC20TokenPredicate,
-        address _validators,
-        address _relayer
+        address _validators
     ) external {
-        if (
-            _eRC20TokenPredicate == address(0) ||
-            _validators == address(0) ||
-            _relayer == address(0)
-        ) revert ZeroAddress();
+        if (_eRC20TokenPredicate == address(0) || _validators == address(0))
+            revert ZeroAddress();
         eRC20TokenPredicate = ERC20TokenPredicate(_eRC20TokenPredicate);
         validators = Validators(_validators);
     }
