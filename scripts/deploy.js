@@ -3,8 +3,6 @@ const { ethers } = require("hardhat");
 async function main() {
   const config = require("./config.json");
 
-  const deployer = await ethers.getSigners();
-
   //deployment of contract logic
   const Gateway = await ethers.getContractFactory("Gateway");
   const gatewayLogic = await Gateway.deploy();
@@ -42,17 +40,9 @@ async function main() {
     NativeERC20Mintable.interface.encodeFunctionData("initialize", [])
   );
 
-  const validatorsAddresses = [
-    config.Validators.validator1,
-    config.Validators.validator2,
-    config.Validators.validator3,
-    config.Validators.validator4,
-    config.Validators.validator5,
-  ];
-
   const validatorscProxy = await ValidatorsProxy.deploy(
     await validatorscLogic.getAddress(),
-    Validators.interface.encodeFunctionData("initialize", [validatorsAddresses])
+    Validators.interface.encodeFunctionData("initialize", [config.Validators])
   );
 
   //casting proxy to the logic
