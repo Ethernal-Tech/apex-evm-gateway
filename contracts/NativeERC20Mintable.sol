@@ -48,14 +48,13 @@ contract NativeERC20Mintable is
 
     function setDependencies(
         address predicate_,
-        address owner_,
+        // address owner_,
         string calldata name_,
         string calldata symbol_,
         uint8 decimals_,
         uint256 tokenSupply_
     ) external onlyOwner {
-        if (owner_ == address(0) || predicate_ == address(0))
-            revert ZeroAddress();
+        if (predicate_ == address(0)) revert ZeroAddress();
         // slither-disable-next-line missing-zero-check,events-access
         _predicate = predicate_;
         // slither-disable-next-line missing-zero-check
@@ -64,7 +63,7 @@ contract NativeERC20Mintable is
         // slither-disable-next-line events-maths
         _decimals = decimals_;
         _totalSupply = tokenSupply_;
-        _transferOwnership(owner_);
+        // _transferOwnership(owner_);
     }
 
     /**
