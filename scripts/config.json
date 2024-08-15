@@ -1,11 +1,11 @@
 {
-  "Validators": {
-    "validator1": "0x103d48db44d8aAe975a936a76B0aCa63cE98C47e",
-    "validator2": "0x2Abe4173eAE1d3893268247DA9Db165e5429969b",
-    "validator3": "0x3FBF0Ad9f4d727a0195ee47e8125317A67762d8c",
-    "validator4": "0x4e3717979AB709b2cA33e13E53D644dc63405d2f",
-    "validator5": "0x5092df1C50A9D0c6611e4f6aE65B1f4d554d0C1C"
-  },
+  "Validators": [
+    "0x103d48db44d8aAe975a936a76B0aCa63cE98C47e",
+    "0x2Abe4173eAE1d3893268247DA9Db165e5429969b",
+    "0x3FBF0Ad9f4d727a0195ee47e8125317A67762d8c",
+    "0x4e3717979AB709b2cA33e13E53D644dc63405d2f",
+    "0x5092df1C50A9D0c6611e4f6aE65B1f4d554d0C1C"
+  ],
   "NativeERC20Mintable": {
     "name": "SomeToken",
     "symbol": "ST",
@@ -26,21 +26,21 @@
       }
     },
     {
-      "addr": "0x2Abe4173eAE1d3893268247DA9Db165e5429969b",
+      "addr": "0x3FBF0Ad9f4d727a0195ee47e8125317A67762d8c",
       "data": {
-        "key": [5, 6, 7, 8]
+        "key": [9, 10, 11, 12]
       }
     },
     {
-      "addr": "0x2Abe4173eAE1d3893268247DA9Db165e5429969b",
+      "addr": "0x4e3717979AB709b2cA33e13E53D644dc63405d2f",
       "data": {
-        "key": [5, 6, 7, 8]
+        "key": [13, 14, 15, 16]
       }
     },
     {
-      "addr": "0x2Abe4173eAE1d3893268247DA9Db165e5429969b",
+      "addr": "0x5092df1C50A9D0c6611e4f6aE65B1f4d554d0C1C",
       "data": {
-        "key": [5, 6, 7, 8]
+        "key": [17, 18, 19, 20]
       }
     }
   ]
