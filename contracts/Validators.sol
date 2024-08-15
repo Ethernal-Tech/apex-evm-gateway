@@ -46,17 +46,17 @@ contract Validators is
 
     function setDependencies(
         address _gatewayAddress,
-        ValidatorAddressChainData[] calldata _chainDatas
+        ValidatorAddressChainData[] calldata _chainData
     ) external {
         if (_gatewayAddress == address(0)) revert ZeroAddress();
         gatewayAddress = _gatewayAddress;
-        _setValidatorsChainData(_chainDatas);
+        _setValidatorsChainData(_chainData);
     }
 
     function _setValidatorsChainData(
-        ValidatorAddressChainData[] calldata _chainDatas
+        ValidatorAddressChainData[] calldata _chainData
     ) internal {
-        if (validatorsCount != _chainDatas.length) {
+        if (validatorsCount != _chainData.length) {
             revert InvalidData("validators count");
         }
 
@@ -68,7 +68,7 @@ contract Validators is
 
         // set validator chain data for each validator
         for (uint i; i < validatorsCount; i++) {
-            ValidatorAddressChainData calldata dt = _chainDatas[i];
+            ValidatorAddressChainData calldata dt = _chainData[i];
             uint8 indx = addressValidatorIndex[dt.addr];
             if (indx == 0) {
                 revert InvalidData("invalid address");
