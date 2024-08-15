@@ -1,5 +1,0 @@
-[profile.default]
-fs_permissions = [{ access = "read", path = "./script/deployment/validatorsConfig.json"}]
-
-[profile.ci]
-verbosity = 4
