@@ -73,7 +73,7 @@ export async function deployGatewayFixtures() {
 
   await eRC20TokenPredicate.setDependencies(gateway.target, nativeERC20Mintable.target);
 
-  await nativeERC20Mintable.setDependencies(eRC20TokenPredicate.target, owner.address, "TEST", "TEST", 18, 0);
+  await nativeERC20Mintable.setDependencies(eRC20TokenPredicate.target, "TEST", "TEST", 18, 0);
 
   const validatorCardanoData = {
     key: ["0x1", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],

@@ -6,17 +6,11 @@ import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixt
 import { alwaysFalseBytecode, alwaysRevertBytecode, alwaysTrueBytecode } from "./constants";
 
 describe("NativeERC20Mintable Contract", function () {
-  it("SetDependencies should fail if Owner or Predicate is Zero Address", async () => {
+  it("SetDependencies should fail if Predicate is Zero Address", async () => {
     const { owner, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      nativeERC20Mintable
-        .connect(owner)
-        .setDependencies(eRC20TokenPredicate.target, ethers.ZeroAddress, "TEST", "TEST", 18, 0)
-    ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
-
-    await expect(
-      nativeERC20Mintable.connect(owner).setDependencies(ethers.ZeroAddress, owner.address, "TEST", "TEST", 18, 0)
+      nativeERC20Mintable.connect(owner).setDependencies(ethers.ZeroAddress, "TEST", "TEST", 18, 0)
     ).to.be.revertedWithCustomError(nativeERC20Mintable, "ZeroAddress");
   });
 
@@ -24,20 +18,15 @@ describe("NativeERC20Mintable Contract", function () {
     const { owner, receiver, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      nativeERC20Mintable
-        .connect(receiver)
-        .setDependencies(eRC20TokenPredicate.target, owner.address, "TEST", "TEST", 18, 0)
+      nativeERC20Mintable.connect(receiver).setDependencies(eRC20TokenPredicate.target, "TEST", "TEST", 18, 0)
     ).to.be.revertedWithCustomError(eRC20TokenPredicate, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
     const { owner, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-    await expect(
-      nativeERC20Mintable
-        .connect(owner)
-        .setDependencies(eRC20TokenPredicate.target, owner.address, "TEST", "TEST", 18, 0)
-    ).to.not.be.reverted;
+    await expect(nativeERC20Mintable.connect(owner).setDependencies(eRC20TokenPredicate.target, "TEST", "TEST", 18, 0))
+      .to.not.be.reverted;
     expect(await nativeERC20Mintable.name()).to.equal("TEST");
     expect(await nativeERC20Mintable.symbol()).to.equal("TEST");
     expect(await nativeERC20Mintable.decimals()).to.equal(18);
