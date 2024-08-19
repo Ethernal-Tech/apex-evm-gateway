@@ -1,3 +1,4 @@
+import { NativeERC20Mintable } from "./../typechain-types/contracts/NativeERC20Mintable";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
@@ -85,5 +86,121 @@ describe("Gateway Contract", function () {
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+  });
+
+  it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
+    const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+    const abiCoder = new ethers.AbiCoder();
+
+    let addresses = [];
+
+    for (let i = 0; i < 100; i++) {
+      addresses.push(ethers.Wallet.createRandom().address);
+    }
+
+    let dataArray = [];
+
+    for (let i = 0; i < 100; i++) {
+      const data = abiCoder.encode(
+        ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+        [[i, blockNumber + 100, 1, [[1, addresses[i], 100]]]]
+      );
+      dataArray.push(data);
+    }
+
+    const depositTXs = [];
+    for (let i = 0; i < 100; i++) {
+      const depositTX = await gateway.deposit(
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        dataArray[i]
+      );
+      depositTXs.push(depositTX);
+    }
+
+    for (let i = 0; i < 100; i++) {
+      const depositReceipt = await depositTXs[i].wait();
+      const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
+
+      expect(depositEvent?.args?.data).to.equal(dataArray[i]);
+    }
+
+    const receiverWithdraw = [
+      {
+        receiver: "something",
+        amount: 100,
+      },
+    ];
+
+    for (let i = 0; i < 100; i++) {
+      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
+      const withdrawReceipt = await withdrawTx.wait();
+      const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
+
+      expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
+      expect(withdrawEvent?.args?.sender).to.equal(receiver);
+      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+      expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
+      expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+    }
+  });
+
+  it("Bunch of consecutive deposits/withraws", async () => {
+    const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+    const abiCoder = new ethers.AbiCoder();
+
+    let addresses = [];
+
+    for (let i = 0; i < 100; i++) {
+      addresses.push(ethers.Wallet.createRandom().address);
+    }
+
+    let dataArray = [];
+
+    for (let i = 0; i < 100; i++) {
+      const data = abiCoder.encode(
+        ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+        [[i, blockNumber + 100, 1, [[1, addresses[i], 100]]]]
+      );
+      dataArray.push(data);
+    }
+
+    const depositTXs = [];
+    for (let i = 0; i < 100; i++) {
+      const depositTX = await gateway.deposit(
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        dataArray[i]
+      );
+      depositTXs.push(depositTX);
+    }
+
+    const receiverWithdraw = [
+      {
+        receiver: "something",
+        amount: 100,
+      },
+    ];
+
+    for (let i = 0; i < 100; i++) {
+      const depositReceipt = await depositTXs[i].wait();
+      const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
+
+      expect(depositEvent?.args?.data).to.equal(dataArray[i]);
+
+      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
+      const withdrawReceipt = await withdrawTx.wait();
+      const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
+
+      expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
+      expect(withdrawEvent?.args?.sender).to.equal(receiver);
+      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+      expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
+      expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+    }
   });
 });

@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/IGatewayStructs.sol";
+import "./interfaces/INativeERC20.sol";
 import "./System.sol";
 
 /**
@@ -21,7 +22,8 @@ contract NativeERC20Mintable is
     IERC20Metadata,
     IGatewayStructs,
     OwnableUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    INativeERC20
 {
     mapping(address => mapping(address => uint256)) private _allowances;
 

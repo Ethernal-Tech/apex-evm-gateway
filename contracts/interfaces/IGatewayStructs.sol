@@ -31,6 +31,7 @@ interface IGatewayStructs {
     }
 
     event Deposit(bytes data);
+
     event Withdraw(
         uint8 destinationChainId,
         address sender,
@@ -39,19 +40,15 @@ interface IGatewayStructs {
     );
     event TTLExpired(bytes data);
 
-    error NotOwner();
     error NotGateway();
     error NotPredicate();
     error NotPredicateOrOwner();
     error ExceedsMaxLength();
-    error InvalidReceiver();
     error InvalidSignature();
     error ZeroAddress();
     error InvalidData(string data);
-    error BurnFailed();
     error InsufficientAllowance();
     error PrecompileCallFailed();
     error DecresedAllowenceBelowZero();
     error BatchAlreadyExecuted();
-    error ValidatorNotRegistered();
 }
