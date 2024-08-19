@@ -109,9 +109,4 @@ contract Validators is
     {
         return chainData;
     }
-
-    modifier onlyGateway() {
-        if (msg.sender != gatewayAddress) revert NotGateway();
-        _;
-    }
 }

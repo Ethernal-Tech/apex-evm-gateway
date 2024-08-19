@@ -78,13 +78,10 @@ contract ERC20TokenPredicate is
         uint256 _receiversLength = _receivers.length;
 
         for (uint256 i; i < _receiversLength; i++) {
-            INativeERC20(nativeToken).mint(
-                _receivers[i].receiver,
-                _receivers[i].amount
-            );
+            nativeToken.mint(_receivers[i].receiver, _receivers[i].amount);
         }
 
-        INativeERC20(nativeToken).mint(_relayer, _deposits.feeAmount);
+        nativeToken.mint(_relayer, _deposits.feeAmount);
 
         gateway.depositEvent(_data);
     }
