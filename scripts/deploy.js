@@ -87,6 +87,21 @@ async function main() {
   console.log("ValidatorsLogic owner:", await validatorsc.owner());
   console.log("---");
   console.log("SystemLogic deployed at:", system.target);
+  console.log("---");
+
+  // Proxy Gateway upgrade test
+  const GatewayV2 = await ethers.getContractFactory("GatewayV2");
+  const gatewayV2Logic = await GatewayV2.deploy();
+
+  //empty bytes for second parameter signifies that contract is only being upgraded
+  await gateway.upgradeToAndCall(await gatewayV2Logic.getAddress(), "0x");
+
+  const GatewayDeployedV2 = await ethers.getContractFactory("GatewayV2");
+  const gatewayV2 = GatewayDeployedV2.attach(gatewayProxy.target);
+
+  //function hello() added in BridgeV2 contract always returns true
+  const result = await gatewayV2.hello();
+  console.log("Hello call GatewayV2", result);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
