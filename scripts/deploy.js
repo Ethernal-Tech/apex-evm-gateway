@@ -13,9 +13,6 @@ async function main() {
   const NativeERC20Mintable = await ethers.getContractFactory("NativeERC20Mintable");
   const nativeERC20MintableLogic = await NativeERC20Mintable.deploy();
 
-  const System = await ethers.getContractFactory("System");
-  const system = await System.deploy();
-
   const Validators = await ethers.getContractFactory("Validators");
   const validatorscLogic = await Validators.deploy();
 
@@ -85,8 +82,6 @@ async function main() {
   console.log("ValidatorsProxy deployed at:", validatorscProxy.target);
   console.log("---");
   console.log("ValidatorsLogic owner:", await validatorsc.owner());
-  console.log("---");
-  console.log("SystemLogic deployed at:", system.target);
   console.log("---");
 
   // Proxy Gateway upgrade test
