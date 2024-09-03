@@ -20,7 +20,35 @@ contract Gateway is
     Validators public validators;
     uint256 public constant MAX_LENGTH = 2048;
 
-    //test
+    // address immutable verifyingContract = address(this);
+    // bytes32 constant salt =
+    //     0x617065782d65766d2d6761746577617900000000000000000000000000000000;
+
+    // string private constant RECEIVERWITHDRAWAL_TYPE =
+    //     "ReceiverWithdrawal(string receiver,uint256 amount)";
+
+    // string private constant WITHDRAWALS_TYPE =
+    //     "Withdraw(uint8 destinationChainId,ReceiverWithdrawal[] receivers,uint256 feeAmount)ReceiverWithdrawal(string receiver,uint256 amount)";
+
+    // string private constant EIP712_DOMAIN =
+    //     "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)";
+
+    // bytes32 private constant WITHDRAW_TYPEHASH =
+    //     keccak256(abi.encodePacked(WITHDRAW_TYPE));
+
+    // bytes32 private constant EIP712_DOMAIN_TYPEHASH =
+    //     keccak256(abi.encodePacked(EIP712_DOMAIN));
+
+    // bytes32 private immutable DOMAIN_SEPARATOR =
+    //     keccak256(
+    //         abi.encode(
+    //             EIP712_DOMAIN_TYPEHASH,
+    //             keccak256("Apex EVM Gateway"),
+    //             keccak256("1"),
+    //             verifyingContract,
+    //             salt
+    //         )
+    //     );
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
