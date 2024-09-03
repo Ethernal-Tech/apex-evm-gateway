@@ -7,9 +7,8 @@ interface IERC20TokenPredicate is IGatewayStructs {
     function deposit(bytes calldata data, address relayer) external;
 
     function withdraw(
-        uint8 _destinationChainId,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount,
+        Withdrawals calldata _withdrawals,
+        bytes calldata _signature,
         address _caller
     ) external;
 }

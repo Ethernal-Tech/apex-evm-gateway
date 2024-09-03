@@ -20,14 +20,21 @@ interface IGatewayStructs {
         ReceiverDeposit[] receivers;
     }
 
+    struct ReceiverWithdrawal {
+        string receiver;
+        uint256 amount;
+    }
+
     struct ReceiverDeposit {
         address receiver;
         uint256 amount;
     }
 
-    struct ReceiverWithdraw {
-        string receiver;
-        uint256 amount;
+    struct Withdrawals {
+        uint8 destinationChainId;
+        address sender;
+        ReceiverWithdrawal[] receivers;
+        uint256 feeAmount;
     }
 
     event Deposit(bytes data);
@@ -35,9 +42,10 @@ interface IGatewayStructs {
     event Withdraw(
         uint8 destinationChainId,
         address sender,
-        ReceiverWithdraw[] receivers,
+        ReceiverWithdrawal[] receivers,
         uint256 feeAmount
     );
+
     event TTLExpired(bytes data);
 
     error NotGateway();

@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
@@ -25,13 +27,44 @@ contract ERC20TokenPredicate is
     Initializable,
     OwnableUpgradeable,
     UUPSUpgradeable,
-    System
+    System,
+    EIP712Upgradeable
 {
     using SafeERC20 for IERC20;
 
     IGateway public gateway;
     INativeERC20 public nativeToken;
     mapping(uint64 => bool) public usedBatches;
+
+    // address immutable verifyingContract = address(this);
+    // bytes32 constant salt =
+    //     0x617065782d65766d2d6761746577617900000000000000000000000000000000;
+
+    // string private constant RECEIVERWITHDRAWAL_TYPE =
+    //     "ReceiverWithdrawal(string receiver,uint256 amount)";
+
+    // string private constant WITHDRAWALS_TYPE =
+    //     "Withdraw(uint8 destinationChainId,ReceiverWithdrawal[] receivers,uint256 feeAmount)ReceiverWithdrawal(string receiver,uint256 amount)";
+
+    // string private constant EIP712_DOMAIN =
+    //     "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)";
+
+    // bytes32 private constant WITHDRAW_TYPEHASH =
+    //     keccak256(abi.encodePacked(WITHDRAW_TYPE));
+
+    // bytes32 private constant EIP712_DOMAIN_TYPEHASH =
+    //     keccak256(abi.encodePacked(EIP712_DOMAIN));
+
+    // bytes32 private immutable DOMAIN_SEPARATOR =
+    //     keccak256(
+    //         abi.encode(
+    //             EIP712_DOMAIN_TYPEHASH,
+    //             keccak256("Apex EVM Gateway"),
+    //             keccak256("1"),
+    //             verifyingContract,
+    //             salt
+    //         )
+    //     );
 
     function initialize() public initializer {
         __Ownable_init(msg.sender);
@@ -88,41 +121,92 @@ contract ERC20TokenPredicate is
 
     /**
      * @notice Function to withdraw tokens from the withdrawer to receiver on the destination chain
-     * @param _destinationChainId id of the destination chain
-     * @param _receivers array of ReceiverWithdraw structs on the destination chain
-     * @param _feeAmount amount to cover the fees
+     * @param _withdrawals withdrawals to be made
      */
     function withdraw(
-        uint8 _destinationChainId,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount,
+        Withdrawals calldata _withdrawals,
+        bytes memory _signature,
         address _caller
     ) external {
-        uint256 _amountLength = _receivers.length;
+        if (!_verifyWithdrawal(_withdrawals, _signature, _caller)) {
+            revert InvalidSignature();
+        }
+
+        uint256 _amountLength = _withdrawals.receivers.length;
 
         uint256 amountSum;
 
         for (uint256 i; i < _amountLength; i++) {
-            amountSum += _receivers[i].amount;
+            amountSum += _withdrawals.receivers[i].amount;
         }
 
-        amountSum = amountSum + _feeAmount;
+        amountSum = amountSum + _withdrawals.feeAmount;
 
         nativeToken.burn(_caller, amountSum);
 
         gateway.withdrawEvent(
-            _destinationChainId,
+            _withdrawals.destinationChainId,
             _caller,
-            _receivers,
-            _feeAmount
+            _withdrawals.receivers,
+            _withdrawals.feeAmount
         );
     }
 
-    // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
+    function _verifyWithdrawal(
+        Withdrawals calldata _withdrawals,
+        bytes memory _signature,
+        address _caller
+    ) internal view returns (bool) {
+        bytes32 digest = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    keccak256(
+                        "Withdrawals(uint8 destinationChainId,address sender,ReceiverWithdrawal[] receivers,uint256 feeAmount)ReceiverWithdrawal(string receiver,uint256 amount)"
+                    ),
+                    _withdrawals.destinationChainId,
+                    _withdrawals.sender,
+                    _withdrawals.receivers,
+                    _withdrawals.feeAmount
+                )
+            )
+        );
+
+        address signer = ECDSA.recover(digest, _signature);
+
+        return signer == _caller && signer == _withdrawals.sender;
+    }
+
+    // function hashWithdrawals(
+    //     Withdrawals calldata _withdrawals
+    // ) private pure returns (bytes32) {
+    //     return
+    //         keccak256(
+    //             abi.encode(
+    //                 WITHDRAW_TYPEHASH,
+    //                 _withdrawals.destinationChainId,
+    //                 _withdrawals.receivers,
+    //                 _withdrawals.feeAmount
+    //             )
+    //         );
+    // }
+
+    // function verify(
+    //     address _signer,
+    //     Withdrawals calldata _withdrawals,
+    //     uint8 sigV,
+    //     bytes32 sigR,
+    //     bytes32 sigS
+    // ) public pure returns (bool) {
+    //     return
+    //         _signer ==
+    //         ecrecover(hashWithdrawals(_withdrawals), sigV, sigR, sigS);
+    // }
 
     modifier onlyGateway() {
         if (msg.sender != address(gateway)) revert NotGateway();
         _;
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }

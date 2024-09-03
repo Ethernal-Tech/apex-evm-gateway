@@ -11,9 +11,8 @@ interface IGateway is IGatewayStructs {
     ) external;
 
     function withdraw(
-        uint8 _destinationChainId,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
+        Withdrawals calldata _withdrawals,
+        bytes calldata _signature
     ) external;
 
     function depositEvent(bytes calldata data) external;
@@ -21,7 +20,7 @@ interface IGateway is IGatewayStructs {
     function withdrawEvent(
         uint8 destinationChainId,
         address sender,
-        ReceiverWithdraw[] calldata receivers,
+        ReceiverWithdrawal[] calldata receivers,
         uint256 feeAmount
     ) external;
 

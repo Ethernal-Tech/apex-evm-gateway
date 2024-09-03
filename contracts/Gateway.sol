@@ -62,16 +62,10 @@ contract Gateway is
     }
 
     function withdraw(
-        uint8 _destinationChainId,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
+        Withdrawals calldata _withdrawals,
+        bytes memory signature
     ) external {
-        eRC20TokenPredicate.withdraw(
-            _destinationChainId,
-            _receivers,
-            _feeAmount,
-            msg.sender
-        );
+        eRC20TokenPredicate.withdraw(_withdrawals, signature, msg.sender);
     }
 
     function depositEvent(
@@ -83,7 +77,7 @@ contract Gateway is
     function withdrawEvent(
         uint8 _destinationChainId,
         address _sender,
-        ReceiverWithdraw[] calldata _receivers,
+        ReceiverWithdrawal[] calldata _receivers,
         uint256 _feeAmount
     ) external onlyPredicate {
         emit Withdraw(_destinationChainId, _sender, _receivers, _feeAmount);
