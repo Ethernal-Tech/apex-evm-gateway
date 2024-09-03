@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
@@ -27,8 +25,7 @@ contract ERC20TokenPredicate is
     Initializable,
     OwnableUpgradeable,
     UUPSUpgradeable,
-    System,
-    EIP712Upgradeable
+    System
 {
     using SafeERC20 for IERC20;
 
@@ -123,15 +120,7 @@ contract ERC20TokenPredicate is
      * @notice Function to withdraw tokens from the withdrawer to receiver on the destination chain
      * @param _withdrawals withdrawals to be made
      */
-    function withdraw(
-        Withdrawals calldata _withdrawals,
-        bytes memory _signature,
-        address _caller
-    ) external {
-        if (!_verifyWithdrawal(_withdrawals, _signature, _caller)) {
-            revert InvalidSignature();
-        }
-
+    function withdraw(Withdrawals calldata _withdrawals) external {
         uint256 _amountLength = _withdrawals.receivers.length;
 
         uint256 amountSum;
@@ -142,38 +131,14 @@ contract ERC20TokenPredicate is
 
         amountSum = amountSum + _withdrawals.feeAmount;
 
-        nativeToken.burn(_caller, amountSum);
+        nativeToken.burn(_withdrawals.sender, amountSum);
 
         gateway.withdrawEvent(
             _withdrawals.destinationChainId,
-            _caller,
+            _withdrawals.sender,
             _withdrawals.receivers,
             _withdrawals.feeAmount
         );
-    }
-
-    function _verifyWithdrawal(
-        Withdrawals calldata _withdrawals,
-        bytes memory _signature,
-        address _caller
-    ) internal view returns (bool) {
-        bytes32 digest = _hashTypedDataV4(
-            keccak256(
-                abi.encode(
-                    keccak256(
-                        "Withdrawals(uint8 destinationChainId,address sender,ReceiverWithdrawal[] receivers,uint256 feeAmount)ReceiverWithdrawal(string receiver,uint256 amount)"
-                    ),
-                    _withdrawals.destinationChainId,
-                    _withdrawals.sender,
-                    _withdrawals.receivers,
-                    _withdrawals.feeAmount
-                )
-            )
-        );
-
-        address signer = ECDSA.recover(digest, _signature);
-
-        return signer == _caller && signer == _withdrawals.sender;
     }
 
     // function hashWithdrawals(
