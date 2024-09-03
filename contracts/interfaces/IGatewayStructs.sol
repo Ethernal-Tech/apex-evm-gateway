@@ -31,10 +31,11 @@ interface IGatewayStructs {
     }
 
     struct Withdrawals {
-        uint8 destinationChainId;
-        address sender;
-        ReceiverWithdrawal[] receivers;
+        uint256 nonce;
         uint256 feeAmount;
+        address sender;
+        uint8 destinationChainId;
+        ReceiverWithdrawal[] receivers;
     }
 
     event Deposit(bytes data);

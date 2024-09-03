@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
 import "./ERC20TokenPredicate.sol";
@@ -20,35 +21,43 @@ contract Gateway is
     Validators public validators;
     uint256 public constant MAX_LENGTH = 2048;
 
-    // address immutable verifyingContract = address(this);
-    // bytes32 constant salt =
-    //     0x617065782d65766d2d6761746577617900000000000000000000000000000000;
+    //EIP712 block start
+    mapping(address => uint256) public nonces;
+    string public constant name = "Apex EVM Gateway";
+    string public constant version = "1";
+    bytes32 public constant salt =
+        0x617065782d65766d2d6761746577617900000000000000000000000000000000;
 
-    // string private constant RECEIVERWITHDRAWAL_TYPE =
-    //     "ReceiverWithdrawal(string receiver,uint256 amount)";
+    string private constant EIP712_DOMAIN =
+        "EIP712Domain(string name,string version,uint8 chainID,address verifyingContract,bytes32 salt)";
 
-    // string private constant WITHDRAWALS_TYPE =
-    //     "Withdraw(uint8 destinationChainId,ReceiverWithdrawal[] receivers,uint256 feeAmount)ReceiverWithdrawal(string receiver,uint256 amount)";
+    bytes32 private constant EIP712_DOMAIN_TYPEHASH =
+        keccak256(abi.encodePacked(EIP712_DOMAIN));
 
-    // string private constant EIP712_DOMAIN =
-    //     "EIP712Domain(string name,string version,address verifyingContract,bytes32 salt)";
+    string private constant RECEIVERWITHDRAWAL_TYPE =
+        "ReceiverWithdrawal(string receiver,uint256 amount)";
 
-    // bytes32 private constant WITHDRAW_TYPEHASH =
-    //     keccak256(abi.encodePacked(WITHDRAW_TYPE));
+    bytes32 private constant RECEIVERWITHDRAWAL_TYPEHASH =
+        keccak256(abi.encodePacked(RECEIVERWITHDRAWAL_TYPE));
 
-    // bytes32 private constant EIP712_DOMAIN_TYPEHASH =
-    //     keccak256(abi.encodePacked(EIP712_DOMAIN));
+    string private constant WITHDRAWALS_TYPE =
+        "Withdraw(uint256 nounce,uint256 feeAmount,address sender,uint8 destinationChainId,ReceiverWithdrawal[] receivers)ReceiverWithdrawal(string receiver,uint256 amount)";
 
-    // bytes32 private immutable DOMAIN_SEPARATOR =
-    //     keccak256(
-    //         abi.encode(
-    //             EIP712_DOMAIN_TYPEHASH,
-    //             keccak256("Apex EVM Gateway"),
-    //             keccak256("1"),
-    //             verifyingContract,
-    //             salt
-    //         )
-    //     );
+    bytes32 private constant WITHDRAWALS_TYPEHASH =
+        keccak256(abi.encodePacked(WITHDRAWALS_TYPE, RECEIVERWITHDRAWAL_TYPE));
+
+    bytes32 private immutable DOMAIN_SEPARATOR =
+        keccak256(
+            abi.encode(
+                EIP712_DOMAIN_TYPEHASH,
+                keccak256(abi.encodePacked(name)),
+                keccak256(abi.encodePacked(version)),
+                address(this),
+                salt
+            )
+        );
+
+    //EIP712 block end
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -95,9 +104,11 @@ contract Gateway is
         Withdrawals calldata _withdrawals,
         bytes memory _signature
     ) external {
-        if (!_verifyWithdrawal(_withdrawals, _signature, msg.sender)) {
+        if (!_verifyWithdrawal(_withdrawals, _signature)) {
             revert InvalidSignature();
         }
+        nonces[_withdrawals.sender]++;
+
         eRC20TokenPredicate.withdraw(_withdrawals);
     }
 
@@ -124,27 +135,52 @@ contract Gateway is
 
     function _verifyWithdrawal(
         Withdrawals calldata _withdrawals,
-        bytes memory _signature,
-        address _caller
+        bytes memory _signature
     ) internal view returns (bool) {
-        // bytes32 digest = _hashTypedDataV4(
-        //     keccak256(
-        //         abi.encode(
-        //             keccak256(
-        //                 "Withdrawals(uint8 destinationChainId,address sender,ReceiverWithdrawal[] receivers,uint256 feeAmount)ReceiverWithdrawal(string receiver,uint256 amount)"
-        //             ),
-        //             _withdrawals.destinationChainId,
-        //             _withdrawals.sender,
-        //             _withdrawals.receivers,
-        //             _withdrawals.feeAmount
-        //         )
-        //     )
-        // );
+        return
+            _withdrawals.sender ==
+            ECDSA.recover(_hashWithdrawals(_withdrawals), _signature);
+    }
 
-        // address signer = ECDSA.recover(digest, _signature);
+    function _hashReceiverWithdrawal(
+        ReceiverWithdrawal[] memory _receiverWithdrawals
+    ) internal pure returns (bytes32) {
+        uint256 _receiversLength = _receiverWithdrawals.length;
+        bytes32[] memory receiversHashes = new bytes32[](_receiversLength);
 
-        // return signer == _caller && signer == _withdrawals.sender;
-        return true;
+        for (uint i = 0; i < _receiversLength; i++) {
+            receiversHashes[i] = keccak256(
+                abi.encode(
+                    RECEIVERWITHDRAWAL_TYPEHASH,
+                    _receiverWithdrawals[i].receiver,
+                    _receiverWithdrawals[i].amount
+                )
+            );
+        }
+
+        return keccak256(abi.encodePacked(receiversHashes));
+    }
+
+    function _hashWithdrawals(
+        Withdrawals memory _withdrawals
+    ) private view returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked(
+                    "\\x19\\x01",
+                    DOMAIN_SEPARATOR,
+                    keccak256(
+                        abi.encode(
+                            WITHDRAWALS_TYPEHASH,
+                            _withdrawals.nonce,
+                            _withdrawals.feeAmount,
+                            _withdrawals.sender,
+                            _withdrawals.destinationChainId,
+                            _hashReceiverWithdrawal(_withdrawals.receivers)
+                        )
+                    )
+                )
+            );
     }
 
     modifier onlyPredicate() {

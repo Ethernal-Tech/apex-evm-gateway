@@ -111,32 +111,6 @@ contract ERC20TokenPredicate is
         );
     }
 
-    // function hashWithdrawals(
-    //     Withdrawals calldata _withdrawals
-    // ) private pure returns (bytes32) {
-    //     return
-    //         keccak256(
-    //             abi.encode(
-    //                 WITHDRAW_TYPEHASH,
-    //                 _withdrawals.destinationChainId,
-    //                 _withdrawals.receivers,
-    //                 _withdrawals.feeAmount
-    //             )
-    //         );
-    // }
-
-    // function verify(
-    //     address _signer,
-    //     Withdrawals calldata _withdrawals,
-    //     uint8 sigV,
-    //     bytes32 sigR,
-    //     bytes32 sigS
-    // ) public pure returns (bool) {
-    //     return
-    //         _signer ==
-    //         ecrecover(hashWithdrawals(_withdrawals), sigV, sigR, sigS);
-    // }
-
     modifier onlyGateway() {
         if (msg.sender != address(gateway)) revert NotGateway();
         _;
