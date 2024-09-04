@@ -72,7 +72,16 @@ contract Gateway is
 
         amountSum = amountSum + _feeAmount;
 
-        if (msg.value < amountSum) revert InsufficientValue();
+        if (msg.value < amountSum) {
+            emit WithdrawInsufficientValue(
+                _destinationChainId,
+                msg.sender,
+                _receivers,
+                _feeAmount,
+                msg.value
+            );
+            revert InsufficientValue();
+        }
 
         eRC20TokenPredicate.withdraw(
             _destinationChainId,
