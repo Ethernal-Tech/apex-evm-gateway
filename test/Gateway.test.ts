@@ -73,7 +73,7 @@ describe("Gateway Contract", function () {
     const signature =
       "0x1c4509ccf4268a2473492289ad0570117607db35455b8da02047c32921c7fd9d2374d70e4a1e9f0a465352c3394244c980441aba26b8909e100bae35970081ddff";
 
-    const witdrawals = {
+    const withdrawals = {
       nonce: 123,
       feeAmount: 1,
       sender: receiver,
@@ -90,7 +90,7 @@ describe("Gateway Contract", function () {
       ],
     };
 
-    const withdrawTx = await gateway.connect(receiver).withdraw(witdrawals, signature);
+    const withdrawTx = await gateway.connect(receiver).withdraw(withdrawals, signature);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
@@ -142,23 +142,38 @@ describe("Gateway Contract", function () {
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
     }
 
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
+    const signature =
+      "0x1c4509ccf4268a2473492289ad0570117607db35455b8da02047c32921c7fd9d2374d70e4a1e9f0a465352c3394244c980441aba26b8909e100bae35970081ddff";
+
+    const withdrawals = {
+      nonce: 123,
+      feeAmount: 1,
+      sender: receiver,
+      destinationChainId: 1,
+      receivers: [
+        {
+          receiver: "receiver1",
+          amount: 100,
+        },
+        {
+          receiver: "receiver2",
+          amount: 200,
+        },
+      ],
+    };
 
     for (let i = 0; i < 100; i++) {
-      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
+      const withdrawTx = await gateway.connect(receiver).withdraw(withdrawals, signature);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
-      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("receiver1");
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-      expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+      expect(withdrawEvent?.args?.receivers[1].receiver).to.equal("receiver2");
+      expect(withdrawEvent?.args?.receivers[1].amount).to.equal(200);
+      expect(withdrawEvent?.args?.feeAmount).to.equal(1);
     }
   });
 
@@ -194,12 +209,25 @@ describe("Gateway Contract", function () {
       depositTXs.push(depositTX);
     }
 
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
+    const signature =
+      "0x1c4509ccf4268a2473492289ad0570117607db35455b8da02047c32921c7fd9d2374d70e4a1e9f0a465352c3394244c980441aba26b8909e100bae35970081ddff";
+
+    const withdrawals = {
+      nonce: 123,
+      feeAmount: 1,
+      sender: receiver,
+      destinationChainId: 1,
+      receivers: [
+        {
+          receiver: "receiver1",
+          amount: 100,
+        },
+        {
+          receiver: "receiver2",
+          amount: 200,
+        },
+      ],
+    };
 
     for (let i = 0; i < 100; i++) {
       const depositReceipt = await depositTXs[i].wait();
@@ -207,15 +235,17 @@ describe("Gateway Contract", function () {
 
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
 
-      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
+      const withdrawTx = await gateway.connect(receiver).withdraw(withdrawals, signature);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
-      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("receiver1");
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-      expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+      expect(withdrawEvent?.args?.receivers[1].receiver).to.equal("receiver2");
+      expect(withdrawEvent?.args?.receivers[1].amount).to.equal(200);
+      expect(withdrawEvent?.args?.feeAmount).to.equal(1);
     }
   });
 });

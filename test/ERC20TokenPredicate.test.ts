@@ -115,29 +115,39 @@ describe("ERC20TokenPredicate Contract", function () {
   });
 
   it("Withdraw sucess", async () => {
-    const { gateway, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
-
-    const address = ethers.Wallet.createRandom().address;
+    const { gateway, receiver, nativeERC20Mintable, eRC20TokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await nativeERC20Mintable.mint(gateway.target, 1000000);
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
+    const withdrawals = {
+      nonce: 123,
+      feeAmount: 1,
+      sender: receiver,
+      destinationChainId: 1,
+      receivers: [
+        {
+          receiver: "receiver1",
+          amount: 100,
+        },
+        {
+          receiver: "receiver2",
+          amount: 200,
+        },
+      ],
+    };
 
-    const withdrawTx = await eRC20TokenPredicate.connect(gatewayContract).withdraw(1, receiverWithdraw, 100, address);
+    const withdrawTx = await eRC20TokenPredicate.connect(gatewayContract).withdraw(withdrawals);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
-    expect(withdrawEvent?.args?.sender).to.equal(address);
-    expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+    expect(withdrawEvent?.args?.sender).to.equal(receiver);
+    expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("receiver1");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-    expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+    expect(withdrawEvent?.args?.receivers[1].receiver).to.equal("receiver2");
+    expect(withdrawEvent?.args?.receivers[1].amount).to.equal(200);
+    expect(withdrawEvent?.args?.feeAmount).to.equal(1);
   });
 });
