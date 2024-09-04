@@ -70,22 +70,37 @@ describe("Gateway Contract", function () {
       data
     );
 
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
+    const signature =
+      "0x1c4509ccf4268a2473492289ad0570117607db35455b8da02047c32921c7fd9d2374d70e4a1e9f0a465352c3394244c980441aba26b8909e100bae35970081ddff";
 
-    const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
+    const witdrawals = {
+      nonce: 123,
+      feeAmount: 1,
+      sender: receiver,
+      destinationChainId: 1,
+      receivers: [
+        {
+          receiver: "receiver1",
+          amount: 100,
+        },
+        {
+          receiver: "receiver2",
+          amount: 200,
+        },
+      ],
+    };
+
+    const withdrawTx = await gateway.connect(receiver).withdraw(witdrawals, signature);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
     expect(withdrawEvent?.args?.sender).to.equal(receiver);
-    expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+    expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("receiver1");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-    expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+    expect(withdrawEvent?.args?.receivers[1].receiver).to.equal("receiver2");
+    expect(withdrawEvent?.args?.receivers[1].amount).to.equal(200);
+    expect(withdrawEvent?.args?.feeAmount).to.equal(1);
   });
 
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
