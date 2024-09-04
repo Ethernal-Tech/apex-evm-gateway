@@ -97,7 +97,8 @@ contract ERC20TokenPredicate is
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount,
         address _caller,
-        uint256 _amountSum
+        uint256 _amountSum,
+        uint256 _value
     ) external {
         nativeToken.burn(address(gateway), _amountSum);
 
@@ -105,7 +106,8 @@ contract ERC20TokenPredicate is
             _destinationChainId,
             _caller,
             _receivers,
-            _feeAmount
+            _feeAmount,
+            _value
         );
     }
 

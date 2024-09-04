@@ -132,7 +132,7 @@ describe("ERC20TokenPredicate Contract", function () {
 
     const withdrawTx = await eRC20TokenPredicate
       .connect(gatewayContract)
-      .withdraw(1, receiverWithdraw, 100, address, 200);
+      .withdraw(1, receiverWithdraw, 100, address, 200, 200);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
@@ -141,5 +141,6 @@ describe("ERC20TokenPredicate Contract", function () {
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+    expect(withdrawEvent?.args?.value).to.equal(200);
   });
 });

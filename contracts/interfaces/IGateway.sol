@@ -22,7 +22,8 @@ interface IGateway is IGatewayStructs {
         uint8 destinationChainId,
         address sender,
         ReceiverWithdraw[] calldata receivers,
-        uint256 feeAmount
+        uint256 feeAmount,
+        uint256 value
     ) external;
 
     function ttlEvent(bytes calldata data) external;

@@ -36,7 +36,8 @@ interface IGatewayStructs {
         uint8 destinationChainId,
         address sender,
         ReceiverWithdraw[] receivers,
-        uint256 feeAmount
+        uint256 feeAmount,
+        uint256 value
     );
     event TTLExpired(bytes data);
 
