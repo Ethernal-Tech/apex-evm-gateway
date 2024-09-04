@@ -130,7 +130,9 @@ describe("ERC20TokenPredicate Contract", function () {
       },
     ];
 
-    const withdrawTx = await eRC20TokenPredicate.connect(gatewayContract).withdraw(1, receiverWithdraw, 100, address);
+    const withdrawTx = await eRC20TokenPredicate
+      .connect(gatewayContract)
+      .withdraw(1, receiverWithdraw, 100, address, 200);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
