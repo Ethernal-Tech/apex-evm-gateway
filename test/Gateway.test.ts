@@ -87,6 +87,7 @@ describe("Gateway Contract", function () {
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+    expect(withdrawEvent?.args?.value).to.equal(200);
   });
 
   it("Withdraw should fail if not enough value is submitted", async () => {
@@ -179,6 +180,7 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+      expect(withdrawEvent?.args?.value).to.equal(200);
     }
   });
 
@@ -238,6 +240,7 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+      expect(withdrawEvent?.args?.value).to.equal(200);
     }
   });
 });
