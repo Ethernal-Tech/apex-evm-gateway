@@ -10,6 +10,7 @@ interface IERC20TokenPredicate is IGatewayStructs {
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount,
-        address _caller
+        address _caller,
+        uint256 _amountSum
     ) external;
 }

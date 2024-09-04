@@ -96,19 +96,10 @@ contract ERC20TokenPredicate is
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount,
-        address _caller
+        address _caller,
+        uint256 _amountSum
     ) external {
-        uint256 _amountLength = _receivers.length;
-
-        uint256 amountSum;
-
-        for (uint256 i; i < _amountLength; i++) {
-            amountSum += _receivers[i].amount;
-        }
-
-        amountSum = amountSum + _feeAmount;
-
-        nativeToken.burn(_caller, amountSum);
+        nativeToken.burn(address(gateway), _amountSum);
 
         gateway.withdrawEvent(
             _destinationChainId,

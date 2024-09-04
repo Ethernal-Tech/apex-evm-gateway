@@ -48,6 +48,7 @@ interface IGatewayStructs {
     error ZeroAddress();
     error InvalidData(string data);
     error InsufficientAllowance();
+    error InsufficientValue();
     error PrecompileCallFailed();
     error DecresedAllowenceBelowZero();
     error BatchAlreadyExecuted();

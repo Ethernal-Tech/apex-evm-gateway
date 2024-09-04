@@ -65,12 +65,25 @@ contract Gateway is
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount
-    ) external {
+    ) external payable {
+        uint256 _amountLength = _receivers.length;
+
+        uint256 amountSum;
+
+        for (uint256 i; i < _amountLength; i++) {
+            amountSum += _receivers[i].amount;
+        }
+
+        amountSum = amountSum + _feeAmount;
+
+        if (msg.value < amountSum) revert InsufficientValue();
+
         eRC20TokenPredicate.withdraw(
             _destinationChainId,
             _receivers,
             _feeAmount,
-            msg.sender
+            msg.sender,
+            amountSum
         );
     }
 
