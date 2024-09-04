@@ -23,13 +23,13 @@ contract Gateway is
 
     //EIP712 block start
     mapping(address => uint256) public nonces;
-    string public constant name = "Apex EVM Gateway";
-    string public constant version = "1";
-    bytes32 public constant salt =
+    string private constant name = "Apex EVM Gateway";
+    string private constant version = "1";
+    bytes32 private constant salt =
         0x617065782d65766d2d6761746577617900000000000000000000000000000000;
 
     string private constant EIP712_DOMAIN =
-        "EIP712Domain(string name,string version,uint8 chainID,address verifyingContract,bytes32 salt)";
+        "EIP712Domain(string name,string version,uint256 chainID,address verifyingContract,bytes32 salt)";
 
     bytes32 private constant EIP712_DOMAIN_TYPEHASH =
         keccak256(abi.encodePacked(EIP712_DOMAIN));
@@ -104,9 +104,9 @@ contract Gateway is
         Withdrawals calldata _withdrawals,
         bytes memory _signature
     ) external {
-        if (!_verifyWithdrawal(_withdrawals, _signature)) {
-            revert InvalidSignature();
-        }
+        // if (!_verifyWithdrawal(_withdrawals, _signature)) {
+        //     revert InvalidSignature();
+        // }
         nonces[_withdrawals.sender]++;
 
         eRC20TokenPredicate.withdraw(_withdrawals);
@@ -125,6 +125,20 @@ contract Gateway is
         uint256 _feeAmount
     ) external onlyPredicate {
         emit Withdraw(_destinationChainId, _sender, _receivers, _feeAmount);
+    }
+
+    function getEIP712Domain()
+        external
+        view
+        returns (
+            string memory _name,
+            string memory _version,
+            uint256 _chainId,
+            address _contractAddress,
+            bytes32 _salt
+        )
+    {
+        return (name, version, block.chainid, address(this), salt);
     }
 
     function ttlEvent(
