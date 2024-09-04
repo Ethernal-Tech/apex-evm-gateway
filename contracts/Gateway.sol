@@ -29,7 +29,7 @@ contract Gateway is
         0x617065782d65766d2d6761746577617900000000000000000000000000000000;
 
     string private constant EIP712_DOMAIN =
-        "EIP712Domain(string name,string version,uint256 chainID,address verifyingContract,bytes32 salt)";
+        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
 
     bytes32 private constant EIP712_DOMAIN_TYPEHASH =
         keccak256(abi.encodePacked(EIP712_DOMAIN));

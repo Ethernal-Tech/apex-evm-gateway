@@ -1,4 +1,3 @@
-import { NativeERC20Mintable } from "./../typechain-types/contracts/NativeERC20Mintable";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
@@ -69,6 +68,95 @@ describe("Gateway Contract", function () {
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       data
     );
+
+    // withdraw start
+    const eip712domain_type_definition = {
+      EIP712Domain: [
+        {
+          name: "name",
+          type: "string",
+        },
+        {
+          name: "version",
+          type: "string",
+        },
+        {
+          name: "chainId",
+          type: "uint256",
+        },
+        {
+          name: "verifyingContract",
+          type: "address",
+        },
+        {
+          name: "salt",
+          type: "butes32",
+        },
+      ],
+    };
+
+    const chainId = (await ethers.provider.getNetwork()).chainId;
+
+    const eip712domain_domain = {
+      name: "Apex EVM Gateway",
+      version: "1",
+      chainId: chainId,
+      verifyingContract: gateway.target,
+      salt: "0x617065782d65766d2d6761746577617900000000000000000000000000000000",
+    };
+
+    const withdraw_request = {
+      types: {
+        ...eip712domain_type_definition,
+        WithdrawRequest: [
+          {
+            name: "to",
+            type: "address",
+          },
+          {
+            name: "amount",
+            type: "uint256",
+          },
+        ],
+      },
+      primaryType: "TransferRequest",
+      domain: karma_request_domain,
+      message: {
+        to: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+        amount: 1234,
+      },
+    };
+    let signature = await window.ethereum.request({
+      method: "eth_signTypedData_v4",
+      params: [accounts[0], transfer_request],
+    });
+
+    const withdraw_request = {
+      types: {
+        ...eip712domain_type_definition,
+        WithdrawalRequest: [
+          {
+            name: "to",
+            type: "address",
+          },
+          {
+            name: "amount",
+            type: "uint256",
+          },
+        ],
+      },
+      primaryType: "TransferRequest",
+      domain: karma_request_domain,
+      message: {
+        to: "0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC",
+        amount: 1234,
+      },
+    };
+    let signature = await window.ethereum.request({
+      method: "eth_signTypedData_v4",
+      params: [accounts[0], transfer_request],
+    });
+    // withdraw end
 
     const signature =
       "0x1c4509ccf4268a2473492289ad0570117607db35455b8da02047c32921c7fd9d2374d70e4a1e9f0a465352c3394244c980441aba26b8909e100bae35970081ddff";
