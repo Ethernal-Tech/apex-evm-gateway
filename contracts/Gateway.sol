@@ -87,6 +87,12 @@ contract Gateway is
             revert InsufficientValue();
         }
 
+        (bool success, ) = address(nativeTokenPredicate.nativeTokenWallet())
+            .call{value: amountSum}("");
+
+        // Revert the transaction if the transfer fails
+        if (!success) revert TransferFailed();
+
         nativeTokenPredicate.withdraw(
             _destinationChainId,
             _receivers,

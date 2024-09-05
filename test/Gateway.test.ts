@@ -1,4 +1,3 @@
-import { NativeERC20Mintable } from "./../typechain-types/contracts/NativeERC20Mintable";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
@@ -14,20 +13,20 @@ describe("Gateway Contract", function () {
   });
 
   it("SetDependencies should fail if not called by owner", async () => {
-    const { receiver, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      gateway.connect(receiver).setDependencies(eRC20TokenPredicate.target, validatorsc.target)
+      gateway.connect(receiver).setDependencies(nativeTokenPredicate.target, validatorsc.target)
     ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
-    const { owner, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, nativeTokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
 
-    await expect(gateway.connect(owner).setDependencies(eRC20TokenPredicate.target, validatorsc.target)).to.not.be
+    await expect(gateway.connect(owner).setDependencies(nativeTokenPredicate.target, validatorsc.target)).to.not.be
       .reverted;
 
-    expect(await gateway.eRC20TokenPredicate()).to.equal(eRC20TokenPredicate.target);
+    expect(await gateway.nativeTokenPredicate()).to.equal(nativeTokenPredicate.target);
     expect(await gateway.validators()).to.equal(validatorsc.target);
   });
 
