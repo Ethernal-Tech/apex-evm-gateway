@@ -8,11 +8,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "./interfaces/IERC20TokenPredicate.sol";
-import "./interfaces/INativeERC20.sol";
+import "./interfaces/INativeTokenPredicate.sol";
+import "./interfaces/INativeTokenWallet.sol";
 import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
-import "./System.sol";
 
 /**
     @title ERC20TokenPredicate
@@ -20,17 +19,16 @@ import "./System.sol";
     @notice Enables ERC20 token deposits and withdrawals across an arbitrary root chain and token chain
  */
 // solhint-disable reason-string
-contract ERC20TokenPredicate is
-    IERC20TokenPredicate,
+contract NativeTokenPredicate is
+    INativeTokenPredicate,
     Initializable,
     OwnableUpgradeable,
-    UUPSUpgradeable,
-    System
+    UUPSUpgradeable
 {
     using SafeERC20 for IERC20;
 
     IGateway public gateway;
-    INativeERC20 public nativeToken;
+    INativeTokenWallet public nativeTokenWallet;
     mapping(uint64 => bool) public usedBatches;
 
     function initialize() public initializer {
@@ -44,12 +42,12 @@ contract ERC20TokenPredicate is
 
     function setDependencies(
         address _gateway,
-        address _nativeToken
+        address _nativeTokenWallet
     ) external onlyOwner {
-        if (_gateway == address(0) || _nativeToken == address(0))
+        if (_gateway == address(0) || _nativeTokenWallet == address(0))
             revert ZeroAddress();
         gateway = IGateway(_gateway);
-        nativeToken = INativeERC20(_nativeToken);
+        nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
     }
 
     /**
@@ -78,10 +76,13 @@ contract ERC20TokenPredicate is
         uint256 _receiversLength = _receivers.length;
 
         for (uint256 i; i < _receiversLength; i++) {
-            nativeToken.mint(_receivers[i].receiver, _receivers[i].amount);
+            nativeTokenWallet.deposit(
+                _receivers[i].receiver,
+                _receivers[i].amount
+            );
         }
 
-        nativeToken.mint(_relayer, _deposits.feeAmount);
+        nativeTokenWallet.deposit(_relayer, _deposits.feeAmount);
 
         gateway.depositEvent(_data);
     }
@@ -100,7 +101,7 @@ contract ERC20TokenPredicate is
         uint256 _amountSum,
         uint256 _value
     ) external {
-        nativeToken.burn(address(gateway), _amountSum);
+        nativeTokenWallet.withdraw(_amountSum);
 
         gateway.withdrawEvent(
             _destinationChainId,
@@ -111,11 +112,11 @@ contract ERC20TokenPredicate is
         );
     }
 
-    // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
-
     modifier onlyGateway() {
         if (msg.sender != address(gateway)) revert NotGateway();
         _;
     }
+
+    // slither-disable-next-line unused-state,naming-convention
+    uint256[50] private __gap;
 }
