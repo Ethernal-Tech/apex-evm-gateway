@@ -37,8 +37,8 @@ describe("Gateway Contract", function () {
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[address, 100]]]]
     );
 
     const depositTx = await gateway.deposit(
@@ -59,8 +59,8 @@ describe("Gateway Contract", function () {
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[address, 100]]]]
     );
 
     await gateway.deposit(
@@ -96,8 +96,8 @@ describe("Gateway Contract", function () {
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[address, 100]]]]
     );
 
     await gateway.deposit(
@@ -137,8 +137,8 @@ describe("Gateway Contract", function () {
 
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
-        ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
-        [[i, blockNumber + 100, 1, [[1, addresses[i], 100]]]]
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+        [[i, blockNumber + 100, 1, [[addresses[i], 100]]]]
       );
       dataArray.push(data);
     }
@@ -184,7 +184,21 @@ describe("Gateway Contract", function () {
   });
 
   it("Bunch of consecutive deposits/withraws", async () => {
-    const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
+    const { owner, receiver, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
+
+    const gatewayContractAddress = await gateway.getAddress();
+
+    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+
+    await owner.sendTransaction({
+      to: gatewayContractAddress,
+      value: ethers.parseUnits("1", "ether"),
+    });
+
+    await owner.sendTransaction({
+      to: nativeTokenWalletAddress,
+      value: ethers.parseUnits("1", "ether"),
+    });
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
@@ -199,8 +213,8 @@ describe("Gateway Contract", function () {
 
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
-        ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
-        [[i, blockNumber + 100, 1, [[1, addresses[i], 100]]]]
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+        [[i, blockNumber + 100, 1, [[addresses[i], 100]]]]
       );
       dataArray.push(data);
     }

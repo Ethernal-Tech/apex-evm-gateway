@@ -31,7 +31,7 @@ describe("NativeTokenPredicate Contract", function () {
       .be.reverted;
 
     expect(await nativeTokenPredicate.gateway()).to.equal(gateway.target);
-    expect(await nativeTokenPredicate.nativeToken()).to.equal(nativeTokenWallet.target);
+    expect(await nativeTokenPredicate.nativeTokenWallet()).to.equal(nativeTokenWallet.target);
   });
 
   it("Deposit should fail if not called by Gateway", async () => {
@@ -74,17 +74,29 @@ describe("NativeTokenPredicate Contract", function () {
   });
 
   it("Deposit should fail if batch is already executed", async () => {
-    const { gateway, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { gateway, owner, nativeTokenPredicate, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[address, 100]]]]
     );
 
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.target);
+
+    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+
+    await owner.sendTransaction({
+      to: gatewayContract,
+      value: ethers.parseUnits("1", "ether"),
+    });
+
+    await owner.sendTransaction({
+      to: nativeTokenWalletAddress,
+      value: ethers.parseUnits("1", "ether"),
+    });
 
     await nativeTokenPredicate.connect(gatewayContract).deposit(data, address);
 
@@ -95,17 +107,29 @@ describe("NativeTokenPredicate Contract", function () {
   });
 
   it("Deposit success", async () => {
-    const { gateway, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, nativeTokenPredicate, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const data = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
+      ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[address, 100]]]]
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.target);
+
+    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+
+    await owner.sendTransaction({
+      to: gatewayContract,
+      value: ethers.parseUnits("1", "ether"),
+    });
+
+    await owner.sendTransaction({
+      to: nativeTokenWalletAddress,
+      value: ethers.parseUnits("1", "ether"),
+    });
 
     const depositTx = await nativeTokenPredicate.connect(gatewayContract).deposit(data, address);
     const depositReceipt = await depositTx.wait();
@@ -115,11 +139,20 @@ describe("NativeTokenPredicate Contract", function () {
   });
 
   it("Withdraw sucess", async () => {
-    const { gateway, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { owner, receiver, gateway, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(
+      deployGatewayFixtures
+    );
 
-    const address = ethers.Wallet.createRandom().address;
+    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
-    await nativeTokenWallet.deposit(gateway.target, 1000000);
+    await owner.sendTransaction({
+      to: nativeTokenWalletAddress,
+      value: ethers.parseUnits("1", "ether"),
+    });
+
+    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
+
+    await nativeTokenWallet.deposit(owner.address, randomAmount);
 
     const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
@@ -132,12 +165,12 @@ describe("NativeTokenPredicate Contract", function () {
 
     const withdrawTx = await nativeTokenPredicate
       .connect(gatewayContract)
-      .withdraw(1, receiverWithdraw, 100, address, 200, 200);
+      .withdraw(1, receiverWithdraw, 100, receiver, 200, 200);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
-    expect(withdrawEvent?.args?.sender).to.equal(address);
+    expect(withdrawEvent?.args?.sender).to.equal(receiver);
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
