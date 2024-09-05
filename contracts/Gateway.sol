@@ -50,11 +50,7 @@ contract Gateway is
         bytes calldata _data
     ) external {
         bytes32 _hash = keccak256(_data);
-        (bool valid, ) = validators.isBlsSignatureValid(
-            _hash,
-            _signature,
-            _bitmap
-        );
+        bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
 
         if (!valid) revert InvalidSignature();
 
