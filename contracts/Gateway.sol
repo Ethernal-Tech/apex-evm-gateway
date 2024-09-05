@@ -9,6 +9,7 @@ import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
 import "./NativeTokenPredicate.sol";
 import "./Validators.sol";
+import "hardhat/console.sol";
 
 contract Gateway is
     IGateway,
@@ -83,8 +84,9 @@ contract Gateway is
             revert InsufficientValue();
         }
 
-        (bool success, ) = address(nativeTokenPredicate.nativeTokenWallet())
-            .call{value: amountSum}("");
+        address native = address(nativeTokenPredicate.nativeTokenWallet());
+
+        (bool success, ) = native.call{value: amountSum}("");
 
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
