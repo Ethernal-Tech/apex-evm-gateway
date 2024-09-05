@@ -127,6 +127,8 @@ contract Gateway is
         emit TTLExpired(_data);
     }
 
+    receive() external payable {}
+
     modifier onlyPredicate() {
         if (msg.sender != address(nativeTokenPredicate)) revert NotPredicate();
         _;
