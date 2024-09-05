@@ -5,29 +5,29 @@ import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
 
 describe("Gateway Contract", function () {
-  it("SetDependencies should fail if Gateway or NetiveToken are Zero Address", async () => {
-    const { owner, gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
+  it("SetDependencies should fail if Validator is Zero Address", async () => {
+    const { owner, gateway } = await loadFixture(deployGatewayFixtures);
 
-    await expect(
-      gateway.connect(owner).setDependencies(ethers.ZeroAddress, validatorsc.target)
-    ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
+    await expect(gateway.connect(owner).setDependencies(ethers.ZeroAddress)).to.to.be.revertedWithCustomError(
+      gateway,
+      "ZeroAddress"
+    );
   });
 
   it("SetDependencies should fail if not called by owner", async () => {
-    const { receiver, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
 
-    await expect(
-      gateway.connect(receiver).setDependencies(eRC20TokenPredicate.target, validatorsc.target)
-    ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
+    await expect(gateway.connect(receiver).setDependencies(validatorsc.target)).to.be.revertedWithCustomError(
+      gateway,
+      "OwnableUnauthorizedAccount"
+    );
   });
 
   it("SetDependencies and validate initialization", async () => {
-    const { owner, gateway, eRC20TokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
 
-    await expect(gateway.connect(owner).setDependencies(eRC20TokenPredicate.target, validatorsc.target)).to.not.be
-      .reverted;
+    await expect(gateway.connect(owner).setDependencies(validatorsc.target)).to.not.be.reverted;
 
-    expect(await gateway.eRC20TokenPredicate()).to.equal(eRC20TokenPredicate.target);
     expect(await gateway.validators()).to.equal(validatorsc.target);
   });
 

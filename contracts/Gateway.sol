@@ -111,14 +111,6 @@ contract Gateway is
         _amountSum = _amountSum + _feeAmount;
 
         if (msg.value < _amountSum) {
-            emit Withdraw(
-                _destinationChainId,
-                msg.sender,
-                _receivers,
-                _feeAmount,
-                msg.value,
-                false
-            );
             revert InsufficientValue();
         }
 
@@ -129,8 +121,7 @@ contract Gateway is
             msg.sender,
             _receivers,
             _feeAmount,
-            msg.value,
-            true
+            msg.value
         );
     }
 
