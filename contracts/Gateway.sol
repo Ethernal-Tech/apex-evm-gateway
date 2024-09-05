@@ -7,7 +7,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
-import "./ERC20TokenPredicate.sol";
 import "./Validators.sol";
 
 contract Gateway is
@@ -16,9 +15,11 @@ contract Gateway is
     OwnableUpgradeable,
     UUPSUpgradeable
 {
-    ERC20TokenPredicate public eRC20TokenPredicate;
     Validators public validators;
     uint256 public constant MAX_LENGTH = 2048;
+
+    mapping(uint64 => bool) public usedBatches;
+    uint256 public totalSupply;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -34,13 +35,8 @@ contract Gateway is
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(
-        address _eRC20TokenPredicate,
-        address _validators
-    ) external onlyOwner {
-        if (_eRC20TokenPredicate == address(0) || _validators == address(0))
-            revert ZeroAddress();
-        eRC20TokenPredicate = ERC20TokenPredicate(_eRC20TokenPredicate);
+    function setDependencies(address _validators) external onlyOwner {
+        if (_validators == address(0)) revert ZeroAddress();
         validators = Validators(_validators);
     }
 
@@ -58,7 +54,45 @@ contract Gateway is
 
         if (!valid) revert InvalidSignature();
 
-        eRC20TokenPredicate.deposit(_data, msg.sender);
+        Deposits memory _deposits = abi.decode(_data, (Deposits));
+
+        if (usedBatches[_deposits.batchId]) {
+            revert BatchAlreadyExecuted();
+        }
+
+        if (_deposits.ttlExpired < block.number) {
+            emit TTLExpired(_data);
+            return;
+        }
+
+        ReceiverDeposit[] memory _receivers = _deposits.receivers;
+        uint256 _receiversLength = _receivers.length;
+        uint256 _amountSum;
+
+        for (uint256 i; i < _receiversLength; i++) {
+            if (_receivers[i].receiver == address(0)) revert ZeroAddress();
+
+            (bool callSuccess, ) = _receivers[i].receiver.call{
+                value: _receivers[i].amount
+            }("");
+            _amountSum = _amountSum + _receivers[i].amount;
+
+            // Revert the transaction if the transfer fails
+            require(callSuccess, "Failed to send Ether");
+        }
+
+        (bool success, ) = msg.sender.call{value: _deposits.feeAmount}("");
+
+        // Revert the transaction if the transfer fails
+        require(success, "Failed to send Ether");
+
+        _amountSum = _amountSum + _deposits.feeAmount;
+
+        totalSupply += _amountSum;
+
+        usedBatches[_deposits.batchId] = true;
+
+        emit Deposit(_data);
     }
 
     function withdraw(
@@ -68,66 +102,36 @@ contract Gateway is
     ) external payable {
         uint256 _amountLength = _receivers.length;
 
-        uint256 amountSum;
+        uint256 _amountSum;
 
         for (uint256 i; i < _amountLength; i++) {
-            amountSum += _receivers[i].amount;
+            _amountSum += _receivers[i].amount;
         }
 
-        amountSum = amountSum + _feeAmount;
+        _amountSum = _amountSum + _feeAmount;
 
-        if (msg.value < amountSum) {
-            emit WithdrawInsufficientValue(
+        if (msg.value < _amountSum) {
+            emit Withdraw(
                 _destinationChainId,
                 msg.sender,
                 _receivers,
                 _feeAmount,
-                msg.value
+                msg.value,
+                false
             );
             revert InsufficientValue();
         }
 
-        eRC20TokenPredicate.withdraw(
-            _destinationChainId,
-            _receivers,
-            _feeAmount,
-            msg.sender,
-            amountSum,
-            msg.value
-        );
-    }
+        totalSupply -= _amountSum;
 
-    function depositEvent(
-        bytes calldata _data
-    ) external onlyPredicate maxLengthExceeded(_data) {
-        emit Deposit(_data);
-    }
-
-    function withdrawEvent(
-        uint8 _destinationChainId,
-        address _sender,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount,
-        uint256 _value
-    ) external onlyPredicate {
         emit Withdraw(
             _destinationChainId,
-            _sender,
+            msg.sender,
             _receivers,
             _feeAmount,
-            _value
+            msg.value,
+            true
         );
-    }
-
-    function ttlEvent(
-        bytes calldata _data
-    ) external onlyPredicate maxLengthExceeded(_data) {
-        emit TTLExpired(_data);
-    }
-
-    modifier onlyPredicate() {
-        if (msg.sender != address(eRC20TokenPredicate)) revert NotPredicate();
-        _;
     }
 
     modifier maxLengthExceeded(bytes calldata _data) {
