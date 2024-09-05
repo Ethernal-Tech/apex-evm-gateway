@@ -12,7 +12,6 @@ import "./interfaces/INativeTokenPredicate.sol";
 import "./interfaces/INativeTokenWallet.sol";
 import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
-import "hardhat/console.sol";
 
 /**
     @title ERC20TokenPredicate
@@ -76,15 +75,11 @@ contract NativeTokenPredicate is
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;
 
-        console.log("USAO OVDE");
-
         for (uint256 i; i < _receiversLength; i++) {
-            console.log("AMOUNT: ", _receivers[i].amount);
             nativeTokenWallet.deposit(
                 _receivers[i].receiver,
                 _receivers[i].amount
             );
-            console.log("PUKAO OVDE");
         }
 
         nativeTokenWallet.deposit(_relayer, _deposits.feeAmount);
