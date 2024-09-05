@@ -21,8 +21,8 @@ contract NativeTokenWallet is
     IGatewayStructs,
     INativeTokenWallet
 {
-    address public _predicate;
-    uint256 public _totalSupply;
+    address public predicate;
+    uint256 public totalSupply;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -38,26 +38,31 @@ contract NativeTokenWallet is
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(uint256 tokenSupply_) external onlyOwner {
-        _totalSupply = tokenSupply_;
+    function setDependencies(
+        address _predicate,
+        uint256 _tokenSupply
+    ) external onlyOwner {
+        if (_predicate == address(0)) revert ZeroAddress();
+        predicate = _predicate;
+        totalSupply = _tokenSupply;
     }
 
     /**
      * @notice Deposits an amount of tokens to a particular address
      * @dev Can only be called by the predicate or owner address
-     * @param account Account of the user to mint the tokens to
-     * @param amount Amount of tokens to mint to the account
+     * @param _account Account of the user to mint the tokens to
+     * @param _amount Amount of tokens to mint to the account
      * @return bool Returns true if function call is successful
      */
     function deposit(
-        address account,
-        uint256 amount
+        address _account,
+        uint256 _amount
     ) external onlyPredicateOrOwner returns (bool) {
-        if (account == address(0)) revert ZeroAddress();
+        if (_account == address(0)) revert ZeroAddress();
 
-        _totalSupply += amount;
+        totalSupply += _amount;
 
-        (bool success, ) = account.call{value: amount}("");
+        (bool success, ) = _account.call{value: _amount}("");
 
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
@@ -65,12 +70,14 @@ contract NativeTokenWallet is
         return true;
     }
 
-    function withdraw(uint256 amount) external override onlyPredicateOrOwner {
-        _totalSupply += amount;
+    function withdraw(uint256 _amount) external override onlyPredicateOrOwner {
+        totalSupply -= _amount;
     }
 
+    receive() external payable {}
+
     modifier onlyPredicateOrOwner() {
-        if (msg.sender != _predicate && msg.sender != owner())
+        if (msg.sender != predicate && msg.sender != owner())
             revert NotPredicateOrOwner();
 
         _;
