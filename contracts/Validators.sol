@@ -82,20 +82,19 @@ contract Validators is
         bytes32 _hash,
         bytes calldata _signature,
         uint256 _bitmap
-    ) external view returns (bool callSuccess, bytes memory returnData) {
+    ) external view returns (bool) {
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls,calls-loop
-        (callSuccess, returnData) = VALIDATOR_BLS_PRECOMPILE.staticcall{
-            gas: VALIDATOR_BLS_PRECOMPILE_GAS
-        }(
+        (bool callSuccess, bytes memory returnData) = VALIDATOR_BLS_PRECOMPILE
+            .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
             abi.encodePacked(
                 uint8(1),
                 abi.encode(_hash, _signature, chainData, _bitmap)
             )
         );
 
-        return (callSuccess, returnData);
+        return callSuccess && abi.decode(returnData, (bool));
     }
 
     function getValidatorsAddresses() external view returns (address[] memory) {
