@@ -226,7 +226,6 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
       expect(withdrawEvent?.args?.value).to.equal(200);
-      expect(withdrawEvent?.args?.value).to.equal(200);
     }
   });
 
