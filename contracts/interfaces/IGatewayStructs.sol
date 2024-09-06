@@ -36,8 +36,18 @@ interface IGatewayStructs {
         uint8 destinationChainId,
         address sender,
         ReceiverWithdraw[] receivers,
-        uint256 feeAmount
+        uint256 feeAmount,
+        uint256 value
     );
+
+    event WithdrawInsufficientValue(
+        uint8 destinationChainId,
+        address sender,
+        ReceiverWithdraw[] receivers,
+        uint256 feeAmount,
+        uint256 value
+    );
+
     event TTLExpired(bytes data);
 
     error NotGateway();
@@ -48,6 +58,7 @@ interface IGatewayStructs {
     error ZeroAddress();
     error InvalidData(string data);
     error InsufficientAllowance();
+    error InsufficientValue();
     error PrecompileCallFailed();
     error DecresedAllowenceBelowZero();
     error BatchAlreadyExecuted();

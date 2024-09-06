@@ -14,7 +14,7 @@ interface IGateway is IGatewayStructs {
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount
-    ) external;
+    ) external payable;
 
     function depositEvent(bytes calldata data) external;
 
@@ -22,7 +22,8 @@ interface IGateway is IGatewayStructs {
         uint8 destinationChainId,
         address sender,
         ReceiverWithdraw[] calldata receivers,
-        uint256 feeAmount
+        uint256 feeAmount,
+        uint256 value
     ) external;
 
     function ttlEvent(bytes calldata data) external;

@@ -77,7 +77,8 @@ describe("Gateway Contract", function () {
       },
     ];
 
-    const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
+    const value = { value: ethers.parseUnits("200", "wei") };
+    const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
@@ -86,6 +87,39 @@ describe("Gateway Contract", function () {
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+    expect(withdrawEvent?.args?.value).to.equal(200);
+  });
+
+  it("Withdraw should fail if not enough value is submitted", async () => {
+    const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+    const abiCoder = new ethers.AbiCoder();
+    const address = ethers.Wallet.createRandom().address;
+    const data = abiCoder.encode(
+      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+      [[1, blockNumber + 100, 1, [[1, address, 100]]]]
+    );
+
+    await gateway.deposit(
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      data
+    );
+
+    const receiverWithdraw = [
+      {
+        receiver: "something",
+        amount: 100,
+      },
+    ];
+
+    const value = { value: ethers.parseUnits("100", "wei") };
+
+    await expect(gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value)).to.to.be.revertedWithCustomError(
+      gateway,
+      "InsufficientValue"
+    );
   });
 
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
@@ -134,8 +168,10 @@ describe("Gateway Contract", function () {
       },
     ];
 
+    const value = { value: ethers.parseUnits("200", "wei") };
+
     for (let i = 0; i < 100; i++) {
-      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
+      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
@@ -144,6 +180,7 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+      expect(withdrawEvent?.args?.value).to.equal(200);
     }
   });
 
@@ -186,13 +223,15 @@ describe("Gateway Contract", function () {
       },
     ];
 
+    const value = { value: ethers.parseUnits("200", "wei") };
+
     for (let i = 0; i < 100; i++) {
       const depositReceipt = await depositTXs[i].wait();
       const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
 
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
 
-      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100);
+      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
 
@@ -201,6 +240,7 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
+      expect(withdrawEvent?.args?.value).to.equal(200);
     }
   });
 });
