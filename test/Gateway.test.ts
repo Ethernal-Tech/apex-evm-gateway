@@ -90,10 +90,19 @@ describe("Gateway Contract", function () {
       },
     ];
 
+    const totalSupplyBefore = await nativeTokenWallet.totalSupply();
+    const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
+
     const value = { value: ethers.parseUnits("200", "wei") };
     const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
+
+    const totalSupplyAfter = await nativeTokenWallet.totalSupply();
+    const nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
+
+    expect(totalSupplyAfter).to.equal(totalSupplyBefore - BigInt(200));
+    expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + BigInt(200));
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
     expect(withdrawEvent?.args?.sender).to.equal(receiver);
@@ -197,10 +206,19 @@ describe("Gateway Contract", function () {
 
     const value = { value: ethers.parseUnits("200", "wei") };
 
+    const totalSupplyBefore = await nativeTokenWallet.totalSupply();
+    const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
+
     for (let i = 0; i < 100; i++) {
       const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
+
+      let totalSupplyAfter = await nativeTokenWallet.totalSupply();
+      let nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
+
+      expect(totalSupplyAfter).to.equal(totalSupplyBefore - BigInt(200 * (i + 1)));
+      expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + BigInt(200 * (i + 1)));
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
@@ -266,6 +284,9 @@ describe("Gateway Contract", function () {
 
     const value = { value: ethers.parseUnits("200", "wei") };
 
+    let totalSupplyBefore = await nativeTokenWallet.totalSupply();
+    let nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
+
     for (let i = 0; i < 100; i++) {
       const depositReceipt = await depositTXs[i].wait();
       const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
@@ -275,6 +296,12 @@ describe("Gateway Contract", function () {
       const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
+
+      let totalSupplyAfter = await nativeTokenWallet.totalSupply();
+      let nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
+
+      expect(totalSupplyAfter).to.equal(totalSupplyBefore - BigInt(200 * (i + 1)));
+      expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + BigInt(200 * (i + 1)));
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
