@@ -9,7 +9,6 @@ import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
 import "./NativeTokenPredicate.sol";
 import "./Validators.sol";
-import "hardhat/console.sol";
 
 contract Gateway is
     IGateway,
@@ -73,8 +72,8 @@ contract Gateway is
 
         amountSum = amountSum + _feeAmount;
 
-        if (msg.value == amountSum) {
-            revert InsufficientValue();
+        if (msg.value != amountSum) {
+            revert WrongValue();
         }
 
         address nativeTokenWalletAddress = address(
