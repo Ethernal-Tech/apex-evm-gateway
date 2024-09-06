@@ -147,7 +147,7 @@ describe("Gateway Contract", function () {
 
     await expect(gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value)).to.to.be.revertedWithCustomError(
       gateway,
-      "InsufficientValue"
+      "WrongValue"
     );
   });
 
