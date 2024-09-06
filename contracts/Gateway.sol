@@ -73,20 +73,15 @@ contract Gateway is
 
         amountSum = amountSum + _feeAmount;
 
-        if (msg.value < amountSum) {
-            emit WithdrawInsufficientValue(
-                _destinationChainId,
-                msg.sender,
-                _receivers,
-                _feeAmount,
-                msg.value
-            );
+        if (msg.value == amountSum) {
             revert InsufficientValue();
         }
 
-        address native = address(nativeTokenPredicate.nativeTokenWallet());
+        address nativeTokenWalletAddress = address(
+            nativeTokenPredicate.nativeTokenWallet()
+        );
 
-        (bool success, ) = native.call{value: amountSum}("");
+        (bool success, ) = nativeTokenWalletAddress.call{value: amountSum}("");
 
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
