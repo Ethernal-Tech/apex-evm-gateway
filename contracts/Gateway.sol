@@ -73,7 +73,7 @@ contract Gateway is
         amountSum = amountSum + _feeAmount;
 
         if (msg.value != amountSum) {
-            revert WrongValue();
+            revert WrongValue(amountSum, msg.value);
         }
 
         address nativeTokenWalletAddress = address(
