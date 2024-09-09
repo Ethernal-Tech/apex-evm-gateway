@@ -4,17 +4,16 @@ import { alwaysTrueBytecode } from "./constants";
 
 export async function deployGatewayFixtures() {
   // Contracts are deployed using the first signer/account by default
-  const [owner, receiver, validator1, validator2, validator3, validator4, validator5, validator6] =
-    await ethers.getSigners();
+  const [owner, receiver, validator1, validator2, validator3, validator4, validator5] = await ethers.getSigners();
   const validators = [validator1, validator2, validator3, validator4, validator5];
 
   const hre = require("hardhat");
 
-  const NativeERC20Mintable = await ethers.getContractFactory("NativeERC20Mintable");
-  const nativeERC20MintableLogic = await NativeERC20Mintable.deploy();
+  const NativeTokenWallet = await ethers.getContractFactory("NativeTokenWallet");
+  const nativeTokenWalletLogic = await NativeTokenWallet.deploy();
 
-  const ERC20TokenPredicate = await ethers.getContractFactory("ERC20TokenPredicate");
-  const eRC20TokenPredicateLogic = await ERC20TokenPredicate.deploy();
+  const NativeTokenPredicate = await ethers.getContractFactory("NativeTokenPredicate");
+  const nativeTokenPredicateLogic = await NativeTokenPredicate.deploy();
 
   const Validators = await ethers.getContractFactory("Validators");
   const validatorscLogic = await Validators.deploy();
@@ -22,20 +21,20 @@ export async function deployGatewayFixtures() {
   const Gateway = await ethers.getContractFactory("Gateway");
   const gatewayLogic = await Gateway.deploy();
 
-  // deployment of contract proxy
-  const ERC20TokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
-  const NativeERC20MintableProxy = await ethers.getContractFactory("ERC1967Proxy");
+  // // deployment of contract proxy
+  const NativeTokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
+  const NativeTokenWalletProxy = await ethers.getContractFactory("ERC1967Proxy");
   const ValidatorscProxy = await ethers.getContractFactory("ERC1967Proxy");
   const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
 
-  const eRC20TokenPredicateProxy = await ERC20TokenPredicateProxy.deploy(
-    eRC20TokenPredicateLogic.target,
-    ERC20TokenPredicate.interface.encodeFunctionData("initialize", [])
+  const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
+    nativeTokenPredicateLogic.target,
+    NativeTokenPredicate.interface.encodeFunctionData("initialize", [])
   );
 
-  const nativeERC20MintableProxy = await NativeERC20MintableProxy.deploy(
-    nativeERC20MintableLogic.target,
-    NativeERC20Mintable.interface.encodeFunctionData("initialize", [])
+  const nativeTokenWalletProxy = await NativeTokenWalletProxy.deploy(
+    nativeTokenWalletLogic.target,
+    NativeTokenWallet.interface.encodeFunctionData("initialize", [])
   );
 
   const validatorsAddresses = [
@@ -56,12 +55,12 @@ export async function deployGatewayFixtures() {
     Gateway.interface.encodeFunctionData("initialize", [])
   );
 
-  //casting proxy contracts to contract logic
-  const ERC20TokenPredicateDeployed = await ethers.getContractFactory("ERC20TokenPredicate");
-  const eRC20TokenPredicate = ERC20TokenPredicateDeployed.attach(eRC20TokenPredicateProxy.target);
+  // //casting proxy contracts to contract logic
+  const NativeTokenPredicateDeployed = await ethers.getContractFactory("NativeTokenPredicate");
+  const nativeTokenPredicate = NativeTokenPredicateDeployed.attach(nativeTokenPredicateProxy.target);
 
-  const NativeERC20MintableDeployed = await ethers.getContractFactory("NativeERC20Mintable");
-  const nativeERC20Mintable = NativeERC20MintableDeployed.attach(nativeERC20MintableProxy.target);
+  const NativeTokenWalletDeployed = await ethers.getContractFactory("NativeTokenWallet");
+  const nativeTokenWallet = NativeTokenWalletDeployed.attach(nativeTokenWalletProxy.target);
 
   const ValidatorsDeployed = await ethers.getContractFactory("Validators");
   const validatorsc = ValidatorsDeployed.attach(validatorsProxy.target);
@@ -69,11 +68,11 @@ export async function deployGatewayFixtures() {
   const GatewayDeployed = await ethers.getContractFactory("Gateway");
   const gateway = GatewayDeployed.attach(gatewayProxy.target);
 
-  await gateway.setDependencies(eRC20TokenPredicate.target, validatorsc.target);
+  await gateway.setDependencies(nativeTokenPredicate.target, validatorsc.target);
 
-  await eRC20TokenPredicate.setDependencies(gateway.target, nativeERC20Mintable.target);
+  await nativeTokenPredicate.setDependencies(gateway.target, nativeTokenWallet.target);
 
-  await nativeERC20Mintable.setDependencies(eRC20TokenPredicate.target, "TEST", "TEST", 18, 0);
+  await nativeTokenWallet.setDependencies(nativeTokenPredicate.target, 0);
 
   const validatorCardanoData = {
     key: ["0x1", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
@@ -102,17 +101,43 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  await validatorsc.setDependencies(gateway.target, validatorAddressCardanoData);
+  const receiverWithdraw = [
+    {
+      receiver: "something",
+      amount: 100,
+    },
+  ];
 
-  await hre.network.provider.send("hardhat_setCode", [
-    "0x0000000000000000000000000000000000002020",
-    alwaysTrueBytecode, // native transfer pre-compile
-  ]);
+  await validatorsc.setDependencies(gateway.target, validatorAddressCardanoData);
 
   await hre.network.provider.send("hardhat_setCode", [
     "0x0000000000000000000000000000000000002060",
     alwaysTrueBytecode,
   ]);
+
+  //funding
+  const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+
+  await owner.sendTransaction({
+    to: nativeTokenWalletAddress,
+    value: ethers.parseUnits("1", "ether"),
+  });
+
+  const gatewayContractAddress = await gateway.getAddress();
+
+  await owner.sendTransaction({
+    to: gatewayContractAddress,
+    value: ethers.parseUnits("1", "ether"),
+  });
+
+  //data encoding
+  const blockNumber = await ethers.provider.getBlockNumber();
+  const abiCoder = new ethers.AbiCoder();
+  const address = ethers.Wallet.createRandom().address;
+  const data = abiCoder.encode(
+    ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+    [[1, blockNumber + 100, 1, [[address, 1000]]]]
+  );
 
   return {
     hre,
@@ -120,11 +145,13 @@ export async function deployGatewayFixtures() {
     receiver,
     validators,
     gateway,
-    eRC20TokenPredicate,
-    nativeERC20Mintable,
+    nativeTokenPredicate,
+    nativeTokenWallet,
     validatorsc,
     validatorCardanoData,
     validatorAddressCardanoData,
+    receiverWithdraw,
+    data,
   };
 }
 

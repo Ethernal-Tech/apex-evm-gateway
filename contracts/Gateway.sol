@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
-import "./ERC20TokenPredicate.sol";
+import "./NativeTokenPredicate.sol";
 import "./Validators.sol";
 
 contract Gateway is
@@ -16,7 +16,7 @@ contract Gateway is
     OwnableUpgradeable,
     UUPSUpgradeable
 {
-    ERC20TokenPredicate public eRC20TokenPredicate;
+    NativeTokenPredicate public nativeTokenPredicate;
     Validators public validators;
     uint256 public constant MAX_LENGTH = 2048;
 
@@ -35,12 +35,12 @@ contract Gateway is
     ) internal override onlyOwner {}
 
     function setDependencies(
-        address _eRC20TokenPredicate,
+        address _nativeTokenPredicate,
         address _validators
     ) external onlyOwner {
-        if (_eRC20TokenPredicate == address(0) || _validators == address(0))
+        if (_nativeTokenPredicate == address(0) || _validators == address(0))
             revert ZeroAddress();
-        eRC20TokenPredicate = ERC20TokenPredicate(_eRC20TokenPredicate);
+        nativeTokenPredicate = NativeTokenPredicate(_nativeTokenPredicate);
         validators = Validators(_validators);
     }
 
@@ -54,7 +54,7 @@ contract Gateway is
 
         if (!valid) revert InvalidSignature();
 
-        eRC20TokenPredicate.deposit(_data, msg.sender);
+        nativeTokenPredicate.deposit(_data, msg.sender);
     }
 
     function withdraw(
@@ -72,18 +72,20 @@ contract Gateway is
 
         amountSum = amountSum + _feeAmount;
 
-        if (msg.value < amountSum) {
-            emit WithdrawInsufficientValue(
-                _destinationChainId,
-                msg.sender,
-                _receivers,
-                _feeAmount,
-                msg.value
-            );
-            revert InsufficientValue();
+        if (msg.value != amountSum) {
+            revert WrongValue(amountSum, msg.value);
         }
 
-        eRC20TokenPredicate.withdraw(
+        address nativeTokenWalletAddress = address(
+            nativeTokenPredicate.nativeTokenWallet()
+        );
+
+        (bool success, ) = nativeTokenWalletAddress.call{value: amountSum}("");
+
+        // Revert the transaction if the transfer fails
+        if (!success) revert TransferFailed();
+
+        nativeTokenPredicate.withdraw(
             _destinationChainId,
             _receivers,
             _feeAmount,
@@ -121,8 +123,10 @@ contract Gateway is
         emit TTLExpired(_data);
     }
 
+    receive() external payable {}
+
     modifier onlyPredicate() {
-        if (msg.sender != address(eRC20TokenPredicate)) revert NotPredicate();
+        if (msg.sender != address(nativeTokenPredicate)) revert NotPredicate();
         _;
     }
 
