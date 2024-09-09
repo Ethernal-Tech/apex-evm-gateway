@@ -41,13 +41,6 @@ describe("Gateway Contract", function () {
       [[1, blockNumber + 100, 1, [[address, 100]]]]
     );
 
-    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    await owner.sendTransaction({
-      to: nativeTokenWalletAddress,
-      value: ethers.parseUnits("1", "ether"),
-    });
-
     const depositTx = await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -71,11 +64,6 @@ describe("Gateway Contract", function () {
     );
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    await owner.sendTransaction({
-      to: nativeTokenWalletAddress,
-      value: ethers.parseUnits("1", "ether"),
-    });
 
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -123,13 +111,6 @@ describe("Gateway Contract", function () {
       [[1, blockNumber + 100, 1, [[address, 1000]]]]
     );
 
-    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    await owner.sendTransaction({
-      to: nativeTokenWalletAddress,
-      value: ethers.parseUnits("1", "ether"),
-    });
-
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -155,11 +136,6 @@ describe("Gateway Contract", function () {
     const { owner, receiver, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    await owner.sendTransaction({
-      to: nativeTokenWalletAddress,
-      value: ethers.parseUnits("10", "ether"),
-    });
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
@@ -238,11 +214,6 @@ describe("Gateway Contract", function () {
 
     await owner.sendTransaction({
       to: gatewayContractAddress,
-      value: ethers.parseUnits("1", "ether"),
-    });
-
-    await owner.sendTransaction({
-      to: nativeTokenWalletAddress,
       value: ethers.parseUnits("1", "ether"),
     });
 

@@ -108,6 +108,14 @@ export async function deployGatewayFixtures() {
     alwaysTrueBytecode,
   ]);
 
+  //funding
+  const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+
+  await owner.sendTransaction({
+    to: nativeTokenWalletAddress,
+    value: ethers.parseUnits("1", "ether"),
+  });
+
   return {
     hre,
     owner,
