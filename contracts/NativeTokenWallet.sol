@@ -58,8 +58,6 @@ contract NativeTokenWallet is
         address _account,
         uint256 _amount
     ) external onlyPredicateOrOwner returns (bool) {
-        if (_account == address(0)) revert ZeroAddress();
-
         totalSupply += _amount;
 
         (bool success, ) = _account.call{value: _amount}("");

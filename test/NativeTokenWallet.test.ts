@@ -38,18 +38,6 @@ describe("NativeTokenWallet Contract", function () {
     );
   });
 
-  it("Deposit will fail if depositing to Zero Address", async function () {
-    const { nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
-
-    const nativeTokenPredicateContract = await impersonateAsContractAndMintFunds(
-      await nativeTokenPredicate.getAddress()
-    );
-
-    await expect(
-      nativeTokenWallet.connect(nativeTokenPredicateContract).deposit(ethers.ZeroAddress, 100)
-    ).to.be.revertedWithCustomError(nativeTokenWallet, "ZeroAddress");
-  });
-
   it("Deposit success", async function () {
     const { receiver, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
