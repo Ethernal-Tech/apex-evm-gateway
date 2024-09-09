@@ -130,6 +130,15 @@ export async function deployGatewayFixtures() {
     value: ethers.parseUnits("1", "ether"),
   });
 
+  //data encoding
+  const blockNumber = await ethers.provider.getBlockNumber();
+  const abiCoder = new ethers.AbiCoder();
+  const address = ethers.Wallet.createRandom().address;
+  const data = abiCoder.encode(
+    ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+    [[1, blockNumber + 100, 1, [[address, 1000]]]]
+  );
+
   return {
     hre,
     owner,
@@ -142,6 +151,7 @@ export async function deployGatewayFixtures() {
     validatorCardanoData,
     validatorAddressCardanoData,
     receiverWithdraw,
+    data,
   };
 }
 

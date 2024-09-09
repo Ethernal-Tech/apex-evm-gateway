@@ -31,15 +31,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Deposit success", async () => {
-    const { gateway } = await loadFixture(deployGatewayFixtures);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.AbiCoder();
-    const address = ethers.Wallet.createRandom().address;
-    const data = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-      [[1, blockNumber + 100, 1, [[address, 100]]]]
-    );
+    const { gateway, data } = await loadFixture(deployGatewayFixtures);
 
     const depositTx = await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -53,15 +45,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Withdraw sucess", async () => {
-    const { receiver, gateway, nativeTokenWallet, receiverWithdraw } = await loadFixture(deployGatewayFixtures);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.AbiCoder();
-    const address = ethers.Wallet.createRandom().address;
-    const data = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-      [[1, blockNumber + 100, 1, [[address, 1000]]]]
-    );
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
@@ -94,15 +78,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Withdraw should fail if not enough value is submitted", async () => {
-    const { receiver, gateway, receiverWithdraw } = await loadFixture(deployGatewayFixtures);
-
-    const blockNumber = await ethers.provider.getBlockNumber();
-    const abiCoder = new ethers.AbiCoder();
-    const address = ethers.Wallet.createRandom().address;
-    const data = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-      [[1, blockNumber + 100, 1, [[address, 1000]]]]
-    );
+    const { receiver, gateway, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
 
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -119,7 +95,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
-    const { receiver, gateway, nativeTokenWallet, receiverWithdraw } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
@@ -185,7 +161,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Bunch of consecutive deposits/withraws", async () => {
-    const { receiver, gateway, nativeTokenWallet, receiverWithdraw } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 

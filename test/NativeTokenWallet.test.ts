@@ -14,7 +14,7 @@ describe("NativeTokenWallet Contract", function () {
   });
 
   it("SetDependencies will fail if not called by owner", async () => {
-    const { owner, receiver, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { receiver, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
       nativeTokenWallet.connect(receiver).setDependencies(nativeTokenPredicate.target, 0)
@@ -51,14 +51,9 @@ describe("NativeTokenWallet Contract", function () {
   });
 
   it("Deposit success", async function () {
-    const { nativeTokenWallet, owner, receiver } = await loadFixture(deployGatewayFixtures);
+    const { receiver, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    await owner.sendTransaction({
-      to: nativeTokenWalletAddress,
-      value: ethers.parseUnits("1", "ether"),
-    });
 
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
 
@@ -78,14 +73,7 @@ describe("NativeTokenWallet Contract", function () {
   });
 
   it("Withdraw will fail in not called by Predicate or Owner", async function () {
-    const { nativeTokenWallet, owner, receiver } = await loadFixture(deployGatewayFixtures);
-
-    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    await owner.sendTransaction({
-      to: nativeTokenWalletAddress,
-      value: ethers.parseUnits("1", "ether"),
-    });
+    const { nativeTokenWallet, receiver } = await loadFixture(deployGatewayFixtures);
 
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
 
@@ -99,13 +87,6 @@ describe("NativeTokenWallet Contract", function () {
 
   it("Withdraw success", async function () {
     const { nativeTokenWallet, owner } = await loadFixture(deployGatewayFixtures);
-
-    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    await owner.sendTransaction({
-      to: nativeTokenWalletAddress,
-      value: ethers.parseUnits("1", "ether"),
-    });
 
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
 
