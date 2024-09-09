@@ -14,7 +14,7 @@ contract Validators is
 {
     address public constant VALIDATOR_BLS_PRECOMPILE =
         0x0000000000000000000000000000000000002060;
-    uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 50000;
+    uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
 
     address public gatewayAddress;
 
