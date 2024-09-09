@@ -101,6 +101,13 @@ export async function deployGatewayFixtures() {
     },
   ];
 
+  const receiverWithdraw = [
+    {
+      receiver: "something",
+      amount: 100,
+    },
+  ];
+
   await validatorsc.setDependencies(gateway.target, validatorAddressCardanoData);
 
   await hre.network.provider.send("hardhat_setCode", [
@@ -116,6 +123,13 @@ export async function deployGatewayFixtures() {
     value: ethers.parseUnits("1", "ether"),
   });
 
+  const gatewayContractAddress = await gateway.getAddress();
+
+  await owner.sendTransaction({
+    to: gatewayContractAddress,
+    value: ethers.parseUnits("1", "ether"),
+  });
+
   return {
     hre,
     owner,
@@ -127,6 +141,7 @@ export async function deployGatewayFixtures() {
     validatorsc,
     validatorCardanoData,
     validatorAddressCardanoData,
+    receiverWithdraw,
   };
 }
 

@@ -31,7 +31,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Deposit success", async () => {
-    const { owner, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
+    const { gateway } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
@@ -53,7 +53,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Withdraw sucess", async () => {
-    const { owner, receiver, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
@@ -70,13 +70,6 @@ describe("Gateway Contract", function () {
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       data
     );
-
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
 
     const totalSupplyBefore = await nativeTokenWallet.totalSupply();
     const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
@@ -101,7 +94,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Withdraw should fail if not enough value is submitted", async () => {
-    const { owner, receiver, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, receiverWithdraw } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
@@ -117,13 +110,6 @@ describe("Gateway Contract", function () {
       data
     );
 
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
-
     const value = { value: ethers.parseUnits("1", "wei") };
 
     await expect(gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value)).to.to.be.revertedWithCustomError(
@@ -133,7 +119,7 @@ describe("Gateway Contract", function () {
   });
 
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
-    const { owner, receiver, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw } = await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
@@ -173,13 +159,6 @@ describe("Gateway Contract", function () {
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
     }
 
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
-
     const value = { value: ethers.parseUnits("200", "wei") };
 
     const totalSupplyBefore = await nativeTokenWallet.totalSupply();
@@ -206,16 +185,9 @@ describe("Gateway Contract", function () {
   });
 
   it("Bunch of consecutive deposits/withraws", async () => {
-    const { owner, receiver, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
-
-    const gatewayContractAddress = await gateway.getAddress();
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw } = await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    await owner.sendTransaction({
-      to: gatewayContractAddress,
-      value: ethers.parseUnits("1", "ether"),
-    });
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
@@ -245,13 +217,6 @@ describe("Gateway Contract", function () {
       );
       depositTXs.push(depositTX);
     }
-
-    const receiverWithdraw = [
-      {
-        receiver: "something",
-        amount: 100,
-      },
-    ];
 
     const value = { value: ethers.parseUnits("200", "wei") };
 
