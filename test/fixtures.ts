@@ -99,7 +99,7 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  await validatorsc.setDependencies(gateway.target, validatorsCardanoData);
+  await validatorsc.setValidatorsChainData(validatorsCardanoData);
 
   await hre.network.provider.send("hardhat_setCode", [
     "0x0000000000000000000000000000000000002060",

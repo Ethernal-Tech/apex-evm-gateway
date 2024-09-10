@@ -16,8 +16,6 @@ contract Validators is
         0x0000000000000000000000000000000000002060;
     uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
 
-    address public gatewayAddress;
-
     ValidatorChainData[] private validatorsChainData;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -34,17 +32,21 @@ contract Validators is
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(
-        address _gatewayAddress,
+    function setValidatorsChainData(
         ValidatorChainData[] calldata _validatorsChainData
     ) external onlyOwner {
-        if (_gatewayAddress == address(0)) revert ZeroAddress();
-        gatewayAddress = _gatewayAddress;
-
         delete validatorsChainData;
         for (uint i; i < _validatorsChainData.length; i++) {
             validatorsChainData.push(_validatorsChainData[i]);
         }
+    }
+
+    function getValidatorsChainData()
+        external
+        view
+        returns (ValidatorChainData[] memory)
+    {
+        return validatorsChainData;
     }
 
     function isBlsSignatureValid(
@@ -64,13 +66,5 @@ contract Validators is
         );
 
         return callSuccess && abi.decode(returnData, (bool));
-    }
-
-    function getValidatorsChainData()
-        external
-        view
-        returns (ValidatorChainData[] memory)
-    {
-        return validatorsChainData;
     }
 }
