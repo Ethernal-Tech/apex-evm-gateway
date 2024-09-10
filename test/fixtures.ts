@@ -47,7 +47,7 @@ export async function deployGatewayFixtures() {
 
   const validatorsProxy = await ValidatorscProxy.deploy(
     validatorscLogic.target,
-    Validators.interface.encodeFunctionData("initialize", [validatorsAddresses])
+    Validators.interface.encodeFunctionData("initialize", [])
   );
 
   const gatewayProxy = await GatewayProxy.deploy(
@@ -74,30 +74,21 @@ export async function deployGatewayFixtures() {
 
   await nativeTokenWallet.setDependencies(nativeTokenPredicate.target, 0);
 
-  const validatorCardanoData = {
-    key: ["0x1", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
-  };
-
-  const validatorAddressCardanoData = [
+  const validatorsCardanoData = [
     {
-      addr: validator1.address,
-      data: validatorCardanoData,
+      key: ["0x1", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     },
     {
-      addr: validator2.address,
-      data: validatorCardanoData,
+      key: ["0x4", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     },
     {
-      addr: validator3.address,
-      data: validatorCardanoData,
+      key: ["0x5", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     },
     {
-      addr: validator4.address,
-      data: validatorCardanoData,
+      key: ["0x3", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     },
     {
-      addr: validator5.address,
-      data: validatorCardanoData,
+      key: ["0x2", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
     },
   ];
 
@@ -108,7 +99,7 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  await validatorsc.setDependencies(gateway.target, validatorAddressCardanoData);
+  await validatorsc.setValidatorsChainData(validatorsCardanoData);
 
   await hre.network.provider.send("hardhat_setCode", [
     "0x0000000000000000000000000000000000002060",
@@ -148,10 +139,10 @@ export async function deployGatewayFixtures() {
     nativeTokenPredicate,
     nativeTokenWallet,
     validatorsc,
-    validatorCardanoData,
-    validatorAddressCardanoData,
+    validatorsCardanoData,
     receiverWithdraw,
     data,
+    validatorsAddresses,
   };
 }
 
