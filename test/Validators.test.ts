@@ -4,61 +4,20 @@ import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
 
 describe("Validators Contract", function () {
-  it("Validate initialization", async () => {
-    const { validatorsc, validators } = await loadFixture(deployGatewayFixtures);
-
-    expect(await validatorsc.validatorsCount()).to.equal(validators.length);
-    expect((await validatorsc.getValidatorsAddresses()).length).to.equal(validators.length);
-    const validatorsAddresses = await validatorsc.getValidatorsAddresses();
-    for (let i = 0; i < validators.length; i++) {
-      expect(validatorsAddresses[i]).to.equal(validators[i].address);
-    }
-    for (let i = 0; i < validators.length; i++) {
-      expect(await validatorsc.addressValidatorIndex(validatorsc.validatorsAddresses(i))).to.equal(i + 1);
-    }
-  });
-
   it("SetDependencies should fail if a validator is Zero Address", async () => {
-    const { owner, validatorsc, validatorAddressCardanoData } = await loadFixture(deployGatewayFixtures);
+    const { owner, validatorsc, validatorsCardanoData } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      validatorsc.connect(owner).setDependencies(ethers.ZeroAddress, validatorAddressCardanoData)
+      validatorsc.connect(owner).setDependencies(ethers.ZeroAddress, validatorsCardanoData)
     ).to.be.revertedWithCustomError(validatorsc, "ZeroAddress");
   });
 
-  it("SetDependencies should fail data does not match number of validators", async function () {
-    const { gateway, validatorsc, owner, validators, validatorCardanoData } = await loadFixture(deployGatewayFixtures);
-
-    const validatorAddressCardanoDataShort = [
-      {
-        addr: validators[0].address,
-        data: validatorCardanoData,
-      },
-      {
-        addr: validators[1].address,
-        data: validatorCardanoData,
-      },
-      {
-        addr: validators[2].address,
-        data: validatorCardanoData,
-      },
-      {
-        addr: validators[3].address,
-        data: validatorCardanoData,
-      },
-    ];
-
-    await expect(
-      validatorsc.connect(owner).setDependencies(gateway.target, validatorAddressCardanoDataShort)
-    ).to.be.revertedWithCustomError(gateway, "InvalidData");
-  });
-
   it("SetDependencies and validate initialization", async () => {
-    const { owner, gateway, validators, validatorsc, validatorAddressCardanoData } = await loadFixture(
+    const { owner, gateway, validators, validatorsc, validatorsCardanoData } = await loadFixture(
       deployGatewayFixtures
     );
 
-    await expect(validatorsc.connect(owner).setDependencies(gateway.target, validatorAddressCardanoData)).not.to.be
+    await expect(validatorsc.connect(owner).setDependencies(gateway.target, validatorsCardanoData)).not.to.be
       .reverted;
 
     expect(await validatorsc.gatewayAddress()).to.be.equal(gateway.target);
@@ -67,7 +26,7 @@ describe("Validators Contract", function () {
 
     for (let i = 0; i < validators.length; i++) {
       for (let j = 0; j < 4; j++) {
-        expect(chainData[i].key[j]).to.equal(validatorAddressCardanoData[i].data.key[j]);
+        expect(chainData[i].key[j]).to.equal(validatorsCardanoData[i].key[j]);
       }
     }
   });

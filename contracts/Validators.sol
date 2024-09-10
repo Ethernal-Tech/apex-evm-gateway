@@ -18,28 +18,16 @@ contract Validators is
 
     address public gatewayAddress;
 
-    ValidatorChainData[] private chainData;
-
-    address[] public validatorsAddresses;
-
-    // mapping in case they could be added/removed
-    mapping(address => uint8) public addressValidatorIndex;
-
-    uint8 public validatorsCount;
+    ValidatorChainData[] private validatorsChainData;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address[] calldata _validators) public initializer {
+    function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-        for (uint8 i; i < _validators.length; i++) {
-            addressValidatorIndex[_validators[i]] = i + 1;
-            validatorsAddresses.push(_validators[i]);
-        }
-        validatorsCount = uint8(_validators.length);
     }
 
     function _authorizeUpgrade(
@@ -48,35 +36,14 @@ contract Validators is
 
     function setDependencies(
         address _gatewayAddress,
-        ValidatorAddressChainData[] calldata _chainDatas
+        ValidatorChainData[] calldata _validatorsChainData
     ) external onlyOwner {
         if (_gatewayAddress == address(0)) revert ZeroAddress();
         gatewayAddress = _gatewayAddress;
-        _setValidatorsChainData(_chainDatas);
-    }
 
-    function _setValidatorsChainData(
-        ValidatorAddressChainData[] calldata _chainDatas
-    ) internal {
-        if (validatorsCount != _chainDatas.length) {
-            revert InvalidData("validators count");
-        }
-
-        // recreate array with n elements
-        delete chainData;
-        for (uint i; i < validatorsCount; i++) {
-            chainData.push();
-        }
-
-        // set validator chain data for each validator
-        for (uint i; i < validatorsCount; i++) {
-            ValidatorAddressChainData calldata dt = _chainDatas[i];
-            uint8 indx = addressValidatorIndex[dt.addr];
-            if (indx == 0) {
-                revert InvalidData("invalid address");
-            }
-
-            chainData[indx - 1] = dt.data;
+        delete validatorsChainData;
+        for (uint i; i < _validatorsChainData.length; i++) {
+            validatorsChainData.push(_validatorsChainData[i]);
         }
     }
 
@@ -92,15 +59,11 @@ contract Validators is
             .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
             abi.encodePacked(
                 uint8(1),
-                abi.encode(_hash, _signature, chainData, _bitmap)
+                abi.encode(_hash, _signature, validatorsChainData, _bitmap)
             )
         );
 
         return callSuccess && abi.decode(returnData, (bool));
-    }
-
-    function getValidatorsAddresses() external view returns (address[] memory) {
-        return validatorsAddresses;
     }
 
     function getValidatorsChainData()
@@ -108,6 +71,6 @@ contract Validators is
         view
         returns (ValidatorChainData[] memory)
     {
-        return chainData;
+        return validatorsChainData;
     }
 }

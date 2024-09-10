@@ -2,11 +2,6 @@
 pragma solidity ^0.8.24;
 
 interface IGatewayStructs {
-    struct ValidatorAddressChainData {
-        address addr;
-        ValidatorChainData data;
-    }
-
     struct ValidatorChainData {
         // verifying key, verifying Fee key for Cardano
         // BLS for EVM
