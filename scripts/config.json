@@ -1,6 +1,6 @@
 {
   "Bridge": {
-    "addr": "0x103d48db44d8aAe975a936a76B0aCa63cE98C47e",
+    "addr": "BRIDGE_ADDRESS",
     "chainId": 1,
     "ABI": [
       {
@@ -32,6 +32,9 @@
     ]
   },
   "NativeToken": {
-    "tokenSupply": 0
+    "tokenSupply": "AMOUNT_OF_TOKENS"
+  },
+  "JsonRpcProvider": {
+    "url": "CHAIN_RPC_URL"
   }
 }

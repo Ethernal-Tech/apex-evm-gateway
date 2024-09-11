@@ -1,20 +1,31 @@
 const { ethers } = require("hardhat");
+const { JsonRpcProvider } = require("ethers");
 
 async function main() {
   const config = require("./config.json");
 
-  //get address of bridge smart contract from config file
-
   // Use the default provider (this automatically connects to a provider service)
-  const provider = ethers.getDefaultProvider(); // Connects to mainnet
+  // const provider = ethers.getDefaultProvider();
+  const provider = new JsonRpcProvider(config.JsonRpcProvider.url);
 
   // Create a contract instance
   const contract = new ethers.Contract(config.Bridge.addr, config.Bridge.ABI, provider);
+  let validatorsChainData = [];
 
-  let validatorsChainData = await contract.getValidatorsChainData(config.Bridge.chainId);
+  validatorsChainData = await contract.getValidatorsChainData(config.Bridge.chainId);
 
-  const BridgeDeployed = await ethers.getContractFactory("Bridge");
-  const bridge = BridgeDeployed.attach(bridgeAddress);
+  const validatorsChainDataJson = [];
+
+  for (let i = 0; i < validatorsChainData.length; i++) {
+    validatorsChainDataJson.push({
+      key: [
+        validatorsChainData[i][0][0],
+        validatorsChainData[i][0][1],
+        validatorsChainData[i][0][2],
+        validatorsChainData[i][0][3],
+      ],
+    });
+  }
 
   //deployment of contract logic
   const Gateway = await ethers.getContractFactory("Gateway");
@@ -68,27 +79,19 @@ async function main() {
   await gateway.setDependencies(nativeTokenPredicateProxy.target, validatorscProxy.target);
   await nativeTokenPredicate.setDependencies(gatewayProxy.target, nativeTokenWalletProxy.target);
   await nativeTokenWallet.setDependencies(nativeTokenPredicateProxy.target, config.NativeToken.tokenSupply);
-  await validatorsc.setValidatorsChainData(validatorsChainData);
+  await validatorsc.setValidatorsChainData(validatorsChainDataJson);
 
   console.log("GatewayLogic deployed at:", gatewayLogic.target);
   console.log("GatewayProxy deployed at:", gatewayProxy.target);
   console.log("---");
-  console.log("GatewayLogic owner:", await gateway.owner());
-  console.log("---");
   console.log("NativeTokenPredicateLogic deployed at:", nativeTokenPredicateLogic.target);
   console.log("NativeTokenPredicateProxy deployed at:", nativeTokenPredicateProxy.target);
-  console.log("---");
-  console.log("NativeTokenPredicateLogic owner:", await nativeTokenPredicate.owner());
   console.log("---");
   console.log("NativeTokenWalletLogic deployed at:", nativeTokenWalletLogic.target);
   console.log("NativeTokenWalletProxy deployed at:", nativeTokenWalletProxy.target);
   console.log("---");
-  console.log("NativeTokenWalletLogic owner:", await nativeTokenWallet.owner());
-  console.log("---");
   console.log("ValidatorsLogic deployed at:", validatorscLogic.target);
   console.log("ValidatorsProxy deployed at:", validatorscProxy.target);
-  console.log("---");
-  console.log("ValidatorsLogic owner:", await validatorsc.owner());
   console.log("---");
 
   // Proxy Gateway upgrade test
