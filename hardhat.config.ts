@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-switch-network";
 // import "dotenv/config";
 
 const config: HardhatUserConfig = {
@@ -9,11 +10,16 @@ const config: HardhatUserConfig = {
 module.exports = {
   networks: {
     hardhat: {},
-    // coston2: {
-    //   url: process.env.COSTON2_URL,
-    //   accounts: [process.env.PRIVATE_KEY],
-    //   gasPrice: 35000000000,
-    // },
+    bridge: {
+      url: process.env.BRIDGE_URL,
+      accounts: [process.env.BRIDGE_PRIVATE_KEY],
+      gasPrice: 35000000000,
+    },
+    nexus: {
+      url: process.env.NEXUS_URL,
+      accounts: [process.env.NEXUS_PRIVATE_KEY],
+      gasPrice: 35000000000,
+    },
   },
   solidity: {
     version: "0.8.24",

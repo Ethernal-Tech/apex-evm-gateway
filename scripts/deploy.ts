@@ -1,7 +1,8 @@
 const { ethers } = require("hardhat");
 const { JsonRpcProvider } = require("ethers");
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-async function main() {
+async function main(hre: HardhatRuntimeEnvironment) {
   const config = require("./config.json");
 
   // const provider = ethers.getDefaultProvider();
@@ -24,6 +25,13 @@ async function main() {
       ],
     });
   }
+
+  // await hre.switchNetwork("sepolia");
+
+  await hre.network.provider.request({
+    method: "hardhat_switchNetwork",
+    params: [{ networkName: "nexus" }],
+  });
 
   //deployment of contract logic
   const Gateway = await ethers.getContractFactory("Gateway");
