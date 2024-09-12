@@ -4,15 +4,13 @@ const { JsonRpcProvider } = require("ethers");
 async function main() {
   const config = require("./config.json");
 
-  // Use the default provider (this automatically connects to a provider service)
   // const provider = ethers.getDefaultProvider();
   const provider = new JsonRpcProvider(config.JsonRpcProvider.url);
 
   // Create a contract instance
   const contract = new ethers.Contract(config.Bridge.addr, config.Bridge.ABI, provider);
-  let validatorsChainData = [];
 
-  validatorsChainData = await contract.getValidatorsChainData(config.Bridge.chainId);
+  const validatorsChainData = await contract.getValidatorsChainData(config.Bridge.chainId);
 
   const validatorsChainDataJson = [];
 
@@ -109,8 +107,6 @@ async function main() {
   // console.log("Hello call GatewayV2", result);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
