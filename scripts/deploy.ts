@@ -115,7 +115,7 @@ async function main(hre: HardhatRuntimeEnvironment) {
   // console.log("Hello call GatewayV2", result);
 }
 
-main().catch((error) => {
+main(hre).catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
