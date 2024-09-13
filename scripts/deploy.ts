@@ -28,12 +28,7 @@ async function main(hre: HardhatRuntimeEnvironment) {
 
   console.log(validatorsChainDataJson);
 
-  // await hre.switchNetwork("sepolia");
-
-  await hre.network.provider.request({
-    method: "hardhat_switchNetwork",
-    params: [{ networkName: "nexus" }],
-  });
+  await hre.switchNetwork("nexus");
 
   //deployment of contract logic
   const Gateway = await ethers.getContractFactory("Gateway");
