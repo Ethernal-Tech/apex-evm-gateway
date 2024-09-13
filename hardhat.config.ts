@@ -10,9 +10,9 @@ const config: HardhatUserConfig = {
 module.exports = {
   networks: {
     hardhat: {},
-    bridge: {
-      url: process.env.BRIDGE_URL,
-      accounts: [process.env.BRIDGE_PRIVATE_KEY],
+    blade: {
+      url: process.env.BLADE,
+      accounts: [process.env.BLADE_PRIVATE_KEY],
       gasPrice: 35000000000,
     },
     nexus: {
