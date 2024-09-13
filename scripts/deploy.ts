@@ -5,7 +5,6 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 async function main(hre: HardhatRuntimeEnvironment) {
   const config = require("./config.json");
 
-  // const provider = ethers.getDefaultProvider();
   const provider = new JsonRpcProvider(config.JsonRpcProvider.url);
 
   // Create a contract instance

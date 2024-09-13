@@ -1,7 +1,7 @@
 {
   "Bridge": {
-    "addr": "0x839902AA5A6f1a0714c9B0083E7c093002db3AfE",
-    "chainId": 1,
+    "addr": "BRIDGE_ADDRESS",
+    "chainId": "CHAIN_ID",
     "ABI": [
       {
         "inputs": [
@@ -32,9 +32,9 @@
     ]
   },
   "NativeToken": {
-    "tokenSupply": "1000"
+    "tokenSupply": "TOKEN_SUPPLY"
   },
   "JsonRpcProvider": {
-    "url": "https://coston-api.flare.network/ext/bc/C/rpc"
+    "url": "BLADE_RPC_URL"
   }
 }
