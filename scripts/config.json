@@ -35,6 +35,6 @@
     "tokenSupply": "1000"
   },
   "JsonRpcProvider": {
-    "url": "https://coston2-api.flare.network/ext/bc/C/rpc"
+    "url": "https://coston-api.flare.network/ext/bc/C/rpc"
   }
 }
