@@ -1,16 +1,5 @@
 {
-  "JsonRpcProviderBlade": {
-    "url": "BLADE_RPC_URL"
-  },
-  "JsonRpcProviderNexus": {
-    "url": "NEXUS_RPC_URL",
-    "privateKey": "NEXUS_PRIVATE_KEY"
-  },
-  "NativeToken": {
-    "tokenSupply": "AMOUNT_OF_TOKENS"
-  },
   "Bridge": {
-    "addr": "BRIDGE_ADDRESS",
     "getValidatorsChainData": [
       {
         "inputs": [

@@ -8,10 +8,21 @@ const validatorsJson = require("../artifacts/contracts/Validators.sol/Validators
 const ERC1967ProxyJson = require("../artifacts/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol/ERC1967Proxy.json");
 
 const main = async () => {
-  //Getting validatorsData from Blade
-  let provider = new JsonRpcProvider(config.JsonRpcProviderBlade.url);
+  if (process.argv.slice(2).length < 2) {
+    console.log("Please provide the RPC URL as an argument");
+    process.exit(1);
+  }
 
-  const contract = new ethers.Contract(config.Bridge.addr, config.Bridge.getValidatorsChainData, provider);
+  const BLADE_RPC_URL = process.argv[2];
+  const BRIDGE_ADDRESS = process.argv[3];
+  const NEXUS_RPC_URL = process.argv[4];
+  const NEXUS_PRIVATE_KEY = process.argv[5];
+  const GATEWAY_AMOUNT_OF_TOKENS = process.argv[6];
+
+  //Getting validatorsData from Blade
+  let provider = new JsonRpcProvider(BLADE_RPC_URL);
+
+  const contract = new ethers.Contract(BRIDGE_ADDRESS, config.Bridge.getValidatorsChainData, provider);
 
   console.log("--- Gettig validatorsChainData from Blade");
   //TO DO change to 2 when done
@@ -31,9 +42,9 @@ const main = async () => {
   }
 
   console.log("--- Deploying the Logic Contracts");
-  provider = new JsonRpcProvider(config.JsonRpcProviderNexus.url);
+  provider = new JsonRpcProvider(NEXUS_RPC_URL);
 
-  const wallet = new ethers.Wallet(config.JsonRpcProviderNexus.privateKey, provider);
+  const wallet = new ethers.Wallet(NEXUS_PRIVATE_KEY, provider);
 
   const gatewayFactory = new ethers.ContractFactory(gatewayJson.abi, gatewayJson.bytecode, wallet);
   const gatewayLogic = await gatewayFactory.deploy();
@@ -110,10 +121,7 @@ const main = async () => {
     wallet
   );
 
-  await proxyNativeTokenWallet.setDependencies(
-    nativeTokenPredicateProxyContract.target,
-    config.NativeToken.tokenSupply
-  );
+  await proxyNativeTokenWallet.setDependencies(nativeTokenPredicateProxyContract.target, GATEWAY_AMOUNT_OF_TOKENS);
 
   console.log("--- Setting validatorsChainData");
   const proxyValidators = new ethers.Contract(validatorsProxyContract.target, validatorsJson.abi, wallet);
