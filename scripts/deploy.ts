@@ -26,6 +26,8 @@ async function main(hre: HardhatRuntimeEnvironment) {
     });
   }
 
+  console.log(validatorsChainDataJson);
+
   // await hre.switchNetwork("sepolia");
 
   await hre.network.provider.request({
