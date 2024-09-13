@@ -11,7 +11,7 @@ module.exports = {
   networks: {
     hardhat: {},
     blade: {
-      url: process.env.BLADE,
+      url: process.env.BLADE_URL,
       accounts: [process.env.BLADE_PRIVATE_KEY],
       gasPrice: 35000000000,
     },
