@@ -95,29 +95,4 @@ describe("NativeTokenPredicate Contract", function () {
 
     expect(depositEvent?.args?.data).to.equal(data);
   });
-
-  it("Withdraw sucess", async () => {
-    const { owner, receiver, gateway, nativeTokenWallet, nativeTokenPredicate, receiverWithdraw } = await loadFixture(
-      deployGatewayFixtures
-    );
-
-    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
-
-    await nativeTokenWallet.deposit(owner.address, randomAmount);
-
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
-
-    const withdrawTx = await nativeTokenPredicate
-      .connect(gatewayContract)
-      .withdraw(1, receiverWithdraw, 100, receiver, 200, 200);
-    const withdrawReceipt = await withdrawTx.wait();
-    const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
-
-    expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
-    expect(withdrawEvent?.args?.sender).to.equal(receiver);
-    expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
-    expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-    expect(withdrawEvent?.args?.feeAmount).to.equal(100);
-    expect(withdrawEvent?.args?.value).to.equal(200);
-  });
 });

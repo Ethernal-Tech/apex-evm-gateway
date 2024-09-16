@@ -85,13 +85,12 @@ contract Gateway is
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
 
-        nativeTokenPredicate.withdraw(
+        emit Withdraw(
             _destinationChainId,
+            msg.sender,
             _receivers,
             _feeAmount,
-            msg.sender,
-            amountSum,
-            msg.value
+            amountSum
         );
     }
 
@@ -99,22 +98,6 @@ contract Gateway is
         bytes calldata _data
     ) external onlyPredicate maxLengthExceeded(_data) {
         emit Deposit(_data);
-    }
-
-    function withdrawEvent(
-        uint8 _destinationChainId,
-        address _sender,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount,
-        uint256 _value
-    ) external onlyPredicate {
-        emit Withdraw(
-            _destinationChainId,
-            _sender,
-            _receivers,
-            _feeAmount,
-            _value
-        );
     }
 
     function ttlEvent(

@@ -7,7 +7,7 @@ describe("NativeTokenWallet Contract", function () {
   it("SetDependencies should fail if Predicate is Zero Address", async () => {
     const { owner, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
-    await expect(nativeTokenWallet.connect(owner).setDependencies(ethers.ZeroAddress, 0)).to.be.revertedWithCustomError(
+    await expect(nativeTokenWallet.connect(owner).setDependencies(ethers.ZeroAddress)).to.be.revertedWithCustomError(
       nativeTokenWallet,
       "ZeroAddress"
     );
@@ -17,14 +17,14 @@ describe("NativeTokenWallet Contract", function () {
     const { receiver, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
 
     await expect(
-      nativeTokenWallet.connect(receiver).setDependencies(nativeTokenPredicate.target, 0)
+      nativeTokenWallet.connect(receiver).setDependencies(nativeTokenPredicate.target)
     ).to.be.revertedWithCustomError(nativeTokenPredicate, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
     const { owner, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-    await expect(nativeTokenWallet.connect(owner).setDependencies(nativeTokenPredicate.target, 0)).to.not.be.reverted;
+    await expect(nativeTokenWallet.connect(owner).setDependencies(nativeTokenPredicate.target)).to.not.be.reverted;
     expect(await nativeTokenWallet.predicate()).to.equal(nativeTokenPredicate.target);
     expect(await nativeTokenWallet.owner()).to.equal(owner.address);
   });
@@ -45,47 +45,15 @@ describe("NativeTokenWallet Contract", function () {
 
     const randomAmount = Math.floor(Math.random() * 1000000 + 1);
 
-    const totalSupplyBefore = await nativeTokenWallet.totalSupply();
     const receiverBalanceBefore = await ethers.provider.getBalance(receiver);
     const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
 
     await nativeTokenWallet.deposit(receiver.address, randomAmount);
 
-    const totalSupplyAfter = await nativeTokenWallet.totalSupply();
     const receiverBalanceAfter = await ethers.provider.getBalance(receiver);
     const nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
 
-    expect(totalSupplyAfter).to.equal(totalSupplyBefore + BigInt(randomAmount));
     expect(receiverBalanceAfter).to.equal(receiverBalanceBefore + BigInt(randomAmount));
     expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore - BigInt(randomAmount));
-  });
-
-  it("Withdraw will fail in not called by Predicate or Owner", async function () {
-    const { nativeTokenWallet, receiver } = await loadFixture(deployGatewayFixtures);
-
-    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
-
-    await nativeTokenWallet.deposit(receiver.address, randomAmount);
-
-    await expect(nativeTokenWallet.connect(receiver).withdraw(1)).to.be.revertedWithCustomError(
-      nativeTokenWallet,
-      "NotPredicateOrOwner"
-    );
-  });
-
-  it("Withdraw success", async function () {
-    const { nativeTokenWallet, owner } = await loadFixture(deployGatewayFixtures);
-
-    const randomAmount = Math.floor(Math.random() * 1000000 + 1);
-
-    await nativeTokenWallet.deposit(owner.address, randomAmount);
-
-    const totalSupplyBefore = await nativeTokenWallet.totalSupply();
-
-    await nativeTokenWallet.connect(owner).withdraw(100);
-
-    const totalSupplyAfter = await nativeTokenWallet.totalSupply();
-
-    expect(totalSupplyAfter).to.equal(totalSupplyBefore - BigInt(100));
   });
 });

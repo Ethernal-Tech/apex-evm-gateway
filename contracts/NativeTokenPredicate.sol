@@ -87,31 +87,6 @@ contract NativeTokenPredicate is
         gateway.depositEvent(_data);
     }
 
-    /**
-     * @notice Function to withdraw tokens from the withdrawer to receiver on the destination chain
-     * @param _destinationChainId id of the destination chain
-     * @param _receivers array of ReceiverWithdraw structs on the destination chain
-     * @param _feeAmount amount to cover the fees
-     */
-    function withdraw(
-        uint8 _destinationChainId,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount,
-        address _caller,
-        uint256 _amountSum,
-        uint256 _value
-    ) external {
-        nativeTokenWallet.withdraw(_amountSum);
-
-        gateway.withdrawEvent(
-            _destinationChainId,
-            _caller,
-            _receivers,
-            _feeAmount,
-            _value
-        );
-    }
-
     modifier onlyGateway() {
         if (msg.sender != address(gateway)) revert NotGateway();
         _;

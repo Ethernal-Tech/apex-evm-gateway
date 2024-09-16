@@ -17,11 +17,4 @@ interface INativeTokenWallet {
      * @return bool Returns true if function call is successful
      */
     function deposit(address account, uint256 amount) external returns (bool);
-
-    /**
-     * @notice Withdraw an amount of tokens from a particular address
-     * @dev Can only be called by the predicate address
-     * @param amount Amount of tokens to burn from the account
-     */
-    function withdraw(uint256 amount) external;
 }
