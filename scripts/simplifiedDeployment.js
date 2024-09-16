@@ -8,8 +8,8 @@ const validatorsJson = require("../artifacts/contracts/Validators.sol/Validators
 const ERC1967ProxyJson = require("../artifacts/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol/ERC1967Proxy.json");
 
 const main = async () => {
-  if (process.argv.slice(2).length < 2) {
-    console.log("Please provide the RPC URL as an argument");
+  if (process.argv.slice(2).length < 4) {
+    console.log("Please provide 4 arguments: BLADE_RPC_URL, BRIDGE_ADDRESS, NEXUS_RPC_URL, NEXUS_PRIVATE_KEY");
     process.exit(1);
   }
 
@@ -17,7 +17,6 @@ const main = async () => {
   const BRIDGE_ADDRESS = process.argv[3];
   const NEXUS_RPC_URL = process.argv[4];
   const NEXUS_PRIVATE_KEY = process.argv[5];
-  const GATEWAY_AMOUNT_OF_TOKENS = process.argv[6];
 
   //Getting validatorsData from Blade
   let provider = new JsonRpcProvider(BLADE_RPC_URL);
@@ -121,7 +120,7 @@ const main = async () => {
     wallet
   );
 
-  await proxyNativeTokenWallet.setDependencies(nativeTokenPredicateProxyContract.target, GATEWAY_AMOUNT_OF_TOKENS);
+  await proxyNativeTokenWallet.setDependencies(nativeTokenPredicateProxyContract.target);
 
   console.log("--- Setting validatorsChainData");
   const proxyValidators = new ethers.Contract(validatorsProxyContract.target, validatorsJson.abi, wallet);
