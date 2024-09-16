@@ -24,7 +24,7 @@ const main = async () => {
 
   const contract = new ethers.Contract(BRIDGE_ADDRESS, config.Bridge.getValidatorsChainData, provider);
 
-  console.log("--- Gettig validatorsChainData from Blade");
+  console.log("--- Getting validatorsChainData from Blade");
   //TO DO change to 2 when done
   const validatorsChainData = await contract.getValidatorsChainData(1);
 
