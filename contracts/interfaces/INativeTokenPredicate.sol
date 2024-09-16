@@ -5,13 +5,4 @@ import "./IGatewayStructs.sol";
 
 interface INativeTokenPredicate is IGatewayStructs {
     function deposit(bytes calldata data, address relayer) external;
-
-    function withdraw(
-        uint8 _destinationChainId,
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount,
-        address _caller,
-        uint256 _amountSum,
-        uint256 _value
-    ) external;
 }

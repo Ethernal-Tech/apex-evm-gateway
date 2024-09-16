@@ -22,7 +22,6 @@ contract NativeTokenWallet is
     INativeTokenWallet
 {
     address public predicate;
-    uint256 public totalSupply;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -38,13 +37,9 @@ contract NativeTokenWallet is
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(
-        address _predicate,
-        uint256 _tokenSupply
-    ) external onlyOwner {
+    function setDependencies(address _predicate) external onlyOwner {
         if (_predicate == address(0)) revert ZeroAddress();
         predicate = _predicate;
-        totalSupply = _tokenSupply;
     }
 
     /**
@@ -58,18 +53,12 @@ contract NativeTokenWallet is
         address _account,
         uint256 _amount
     ) external onlyPredicateOrOwner returns (bool) {
-        totalSupply += _amount;
-
         (bool success, ) = _account.call{value: _amount}("");
 
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
 
         return true;
-    }
-
-    function withdraw(uint256 _amount) external override onlyPredicateOrOwner {
-        totalSupply -= _amount;
     }
 
     receive() external payable {}
