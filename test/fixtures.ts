@@ -72,23 +72,23 @@ export async function deployGatewayFixtures() {
 
   await nativeTokenPredicate.setDependencies(gateway.target, nativeTokenWallet.target);
 
-  await nativeTokenWallet.setDependencies(nativeTokenPredicate.target, 0);
+  await nativeTokenWallet.setDependencies(nativeTokenPredicate.target);
 
   const validatorsCardanoData = [
     {
-      key: ["0x1", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      key: ["0x1", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     },
     {
-      key: ["0x4", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      key: ["0x4", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     },
     {
-      key: ["0x5", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      key: ["0x5", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     },
     {
-      key: ["0x3", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      key: ["0x3", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     },
     {
-      key: ["0x2", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+      key: ["0x2", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     },
   ];
 
