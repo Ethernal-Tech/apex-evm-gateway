@@ -9,6 +9,7 @@ import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
 import "./NativeTokenPredicate.sol";
 import "./Validators.sol";
+import "hardhat/console.sol";
 
 contract Gateway is
     IGateway,
@@ -49,12 +50,17 @@ contract Gateway is
         uint256 _bitmap,
         bytes calldata _data
     ) external {
+        console.log("deposit 1");
         bytes32 _hash = keccak256(_data);
+        console.log("deposit 2");
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
+        console.log("deposit 3");
 
         if (!valid) revert InvalidSignature();
+        console.log("deposit 4");
 
         nativeTokenPredicate.deposit(_data, msg.sender);
+        console.log("deposit 5");
     }
 
     function withdraw(
