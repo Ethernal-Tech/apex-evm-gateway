@@ -56,6 +56,7 @@ contract NativeTokenWallet is
         uint256 _amount
     ) external onlyPredicateOrOwner returns (bool) {
         console.log("SAPUZI 1");
+        console.log(_account);
         console.log(Strings.toString(_amount));
         (bool success, ) = _account.call{value: _amount}("");
         console.log("SAPUZI 2");
