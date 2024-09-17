@@ -8,42 +8,61 @@ const validatorsJson = require("../artifacts/contracts/Validators.sol/Validators
 const ERC1967ProxyJson = require("../artifacts/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol/ERC1967Proxy.json");
 
 const main = async () => {
-  if (process.argv.slice(2).length < 4) {
-    console.log("Please provide 4 arguments: BLADE_RPC_URL, BRIDGE_ADDRESS, NEXUS_RPC_URL, NEXUS_PRIVATE_KEY");
+  if (process.argv.slice(2).length < 2) {
+    console.log("Please provide 2 arguments: NEXUS_RPC_URL, NEXUS_PRIVATE_KEY");
     process.exit(1);
   }
 
-  const BLADE_RPC_URL = process.argv[2];
-  const BRIDGE_ADDRESS = process.argv[3];
-  const NEXUS_RPC_URL = process.argv[4];
-  const NEXUS_PRIVATE_KEY = process.argv[5];
+  const NEXUS_RPC_URL = process.argv[2];
+  const NEXUS_PRIVATE_KEY = process.argv[3];
 
-  //Getting validatorsData from Blade
-  let provider = new JsonRpcProvider(BLADE_RPC_URL);
+  provider = new JsonRpcProvider(NEXUS_RPC_URL);
+  const wallet = new ethers.Wallet(NEXUS_PRIVATE_KEY, provider);
 
-  const contract = new ethers.Contract(BRIDGE_ADDRESS, config.Bridge.getValidatorsChainData, provider);
-
-  console.log("--- Getting validatorsChainData from Blade");
-  //TO DO change to 2 when done
-  const validatorsChainData = await contract.getValidatorsChainData(1);
-
-  const validatorsChainDataJson = [];
-
-  for (let i = 0; i < validatorsChainData.length; i++) {
-    validatorsChainDataJson.push({
+  const validatorsChainData = [
+    {
       key: [
-        validatorsChainData[i][0][0],
-        validatorsChainData[i][0][1],
-        validatorsChainData[i][0][2],
-        validatorsChainData[i][0][3],
+        config.Validators.validator1key[0],
+        config.Validators.validator1key[1],
+        config.Validators.validator1key[2],
+        config.Validators.validator1key[3],
       ],
-    });
-  }
+    },
+    {
+      key: [
+        config.Validators.validator2key[0],
+        config.Validators.validator2key[1],
+        config.Validators.validator2key[2],
+        config.Validators.validator2key[3],
+      ],
+    },
+    {
+      key: [
+        config.Validators.validator3key[0],
+        config.Validators.validator3key[1],
+        config.Validators.validator3key[2],
+        config.Validators.validator3key[3],
+      ],
+    },
+    {
+      key: [
+        config.Validators.validator4key[0],
+        config.Validators.validator4key[1],
+        config.Validators.validator4key[2],
+        config.Validators.validator4key[3],
+      ],
+    },
+    {
+      key: [
+        config.Validators.validator5key[0],
+        config.Validators.validator5key[1],
+        config.Validators.validator5key[2],
+        config.Validators.validator5key[3],
+      ],
+    },
+  ];
 
   console.log("--- Deploying the Logic Contracts");
-  provider = new JsonRpcProvider(NEXUS_RPC_URL);
-
-  const wallet = new ethers.Wallet(NEXUS_PRIVATE_KEY, provider);
 
   const gatewayFactory = new ethers.ContractFactory(gatewayJson.abi, gatewayJson.bytecode, wallet);
   const gatewayLogic = await gatewayFactory.deploy();
@@ -125,7 +144,7 @@ const main = async () => {
   console.log("--- Setting validatorsChainData");
   const proxyValidators = new ethers.Contract(validatorsProxyContract.target, validatorsJson.abi, wallet);
 
-  await proxyValidators.setValidatorsChainData(validatorsChainDataJson);
+  await proxyValidators.setValidatorsChainData(validatorsChainData);
 };
 
 main();
