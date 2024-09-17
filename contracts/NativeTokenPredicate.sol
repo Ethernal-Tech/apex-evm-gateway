@@ -12,6 +12,7 @@ import "./interfaces/INativeTokenPredicate.sol";
 import "./interfaces/INativeTokenWallet.sol";
 import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
+import "hardhat/console.sol";
 
 /**
     @title ERC20TokenPredicate
@@ -59,17 +60,21 @@ contract NativeTokenPredicate is
         bytes calldata _data,
         address _relayer
     ) external onlyGateway {
+        console.log("ZEBRONI 0");
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
         if (usedBatches[_deposits.batchId]) {
+            console.log("ZEBRONI 1");
             revert BatchAlreadyExecuted();
         }
 
         if (_deposits.ttlExpired < block.number) {
+            console.log("ZEBRONI 2");
             gateway.ttlEvent(_data);
             return;
         }
 
+        console.log("ZEBRONI 3");
         usedBatches[_deposits.batchId] = true;
 
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
@@ -82,8 +87,9 @@ contract NativeTokenPredicate is
             );
         }
 
+        console.log("ZEBRONI 4");
         nativeTokenWallet.deposit(_relayer, _deposits.feeAmount);
-
+        console.log("ZEBRONI 5");
         gateway.depositEvent(_data);
     }
 

@@ -8,6 +8,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interfaces/IGatewayStructs.sol";
 import "./interfaces/INativeTokenWallet.sol";
 import "./NativeTokenPredicate.sol";
+import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
     @title NativeToken
@@ -53,10 +55,14 @@ contract NativeTokenWallet is
         address _account,
         uint256 _amount
     ) external onlyPredicateOrOwner returns (bool) {
+        console.log("SAPUZI 1");
+        console.log(Strings.toString(_amount));
         (bool success, ) = _account.call{value: _amount}("");
+        console.log("SAPUZI 2");
 
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
+        console.log("SAPUZI 3");
 
         return true;
     }
