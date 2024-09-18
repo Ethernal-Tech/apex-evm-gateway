@@ -52,14 +52,6 @@ const main = async () => {
         config.Validators.validator4key[3],
       ],
     },
-    {
-      key: [
-        config.Validators.validator5key[0],
-        config.Validators.validator5key[1],
-        config.Validators.validator5key[2],
-        config.Validators.validator5key[3],
-      ],
-    },
   ];
 
   console.log("--- Deploying the Logic Contracts");
