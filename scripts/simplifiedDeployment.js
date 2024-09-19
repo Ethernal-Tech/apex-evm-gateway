@@ -115,7 +115,12 @@ const main = async () => {
   console.log("--- Setting dependencies");
   const proxyGateway = new ethers.Contract(gatewayProxyContract.target, gatewayJson.abi, wallet);
 
-  await proxyGateway.setDependencies(nativeTokenPredicateProxyContract.target, validatorsProxyContract.target);
+  let gasPrice = (await provider.getFeeData()).gasPrice;
+  gasPrice = gasPrice * BigInt(2);
+
+  await proxyGateway.setDependencies(nativeTokenPredicateProxyContract.target, validatorsProxyContract.target, {
+    gasPrice: gasPrice,
+  });
 
   const proxyNativeTokenPredicate = new ethers.Contract(
     nativeTokenPredicateProxyContract.target,
@@ -123,7 +128,9 @@ const main = async () => {
     wallet
   );
 
-  await proxyNativeTokenPredicate.setDependencies(gatewayProxyContract.target, nativeTokenWalletProxyContract.target);
+  await proxyNativeTokenPredicate.setDependencies(gatewayProxyContract.target, nativeTokenWalletProxyContract.target, {
+    gasPrice: gasPrice,
+  });
 
   const proxyNativeTokenWallet = new ethers.Contract(
     nativeTokenWalletProxyContract.target,
@@ -131,12 +138,16 @@ const main = async () => {
     wallet
   );
 
-  await proxyNativeTokenWallet.setDependencies(nativeTokenPredicateProxyContract.target);
+  await proxyNativeTokenWallet.setDependencies(nativeTokenPredicateProxyContract.target, {
+    gasPrice: gasPrice,
+  });
 
   console.log("--- Setting validatorsChainData");
   const proxyValidators = new ethers.Contract(validatorsProxyContract.target, validatorsJson.abi, wallet);
 
-  await proxyValidators.setValidatorsChainData(validatorsChainData);
+  await proxyValidators.setValidatorsChainData(validatorsChainData, {
+    gasPrice: gasPrice,
+  });
 };
 
 main();
