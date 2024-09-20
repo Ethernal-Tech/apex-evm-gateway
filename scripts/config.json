@@ -1,8 +1,8 @@
 {
   "Validators": {
-    "validator1key": [0, 0, 0, 0],
-    "validator2key": [1, 1, 1, 1],
-    "validator3key": [2, 2, 2, 2],
-    "validator4key": [3, 3, 3, 3]
+    "validator1key": ["0", "0", "0", "0"],
+    "validator2key": ["1", "1", "1", "1"],
+    "validator3key": ["2", "2", "2", "2"],
+    "validator4key": ["3", "3", "3", "3"]
   }
 }
