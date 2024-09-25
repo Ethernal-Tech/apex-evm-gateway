@@ -19,41 +19,13 @@ const main = async () => {
   provider = new JsonRpcProvider(NEXUS_RPC_URL);
   const wallet = new ethers.Wallet(NEXUS_PRIVATE_KEY, provider);
 
-  const validatorsChainData = [
-    {
-      key: [
-        config.Validators.validator1key[0],
-        config.Validators.validator1key[1],
-        config.Validators.validator1key[2],
-        config.Validators.validator1key[3],
-      ],
-    },
-    {
-      key: [
-        config.Validators.validator2key[0],
-        config.Validators.validator2key[1],
-        config.Validators.validator2key[2],
-        config.Validators.validator2key[3],
-      ],
-    },
-    {
-      key: [
-        config.Validators.validator3key[0],
-        config.Validators.validator3key[1],
-        config.Validators.validator3key[2],
-        config.Validators.validator3key[3],
-      ],
-    },
-    {
-      key: [
-        config.Validators.validator4key[0],
-        config.Validators.validator4key[1],
-        config.Validators.validator4key[2],
-        config.Validators.validator4key[3],
-      ],
-    },
-  ];
-
+  const validatorsChainData = []
+  for (let x of config.BlsKeys) {
+      validatorsChainData.push({
+        key: x,
+      })
+  }
+  
   console.log("--- Deploying the Logic Contracts");
 
   const gatewayFactory = new ethers.ContractFactory(gatewayJson.abi, gatewayJson.bytecode, wallet);
@@ -116,9 +88,11 @@ const main = async () => {
   const proxyGateway = new ethers.Contract(gatewayProxyContract.target, gatewayJson.abi, wallet);
 
   const gasPrice = (await provider.getFeeData()).gasPrice;
+  const nonce = (await provider.getTransactionCount(wallet.address))
 
   await proxyGateway.setDependencies(nativeTokenPredicateProxyContract.target, validatorsProxyContract.target, {
     gasPrice: gasPrice * BigInt(4),
+    nonce: nonce,
   });
 
   const proxyNativeTokenPredicate = new ethers.Contract(
@@ -129,6 +103,7 @@ const main = async () => {
 
   await proxyNativeTokenPredicate.setDependencies(gatewayProxyContract.target, nativeTokenWalletProxyContract.target, {
     gasPrice: gasPrice * BigInt(4),
+    nonce: nonce + 1,
   });
 
   const proxyNativeTokenWallet = new ethers.Contract(
@@ -139,6 +114,7 @@ const main = async () => {
 
   await proxyNativeTokenWallet.setDependencies(nativeTokenPredicateProxyContract.target, {
     gasPrice: gasPrice * BigInt(4),
+    nonce: nonce + 2,
   });
 
   console.log("--- Setting validatorsChainData");
@@ -146,6 +122,7 @@ const main = async () => {
 
   await proxyValidators.setValidatorsChainData(validatorsChainData, {
     gasPrice: gasPrice * BigInt(4),
+    nonce: nonce + 3,
   });
 };
 
