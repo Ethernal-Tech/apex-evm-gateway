@@ -50,9 +50,9 @@ contract Gateway is
         bytes calldata _data
     ) external {
         bytes32 _hash = keccak256(_data);
-        bool valid = true;//validators.isBlsSignatureValid(_hash, _signature, _bitmap);
+        /*bool valid = */validators.isBlsSignatureValid(_hash, _signature, _bitmap);
 
-        if (!valid) revert InvalidSignature();
+        // if (!valid) revert InvalidSignature();
 
         nativeTokenPredicate.deposit(_data, msg.sender);
     }
