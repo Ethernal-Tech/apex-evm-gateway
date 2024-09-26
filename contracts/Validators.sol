@@ -49,6 +49,13 @@ contract Validators is
         return validatorsChainData;
     }
 
+    struct BlsSigCheck {
+        bytes32 _hash;
+        bytes _signature;
+        ValidatorChainData[] validatorsChainData;
+        uint256 _bitmap;
+    }
+
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,
@@ -57,11 +64,19 @@ contract Validators is
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls,calls-loop
+
+        BlsSigCheck memory data = BlsSigCheck({
+            _hash: _hash,
+            _signature: _signature,
+            validatorsChainData: validatorsChainData,
+            _bitmap: _bitmap
+        });
+
         (bool callSuccess, bytes memory returnData) = VALIDATOR_BLS_PRECOMPILE
             .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
             abi.encodePacked(
                 uint8(1),
-                abi.encode(_hash, _signature, validatorsChainData, _bitmap)
+                abi.encode(data)
             )
         );
 
