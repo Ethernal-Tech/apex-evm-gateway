@@ -9,24 +9,37 @@ const ERC1967ProxyJson = require("../artifacts/@openzeppelin/contracts/proxy/ERC
 
 const main = async () => {
   if (process.argv.slice(2).length < 2) {
-    console.log("Please provide 2 arguments: NEXUS_RPC_URL, NEXUS_PRIVATE_KEY");
+    console.log("Please provide 4 arguments: BLADE_RPC_URL, BRIDGE_ADDRESS, NEXUS_RPC_URL, NEXUS_PRIVATE_KEY");
     process.exit(1);
   }
 
-  const NEXUS_RPC_URL = process.argv[2];
-  const NEXUS_PRIVATE_KEY = process.argv[3];
+  const BLADE_RPC_URL = process.argv[2];
+  const BRIDGE_ADDRESS = process.argv[3];
+  const NEXUS_RPC_URL = process.argv[4];
+  const NEXUS_PRIVATE_KEY = process.argv[5];
+
+  //Getting validatorsData from Blade
+  let provider = new JsonRpcProvider(BLADE_RPC_URL);
+  const contract = new ethers.Contract(BRIDGE_ADDRESS, config.Bridge.getValidatorsChainData, provider);
+  console.log("--- Getting validatorsChainData from Blade");
+
+  const validatorsChainData = await contract.getValidatorsChainData(2);
+  const validatorsChainDataJson = [];
+  for (let i = 0; i < validatorsChainData.length; i++) {
+    validatorsChainDataJson.push({
+      key: [
+        validatorsChainData[i][0][0],
+        validatorsChainData[i][0][1],
+        validatorsChainData[i][0][2],
+        validatorsChainData[i][0][3],
+      ],
+    });
+  }
+
+  console.log("--- Deploying the Logic Contracts");
 
   provider = new JsonRpcProvider(NEXUS_RPC_URL);
   const wallet = new ethers.Wallet(NEXUS_PRIVATE_KEY, provider);
-
-  const validatorsChainData = []
-  for (let x of config.BlsKeys) {
-      validatorsChainData.push({
-        key: x,
-      })
-  }
-  
-  console.log("--- Deploying the Logic Contracts");
 
   const gatewayFactory = new ethers.ContractFactory(gatewayJson.abi, gatewayJson.bytecode, wallet);
   const gatewayLogic = await gatewayFactory.deploy();
@@ -88,7 +101,7 @@ const main = async () => {
   const proxyGateway = new ethers.Contract(gatewayProxyContract.target, gatewayJson.abi, wallet);
 
   const gasPrice = (await provider.getFeeData()).gasPrice;
-  const nonce = (await provider.getTransactionCount(wallet.address))
+  const nonce = await provider.getTransactionCount(wallet.address);
 
   await proxyGateway.setDependencies(nativeTokenPredicateProxyContract.target, validatorsProxyContract.target, {
     gasPrice: gasPrice * BigInt(4),
