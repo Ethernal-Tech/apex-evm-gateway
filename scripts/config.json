@@ -1,0 +1,32 @@
+{
+  "Bridge": {
+    "getValidatorsChainData": [
+      {
+        "inputs": [
+          {
+            "internalType": "uint8",
+            "name": "_chainId",
+            "type": "uint8"
+          }
+        ],
+        "name": "getValidatorsChainData",
+        "outputs": [
+          {
+            "components": [
+              {
+                "internalType": "uint256[4]",
+                "name": "key",
+                "type": "uint256[4]"
+              }
+            ],
+            "internalType": "struct ValidatorChainData[]",
+            "name": "",
+            "type": "tuple[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ]
+  }
+}
