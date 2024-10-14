@@ -36,6 +36,7 @@ interface IGatewayStructs {
     );
 
     event TTLExpired(bytes data);
+    event FundsDeposited(address indexed sender, uint256 value);
 
     error NotGateway();
     error NotPredicate();
