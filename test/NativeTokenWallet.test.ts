@@ -56,25 +56,4 @@ describe("NativeTokenWallet Contract", function () {
     expect(receiverBalanceAfter).to.equal(receiverBalanceBefore + BigInt(randomAmount));
     expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore - BigInt(randomAmount));
   });
-
-  it("Direct Deposit should emit FundsDeposited event", async function () {
-    const { owner, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
-
-    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
-
-    const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
-
-    await expect(
-      owner.sendTransaction({
-        to: nativeTokenWalletAddress,
-        value: ethers.parseUnits("100", "wei"),
-      })
-    )
-      .to.emit(nativeTokenWallet, "FundsDeposited")
-      .withArgs(owner.address, 100);
-
-    const nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
-
-    expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + 100n);
-  });
 });

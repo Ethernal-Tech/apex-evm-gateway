@@ -61,9 +61,7 @@ contract NativeTokenWallet is
         return true;
     }
 
-    receive() external payable {
-        emit FundsDeposited(msg.sender, msg.value);
-    }
+    receive() external payable {}
 
     modifier onlyPredicateOrOwner() {
         if (msg.sender != predicate && msg.sender != owner())

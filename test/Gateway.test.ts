@@ -214,4 +214,25 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.value).to.equal(200);
     }
   });
+  it("Direct Deposit should emit FundsDeposited event", async function () {
+    const { owner, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
+
+    const gatewayAddress = await gateway.getAddress();
+    const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+
+    const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
+
+    await expect(
+      owner.sendTransaction({
+        to: gatewayAddress,
+        value: ethers.parseUnits("100", "wei"),
+      })
+    )
+      .to.emit(gateway, "FundsDeposited")
+      .withArgs(owner.address, 100);
+
+    const nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
+
+    expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + 100n);
+  });
 });
