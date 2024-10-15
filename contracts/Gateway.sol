@@ -106,7 +106,17 @@ contract Gateway is
         emit TTLExpired(_data);
     }
 
-    receive() external payable {}
+    receive() external payable {
+        address nativeTokenWalletAddress = address(
+            nativeTokenPredicate.nativeTokenWallet()
+        );
+
+        (bool success, ) = nativeTokenWalletAddress.call{value: msg.value}("");
+
+        if (!success) revert TransferFailed();
+
+        emit FundsDeposited(msg.sender, msg.value);
+    }
 
     modifier onlyPredicate() {
         if (msg.sender != address(nativeTokenPredicate)) revert NotPredicate();
