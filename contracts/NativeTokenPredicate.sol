@@ -64,7 +64,7 @@ contract NativeTokenPredicate is
 
         // _deposits.batchId can not go into past
         if (_deposits.batchId <= lastBatchId) {
-            revert WrongBatchId();
+            revert BatchAlreadyExecuted();
         }
 
         if (_deposits.ttlExpired < block.number) {

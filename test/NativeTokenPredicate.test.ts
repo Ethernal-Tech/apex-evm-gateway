@@ -78,7 +78,7 @@ describe("NativeTokenPredicate Contract", function () {
 
     await expect(nativeTokenPredicate.connect(gatewayContract).deposit(data, address)).to.be.revertedWithCustomError(
       nativeTokenPredicate,
-      "WrongBatchId"
+      "BatchAlreadyExecuted"
     );
   });
 
