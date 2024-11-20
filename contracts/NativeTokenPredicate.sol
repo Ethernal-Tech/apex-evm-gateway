@@ -54,10 +54,6 @@ contract NativeTokenPredicate is
         nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
     }
 
-    function resetNextExpectedBatch() external onlyOwner {
-        nextExpectedBatch = BATCH_ID_START;
-    }
-
     /**
      * @notice Function to be used for token deposits
      * @param _data Data sent by the sender
