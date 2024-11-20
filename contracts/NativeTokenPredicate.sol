@@ -62,7 +62,8 @@ contract NativeTokenPredicate is
     ) external onlyGateway {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
-        if (lastBatchId + 1 != _deposits.batchId) {
+        // _deposits.batchId can not go into past
+        if (_deposits.batchId <= lastBatchId) {
             revert WrongBatchId();
         }
 
@@ -71,7 +72,7 @@ contract NativeTokenPredicate is
             return;
         }
 
-        lastBatchId++;
+        lastBatchId = _deposits.batchId;
 
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;
