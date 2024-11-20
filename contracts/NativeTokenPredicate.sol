@@ -29,11 +29,12 @@ contract NativeTokenPredicate is
 
     IGateway public gateway;
     INativeTokenWallet public nativeTokenWallet;
-    mapping(uint64 => bool) public usedBatches;
+    uint64 public nextExpectedBatch;
 
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        nextExpectedBatch = 1;
     }
 
     function _authorizeUpgrade(
@@ -50,6 +51,10 @@ contract NativeTokenPredicate is
         nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
     }
 
+    function reset() external onlyOwner {
+        nextExpectedBatch = 1;
+    }
+
     /**
      * @notice Function to be used for token deposits
      * @param _data Data sent by the sender
@@ -61,8 +66,8 @@ contract NativeTokenPredicate is
     ) external onlyGateway {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
-        if (usedBatches[_deposits.batchId]) {
-            revert BatchAlreadyExecuted();
+        if (nextExpectedBatch != _deposits.batchId) {
+            revert WrongBatchId();
         }
 
         if (_deposits.ttlExpired < block.number) {
@@ -70,7 +75,7 @@ contract NativeTokenPredicate is
             return;
         }
 
-        usedBatches[_deposits.batchId] = true;
+        nextExpectedBatch++;
 
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;

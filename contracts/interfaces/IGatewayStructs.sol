@@ -46,6 +46,6 @@ interface IGatewayStructs {
     error ZeroAddress();
     error InvalidData(string data);
     error WrongValue(uint256 expected, uint256 received);
-    error BatchAlreadyExecuted();
+    error WrongBatchId();
     error TransferFailed();
 }
