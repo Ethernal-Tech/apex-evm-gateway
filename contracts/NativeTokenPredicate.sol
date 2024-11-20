@@ -29,12 +29,15 @@ contract NativeTokenPredicate is
 
     IGateway public gateway;
     INativeTokenWallet public nativeTokenWallet;
+    mapping(uint64 => bool) public usedBatches; // remove it before deploying to production
     uint64 public nextExpectedBatch;
+
+    uint64 public constant BATCH_ID_START = 1;
 
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-        nextExpectedBatch = 1;
+        nextExpectedBatch = BATCH_ID_START;
     }
 
     function _authorizeUpgrade(
@@ -51,8 +54,8 @@ contract NativeTokenPredicate is
         nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
     }
 
-    function reset() external onlyOwner {
-        nextExpectedBatch = 1;
+    function resetNextExpectedBatch() external onlyOwner {
+        nextExpectedBatch = BATCH_ID_START;
     }
 
     /**
