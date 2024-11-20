@@ -30,14 +30,11 @@ contract NativeTokenPredicate is
     IGateway public gateway;
     INativeTokenWallet public nativeTokenWallet;
     mapping(uint64 => bool) public usedBatches; // remove it before deploying to production
-    uint64 public nextExpectedBatch;
-
-    uint64 public constant BATCH_ID_START = 1;
+    uint64 public lastBatchId;
 
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-        nextExpectedBatch = BATCH_ID_START;
     }
 
     function _authorizeUpgrade(
@@ -65,7 +62,7 @@ contract NativeTokenPredicate is
     ) external onlyGateway {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
-        if (nextExpectedBatch != _deposits.batchId) {
+        if (lastBatchId + 1 != _deposits.batchId) {
             revert WrongBatchId();
         }
 
@@ -74,7 +71,7 @@ contract NativeTokenPredicate is
             return;
         }
 
-        nextExpectedBatch++;
+        lastBatchId++;
 
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;
