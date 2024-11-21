@@ -18,8 +18,6 @@ contract Gateway is
 {
     NativeTokenPredicate public nativeTokenPredicate;
     Validators public validators;
-    uint256 public constant MAX_LENGTH = 2048;
-
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -96,13 +94,13 @@ contract Gateway is
 
     function depositEvent(
         bytes calldata _data
-    ) external onlyPredicate maxLengthExceeded(_data) {
+    ) external onlyPredicate {
         emit Deposit(_data);
     }
 
     function ttlEvent(
         bytes calldata _data
-    ) external onlyPredicate maxLengthExceeded(_data) {
+    ) external onlyPredicate {
         emit TTLExpired(_data);
     }
 
@@ -120,11 +118,6 @@ contract Gateway is
 
     modifier onlyPredicate() {
         if (msg.sender != address(nativeTokenPredicate)) revert NotPredicate();
-        _;
-    }
-
-    modifier maxLengthExceeded(bytes calldata _data) {
-        if (_data.length > MAX_LENGTH) revert ExceedsMaxLength();
         _;
     }
 }
