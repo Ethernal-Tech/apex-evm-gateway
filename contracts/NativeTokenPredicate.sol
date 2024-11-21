@@ -29,7 +29,8 @@ contract NativeTokenPredicate is
 
     IGateway public gateway;
     INativeTokenWallet public nativeTokenWallet;
-    mapping(uint64 => bool) public usedBatches;
+    mapping(uint64 => bool) public usedBatches; // remove it before deploying to production
+    uint64 public lastBatchId;
 
     function initialize() public initializer {
         __Ownable_init(msg.sender);
@@ -61,7 +62,8 @@ contract NativeTokenPredicate is
     ) external onlyGateway {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
-        if (usedBatches[_deposits.batchId]) {
+        // _deposits.batchId can not go into past
+        if (_deposits.batchId <= lastBatchId) {
             revert BatchAlreadyExecuted();
         }
 
@@ -70,7 +72,7 @@ contract NativeTokenPredicate is
             return;
         }
 
-        usedBatches[_deposits.batchId] = true;
+        lastBatchId = _deposits.batchId;
 
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;
