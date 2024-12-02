@@ -110,7 +110,7 @@ describe("Gateway Contract", function () {
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        [[i+1, blockNumber + 100, 1, [[addresses[i], 200]]]]
+        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200]]]]
       );
       dataArray.push(data);
     }
@@ -173,7 +173,7 @@ describe("Gateway Contract", function () {
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        [[i+1, blockNumber + 100, 1, [[addresses[i], 200]]]]
+        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200]]]]
       );
       dataArray.push(data);
     }

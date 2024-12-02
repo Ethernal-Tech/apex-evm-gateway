@@ -18,6 +18,7 @@ contract Gateway is
 {
     NativeTokenPredicate public nativeTokenPredicate;
     Validators public validators;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -92,15 +93,30 @@ contract Gateway is
         );
     }
 
-    function depositEvent(
+    function updateValidatorsChainData(
+        bytes calldata _signature,
+        uint256 _bitmap,
         bytes calldata _data
-    ) external onlyPredicate {
+    ) external {
+        bytes32 _hash = keccak256(_data);
+        bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
+
+        if (!valid) revert InvalidSignature();
+
+        validators.updateValidatorsChainData(_data);
+    }
+
+    function depositEvent(bytes calldata _data) external onlyPredicate {
         emit Deposit(_data);
     }
 
-    function ttlEvent(
+    function validatorsSetUpdatedEvent(
         bytes calldata _data
     ) external onlyPredicate {
+        emit ValidatorsSetUpdated(_data);
+    }
+
+    function ttlEvent(bytes calldata _data) external onlyPredicate {
         emit TTLExpired(_data);
     }
 
