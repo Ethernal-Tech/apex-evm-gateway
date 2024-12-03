@@ -29,7 +29,8 @@ contract NativeTokenPredicate is
 
     IGateway public gateway;
     INativeTokenWallet public nativeTokenWallet;
-    mapping(uint64 => bool) public usedBatches; // remove it before deploying to production
+    mapping(uint64 => bool) public unused1; // remove it before deploying to production
+    uint64 public unused2; // remove it before deploying to production
     uint64 public lastBatchId;
 
     function initialize() public initializer {
@@ -49,6 +50,10 @@ contract NativeTokenPredicate is
             revert ZeroAddress();
         gateway = IGateway(_gateway);
         nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
+    }
+
+    function resetBatchId() external onlyOwner {
+        lastBatchId = 0;
     }
 
     /**
