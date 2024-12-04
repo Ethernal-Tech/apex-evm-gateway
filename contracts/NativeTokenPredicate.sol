@@ -68,16 +68,16 @@ contract NativeTokenPredicate is
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
         // _deposits.batchId can not go into past
-        if (_deposits.batchId <= lastBatchId) {
+        if (_deposits.batchId != lastBatchId + 1) {
             revert BatchAlreadyExecuted();
         }
+
+        lastBatchId++;
 
         if (_deposits.ttlExpired < block.number) {
             gateway.ttlEvent(_data);
             return;
         }
-
-        lastBatchId = _deposits.batchId;
 
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;
