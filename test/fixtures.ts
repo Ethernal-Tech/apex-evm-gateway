@@ -130,6 +130,11 @@ export async function deployGatewayFixtures() {
     [[1, blockNumber + 100, 1, [[address, 1000]]]]
   );
 
+  const dataUpdateValidatorsChainData = abiCoder.encode(
+    ["uint256", "uint256", "tuple(uint256[4])[]"],
+    [1, blockNumber + 100, [[[1, 2, 3, 4]]]]
+  );
+
   return {
     hre,
     owner,
@@ -142,6 +147,7 @@ export async function deployGatewayFixtures() {
     validatorsCardanoData,
     receiverWithdraw,
     data,
+    dataUpdateValidatorsChainData,
     validatorsAddresses,
   };
 }

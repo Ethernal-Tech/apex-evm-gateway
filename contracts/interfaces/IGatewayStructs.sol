@@ -37,6 +37,7 @@ interface IGatewayStructs {
 
     event TTLExpired(bytes data);
     event FundsDeposited(address indexed sender, uint256 value);
+    event ValidatorsSetUpdated(bytes data);
 
     error NotGateway();
     error NotPredicate();
@@ -48,4 +49,5 @@ interface IGatewayStructs {
     error WrongValue(uint256 expected, uint256 received);
     error BatchAlreadyExecuted();
     error TransferFailed();
+    error WrongValidatorsSetValue();
 }

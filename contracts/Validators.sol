@@ -18,6 +18,8 @@ contract Validators is
 
     ValidatorChainData[] private validatorsChainData;
 
+    uint256 public lastConfirmedValidatorsSet;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -39,6 +41,32 @@ contract Validators is
         for (uint i; i < _validatorsChainData.length; i++) {
             validatorsChainData.push(_validatorsChainData[i]);
         }
+    }
+
+    function updateValidatorsChainData(bytes calldata _data) external {
+        (
+            uint256 _validatorsSetNumber,
+            uint256 _ttl,
+            ValidatorChainData[] memory _validatorsChainData
+        ) = abi.decode(_data, (uint256, uint256, ValidatorChainData[]));
+
+        if (_validatorsSetNumber != (lastConfirmedValidatorsSet + 1)) {
+            revert WrongValidatorsSetValue();
+        }
+
+        lastConfirmedValidatorsSet++;
+
+        if (_ttl < block.number) {
+            emit TTLExpired(_data);
+            return;
+        }
+
+        delete validatorsChainData;
+        for (uint i; i < _validatorsChainData.length; i++) {
+            validatorsChainData.push(_validatorsChainData[i]);
+        }
+
+        emit ValidatorsSetUpdated(_data);
     }
 
     function getValidatorsChainData()
