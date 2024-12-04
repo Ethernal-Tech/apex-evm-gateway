@@ -50,7 +50,6 @@ contract Validators is
             ValidatorChainData[] memory _validatorsChainData
         ) = abi.decode(_data, (uint256, uint256, ValidatorChainData[]));
 
-        // _deposits.batchId can not go into past
         if (_validatorsSetNumber != validatorsSetNumber) {
             revert WrongValidatorsSetValue();
         }
@@ -66,6 +65,8 @@ contract Validators is
         }
 
         validatorsSetNumber++;
+
+        emit ValidatorsSetUpdated(_data);
     }
 
     function getValidatorsChainData()

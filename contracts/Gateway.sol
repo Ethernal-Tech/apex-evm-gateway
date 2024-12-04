@@ -110,12 +110,6 @@ contract Gateway is
         emit Deposit(_data);
     }
 
-    function validatorsSetUpdatedEvent(
-        bytes calldata _data
-    ) external onlyPredicate {
-        emit ValidatorsSetUpdated(_data);
-    }
-
     function ttlEvent(bytes calldata _data) external onlyPredicate {
         emit TTLExpired(_data);
     }
