@@ -132,7 +132,7 @@ export async function deployGatewayFixtures() {
 
   const dataUpdateValidatorsChainData = abiCoder.encode(
     ["uint256", "uint256", "tuple(uint256[4])[]"],
-    [0, blockNumber + 100, [[[1, 2, 3, 4]]]]
+    [1, blockNumber + 100, [[[1, 2, 3, 4]]]]
   );
 
   return {

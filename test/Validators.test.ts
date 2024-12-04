@@ -25,7 +25,7 @@ describe("Validators Contract", function () {
 
     const dataUpdateValidatorsChainData = abiCoder.encode(
       ["uint256", "uint256", "tuple(uint256[4])[]"],
-      [1, blockNumber + 100, [[[1, 2, 3, 4]]]]
+      [10, blockNumber + 100, [[[1, 2, 3, 4]]]]
     );
 
     await expect(validatorsc.updateValidatorsChainData(dataUpdateValidatorsChainData)).to.be.revertedWithCustomError(
@@ -42,7 +42,7 @@ describe("Validators Contract", function () {
 
     const dataUpdateValidatorsChainData = abiCoder.encode(
       ["uint256", "uint256", "tuple(uint256[4])[]"],
-      [0, blockNumber - 1, [[[1, 2, 3, 4]]]]
+      [1, blockNumber - 1, [[[1, 2, 3, 4]]]]
     );
 
     expect(await validatorsc.updateValidatorsChainData(dataUpdateValidatorsChainData))
@@ -60,7 +60,7 @@ describe("Validators Contract", function () {
       dataUpdateValidatorsChainData
     );
 
-    expect(await validatorsc.validatorsSetNumber()).to.equal(1);
+    expect(await validatorsc.lastConfirmedValidatorsSet()).to.equal(1);
 
     expect((await validatorsc.getValidatorsChainData()).length).to.equal(1);
     expect((await validatorsc.getValidatorsChainData())[0][0][0]).to.equal(1);
