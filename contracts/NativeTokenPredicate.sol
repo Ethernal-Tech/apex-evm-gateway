@@ -27,7 +27,7 @@ contract NativeTokenPredicate is
 {
     using SafeERC20 for IERC20;
 
-    IGateway public gateway;
+    address public gateway;
     INativeTokenWallet public nativeTokenWallet;
     mapping(uint64 => bool) public unused1; // remove it before deploying to production
     uint64 public unused2; // remove it before deploying to production
@@ -48,7 +48,7 @@ contract NativeTokenPredicate is
     ) external onlyOwner {
         if (_gateway == address(0) || _nativeTokenWallet == address(0))
             revert ZeroAddress();
-        gateway = IGateway(_gateway);
+        gateway = _gateway;
         nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
     }
 
@@ -64,7 +64,7 @@ contract NativeTokenPredicate is
     function deposit(
         bytes calldata _data,
         address _relayer
-    ) external onlyGateway {
+    ) external onlyGateway returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
         // _deposits.batchId can not go into past
@@ -75,8 +75,7 @@ contract NativeTokenPredicate is
         lastBatchId++;
 
         if (_deposits.ttlExpired < block.number) {
-            gateway.ttlEvent(_data);
-            return;
+            return false;
         }
 
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
@@ -91,7 +90,7 @@ contract NativeTokenPredicate is
 
         nativeTokenWallet.deposit(_relayer, _deposits.feeAmount);
 
-        gateway.depositEvent(_data);
+        return true;
     }
 
     modifier onlyGateway() {

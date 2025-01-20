@@ -53,7 +53,12 @@ contract Gateway is
 
         if (!valid) revert InvalidSignature();
 
-        nativeTokenPredicate.deposit(_data, msg.sender);
+        bool success = nativeTokenPredicate.deposit(_data, msg.sender);
+        if (success) {
+            emit Deposit(_data);
+        } else {
+            emit TTLExpired(_data);
+        }
     }
 
     function withdraw(
@@ -104,14 +109,6 @@ contract Gateway is
         if (!valid) revert InvalidSignature();
 
         validators.updateValidatorsChainData(_data);
-    }
-
-    function depositEvent(bytes calldata _data) external onlyPredicate {
-        emit Deposit(_data);
-    }
-
-    function ttlEvent(bytes calldata _data) external onlyPredicate {
-        emit TTLExpired(_data);
     }
 
     receive() external payable {

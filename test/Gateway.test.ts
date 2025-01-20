@@ -236,3 +236,27 @@ describe("Gateway Contract", function () {
     expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + 100n);
   });
 });
+
+it("Deposit should emit TTLExpired if TTL expired", async () => {
+  const { gateway } = await loadFixture(deployGatewayFixtures);
+
+  const blockNumber = await ethers.provider.getBlockNumber();
+  const abiCoder = new ethers.AbiCoder();
+  const address = ethers.Wallet.createRandom().address;
+  const dataTTLExpired = abiCoder.encode(
+    ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
+    [[1, blockNumber - 1, 1, [[1, address, 100]]]]
+  );
+
+  const depositTx = await gateway.deposit(
+    "0x7465737400000000000000000000000000000000000000000000000000000000",
+    "0x7465737400000000000000000000000000000000000000000000000000000000",
+    dataTTLExpired
+  );
+  const depositReceipt = await depositTx.wait();
+  const ttlEvent = depositReceipt.logs.find((log) => log.fragment.name === "TTLExpired");
+  const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
+
+  expect(ttlEvent?.args?.data).to.equal(dataTTLExpired);
+  expect(depositEvent?.args?.data).to.be.undefined;
+});
