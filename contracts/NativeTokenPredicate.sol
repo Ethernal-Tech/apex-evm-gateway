@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./interfaces/INativeTokenPredicate.sol";
 import "./interfaces/INativeTokenWallet.sol";
 import "./interfaces/IGateway.sol";
@@ -23,7 +24,8 @@ contract NativeTokenPredicate is
     INativeTokenPredicate,
     Initializable,
     OwnableUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    ReentrancyGuard
 {
     using SafeERC20 for IERC20;
 
@@ -64,7 +66,7 @@ contract NativeTokenPredicate is
     function deposit(
         bytes calldata _data,
         address _relayer
-    ) external onlyGateway returns (bool) {
+    ) external onlyGateway nonReentrant returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
         // _deposits.batchId can not go into past
