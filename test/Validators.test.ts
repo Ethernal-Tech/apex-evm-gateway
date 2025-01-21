@@ -1,6 +1,6 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { deployGatewayFixtures } from "./fixtures";
+import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixtures";
 
 describe("Validators Contract", function () {
   it("setValidatorsChainData and validate initialization", async () => {
@@ -16,8 +16,8 @@ describe("Validators Contract", function () {
       }
     }
   });
-  it("UpdateValidators should revert if validatorsSetNumber is not correct", async () => {
-    const { validatorsc } = await loadFixture(deployGatewayFixtures);
+  it("UpdateValidators should revert if not called by Gateway", async () => {
+    const { validatorsc, owner } = await loadFixture(deployGatewayFixtures);
 
     const blockNumber = await ethers.provider.getBlockNumber();
 
@@ -28,10 +28,27 @@ describe("Validators Contract", function () {
       [10, blockNumber + 100, [[[1, 2, 3, 4]]]]
     );
 
-    await expect(validatorsc.updateValidatorsChainData(dataUpdateValidatorsChainData)).to.be.revertedWithCustomError(
-      validatorsc,
-      "WrongValidatorsSetValue()"
+    await expect(
+      validatorsc.connect(owner).updateValidatorsChainData(dataUpdateValidatorsChainData)
+    ).to.be.revertedWithCustomError(validatorsc, "NotGateway()");
+  });
+  it("UpdateValidators should revert if validatorsSetNumber is not correct", async () => {
+    const { gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
+
+    const blockNumber = await ethers.provider.getBlockNumber();
+
+    const abiCoder = new ethers.AbiCoder();
+
+    const dataUpdateValidatorsChainData = abiCoder.encode(
+      ["uint256", "uint256", "tuple(uint256[4])[]"],
+      [10, blockNumber + 100, [[[1, 2, 3, 4]]]]
     );
+
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
+
+    await expect(
+      validatorsc.connect(gatewayContract).updateValidatorsChainData(dataUpdateValidatorsChainData)
+    ).to.be.revertedWithCustomError(validatorsc, "WrongValidatorsSetValue()");
   });
   it("UpdateValidators should emit event if TTL has passed and should not update set", async () => {
     const { gateway, validatorsc, validatorsCardanoData } = await loadFixture(deployGatewayFixtures);
@@ -45,20 +62,24 @@ describe("Validators Contract", function () {
       [1, blockNumber - 1, [[[1, 2, 3, 4]]]]
     );
 
-    expect(await validatorsc.updateValidatorsChainData(dataUpdateValidatorsChainData))
+    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
+
+    expect(await validatorsc.connect(gatewayContract).updateValidatorsChainData(dataUpdateValidatorsChainData))
       .to.emit(gateway, "ValidatorsSetUpdated")
       .withArgs(dataUpdateValidatorsChainData);
 
     expect((await validatorsc.getValidatorsChainData()).length).to.equal(validatorsCardanoData.length);
   });
   it("UpdateValidators success", async () => {
-    const { gateway, validatorsc, dataUpdateValidatorsChainData } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, validatorsc, dataUpdateValidatorsChainData } = await loadFixture(deployGatewayFixtures);
 
-    await gateway.updateValidatorsChainData(
-      "0x7465737400000000000000000000000000000000000000000000000000000000",
-      "0x7465737400000000000000000000000000000000000000000000000000000000",
-      dataUpdateValidatorsChainData
-    );
+    await gateway
+      .connect(owner)
+      .updateValidatorsChainData(
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        dataUpdateValidatorsChainData
+      );
 
     expect(await validatorsc.lastConfirmedValidatorsSet()).to.equal(1);
 

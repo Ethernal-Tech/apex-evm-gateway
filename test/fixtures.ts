@@ -74,6 +74,8 @@ export async function deployGatewayFixtures() {
 
   await nativeTokenWallet.setDependencies(nativeTokenPredicate.target);
 
+  await validatorsc.setDependencies(gateway.target);
+
   const validatorsCardanoData = [
     {
       key: ["0x1", "0x2", "0x3", "0x4"] as [BigNumberish, BigNumberish, BigNumberish, BigNumberish],

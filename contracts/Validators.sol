@@ -16,6 +16,8 @@ contract Validators is
         0x0000000000000000000000000000000000002060;
     uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
 
+    address private gateway;
+
     ValidatorChainData[] private validatorsChainData;
 
     uint256 public lastConfirmedValidatorsSet;
@@ -28,6 +30,11 @@ contract Validators is
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+    }
+
+    function setDependencies(address _gateway) external onlyOwner {
+        if (_gateway == address(0)) revert ZeroAddress();
+        gateway = _gateway;
     }
 
     function _authorizeUpgrade(
@@ -43,7 +50,9 @@ contract Validators is
         }
     }
 
-    function updateValidatorsChainData(bytes calldata _data) external {
+    function updateValidatorsChainData(
+        bytes calldata _data
+    ) external onlyGateway {
         (
             uint256 _validatorsSetNumber,
             uint256 _ttl,
@@ -94,5 +103,10 @@ contract Validators is
         );
 
         return callSuccess && abi.decode(returnData, (bool));
+    }
+
+    modifier onlyGateway() {
+        if (msg.sender != address(gateway)) revert NotGateway();
+        _;
     }
 }
