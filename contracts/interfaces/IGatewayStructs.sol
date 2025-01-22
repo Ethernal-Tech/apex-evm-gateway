@@ -44,6 +44,7 @@ interface IGatewayStructs {
     error NotPredicateOrOwner();
     error InvalidSignature();
     error ZeroAddress();
+
     error WrongValue(uint256 expected, uint256 received);
     error BatchAlreadyExecuted();
     error TransferFailed();

@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { BigNumberish } from "ethers";
 import { alwaysTrueBytecode } from "./constants";
-// import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 export async function deployGatewayFixtures() {
   // Contracts are deployed using the first signer/account by default
@@ -23,18 +23,10 @@ export async function deployGatewayFixtures() {
   const gatewayLogic = await Gateway.deploy();
 
   // // deployment of contract proxy
-  const NativeTokenPredicateProxy = await ethers.getContractFactory(
-    "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy"
-  );
-  const NativeTokenWalletProxy = await ethers.getContractFactory(
-    "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy"
-  );
-  const ValidatorscProxy = await ethers.getContractFactory(
-    "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy"
-  );
-  const GatewayProxy = await ethers.getContractFactory(
-    "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy"
-  );
+  const NativeTokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
+  const NativeTokenWalletProxy = await ethers.getContractFactory("ERC1967Proxy");
+  const ValidatorscProxy = await ethers.getContractFactory("ERC1967Proxy");
+  const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
 
   const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
     nativeTokenPredicateLogic.target,
