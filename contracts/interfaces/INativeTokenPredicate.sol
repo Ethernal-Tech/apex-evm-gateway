@@ -8,4 +8,6 @@ interface INativeTokenPredicate is IGatewayStructs {
         bytes calldata data,
         address relayer
     ) external returns (bool);
+
+    function resetBatchId() external;
 }
