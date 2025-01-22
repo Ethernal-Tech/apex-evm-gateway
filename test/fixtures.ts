@@ -1,7 +1,6 @@
 import { ethers } from "hardhat";
 import { BigNumberish } from "ethers";
 import { alwaysTrueBytecode } from "./constants";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 export async function deployGatewayFixtures() {
   // Contracts are deployed using the first signer/account by default
@@ -23,17 +22,22 @@ export async function deployGatewayFixtures() {
   const gatewayLogic = await Gateway.deploy();
 
   // // deployment of contract proxy
-  const NativeTokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
-  const NativeTokenWalletProxy = await ethers.getContractFactory("ERC1967Proxy");
-  const ValidatorscProxy = await ethers.getContractFactory("ERC1967Proxy");
-  const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
 
-  const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
+  const ERC1967Proxy = await ethers.getContractFactory(
+    "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy"
+  );
+
+  // const NativeTokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
+  // const NativeTokenWalletProxy = await ethers.getContractFactory("ERC1967Proxy");
+  // const ValidatorscProxy = await ethers.getContractFactory("ERC1967Proxy");
+  // const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
+
+  const nativeTokenPredicateProxy = await ERC1967Proxy.deploy(
     nativeTokenPredicateLogic.target,
     NativeTokenPredicate.interface.encodeFunctionData("initialize", [])
   );
 
-  const nativeTokenWalletProxy = await NativeTokenWalletProxy.deploy(
+  const nativeTokenWalletProxy = await ERC1967Proxy.deploy(
     nativeTokenWalletLogic.target,
     NativeTokenWallet.interface.encodeFunctionData("initialize", [])
   );
@@ -46,12 +50,12 @@ export async function deployGatewayFixtures() {
     validator5.address,
   ];
 
-  const validatorsProxy = await ValidatorscProxy.deploy(
+  const validatorsProxy = await ERC1967Proxy.deploy(
     validatorscLogic.target,
     Validators.interface.encodeFunctionData("initialize", [])
   );
 
-  const gatewayProxy = await GatewayProxy.deploy(
+  const gatewayProxy = await ERC1967Proxy.deploy(
     gatewayLogic.target,
     Gateway.interface.encodeFunctionData("initialize", [])
   );
