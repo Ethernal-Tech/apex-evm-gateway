@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -16,7 +15,6 @@ import "./interfaces/IGatewayStructs.sol";
 
 /**
     @title ERC20TokenPredicate
-    @author Polygon Technology (@QEDK)
     @notice Enables ERC20 token deposits and withdrawals across an arbitrary root chain and token chain
  */
 // solhint-disable reason-string
