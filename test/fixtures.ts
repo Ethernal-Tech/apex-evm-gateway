@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import { BigNumberish } from "ethers";
 import { alwaysTrueBytecode } from "./constants";
+// import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 export async function deployGatewayFixtures() {
   // Contracts are deployed using the first signer/account by default
