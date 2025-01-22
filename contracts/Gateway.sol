@@ -68,13 +68,11 @@ contract Gateway is
     ) external payable {
         uint256 _amountLength = _receivers.length;
 
-        uint256 amountSum;
+        uint256 amountSum = _feeAmount;
 
         for (uint256 i; i < _amountLength; i++) {
             amountSum += _receivers[i].amount;
         }
-
-        amountSum = amountSum + _feeAmount;
 
         if (msg.value != amountSum) {
             revert WrongValue(amountSum, msg.value);
