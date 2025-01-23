@@ -7,8 +7,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "./interfaces/IGateway.sol";
 import "./interfaces/IGatewayStructs.sol";
+import "./interfaces/IValidators.sol";
 import "./NativeTokenPredicate.sol";
-import "./Validators.sol";
 
 contract Gateway is
     IGateway,
@@ -17,7 +17,7 @@ contract Gateway is
     UUPSUpgradeable
 {
     NativeTokenPredicate public nativeTokenPredicate;
-    Validators public validators;
+    IValidators public validators;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -40,7 +40,7 @@ contract Gateway is
         if (_nativeTokenPredicate == address(0) || _validators == address(0))
             revert ZeroAddress();
         nativeTokenPredicate = NativeTokenPredicate(_nativeTokenPredicate);
-        validators = Validators(_validators);
+        validators = IValidators(_validators);
     }
 
     function deposit(
