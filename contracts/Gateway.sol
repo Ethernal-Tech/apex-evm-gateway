@@ -77,14 +77,7 @@ contract Gateway is
             revert WrongValue(amountSum, msg.value);
         }
 
-        address nativeTokenWalletAddress = address(
-            nativeTokenPredicate.nativeTokenWallet()
-        );
-
-        (bool success, ) = nativeTokenWalletAddress.call{value: amountSum}("");
-
-        // Revert the transaction if the transfer fails
-        if (!success) revert TransferFailed();
+        transferAmountToWallet(amountSum);
 
         emit Withdraw(
             _destinationChainId,
@@ -108,14 +101,17 @@ contract Gateway is
         validators.updateValidatorsChainData(_data);
     }
 
-    receive() external payable {
+    function transferAmountToWallet(uint256 value) internal {
         address nativeTokenWalletAddress = address(
             nativeTokenPredicate.nativeTokenWallet()
         );
-
-        (bool success, ) = nativeTokenWalletAddress.call{value: msg.value}("");
-
+        (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
+        // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
+    }
+
+    receive() external payable {
+        transferAmountToWallet(msg.value);
 
         emit FundsDeposited(msg.sender, msg.value);
     }
