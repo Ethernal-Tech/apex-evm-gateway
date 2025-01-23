@@ -30,6 +30,18 @@ describe("Gateway Contract", function () {
     expect(await gateway.validators()).to.equal(validatorsc.target);
   });
 
+  it("UpdateValidators should revert if not called by owner", async () => {
+    const { gateway, validators } = await loadFixture(deployGatewayFixtures);
+
+    const signature = "0x1c6a9b6a2f6ec0e1d9f7cb56a874c8b278fbadcf33450da3448d85cf94b78912";
+    const bitmap = BigInt("0b1010101010101010"); // 16-bit bitmap as a BigInt
+    const data = "0xdeadbeef00112233445566778899aabbccddeeff";
+
+    await expect(
+      gateway.connect(validators[0]).updateValidatorsChainData(signature, bitmap, data)
+    ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
+  });
+
   it("Deposit success", async () => {
     const { gateway, data } = await loadFixture(deployGatewayFixtures);
 
