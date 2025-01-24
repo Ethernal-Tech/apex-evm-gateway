@@ -42,10 +42,9 @@ interface IGatewayStructs {
     error NotGateway();
     error NotPredicate();
     error NotPredicateOrOwner();
-    error ExceedsMaxLength();
     error InvalidSignature();
     error ZeroAddress();
-    error InvalidData(string data);
+
     error WrongValue(uint256 expected, uint256 received);
     error BatchAlreadyExecuted();
     error TransferFailed();
