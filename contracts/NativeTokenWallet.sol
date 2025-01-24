@@ -4,9 +4,9 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./interfaces/IGatewayStructs.sol";
-import "./interfaces/INativeTokenWallet.sol";
-import "./NativeTokenPredicate.sol";
+import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
+import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
+import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 
 /**
     @title NativeToken

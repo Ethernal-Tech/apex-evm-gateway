@@ -8,10 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./interfaces/INativeTokenPredicate.sol";
-import "./interfaces/INativeTokenWallet.sol";
-import "./interfaces/IGateway.sol";
-import "./interfaces/IGatewayStructs.sol";
+import {INativeTokenPredicate} from "./interfaces/INativeTokenPredicate.sol";
+import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
+import {IGateway} from "./interfaces/IGateway.sol";
+import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 
 /**
     @title ERC20TokenPredicate

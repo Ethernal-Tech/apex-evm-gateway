@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "./interfaces/IValidators.sol";
-import "./interfaces/IGatewayStructs.sol";
+import {IValidators} from "./interfaces/IValidators.sol";
+import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 
 contract Validators is
     IValidators,
