@@ -4,10 +4,10 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "./interfaces/IGateway.sol";
-import "./interfaces/IGatewayStructs.sol";
-import "./interfaces/IValidators.sol";
-import "./NativeTokenPredicate.sol";
+import {IGateway} from "./interfaces/IGateway.sol";
+import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
+import {IValidators} from "./interfaces/IValidators.sol";
+import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 
 contract Gateway is
     IGateway,
