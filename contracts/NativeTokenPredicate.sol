@@ -14,10 +14,11 @@ import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 
 /**
-    @title ERC20TokenPredicate
-    @notice Enables ERC20 token deposits and withdrawals across an arbitrary root chain and token chain
+ * @title NativeTokenPredicate
+ * @notice Facilitates deposits and withdrawals of native tokens across chains.
+ * @dev Implements deposit functionality and manages dependencies for native token operations.
+ * Inherits from OpenZeppelin's Initializable, OwnableUpgradeable, UUPSUpgradeable, and ReentrancyGuard.
  */
-// solhint-disable reason-string
 contract NativeTokenPredicate is
     INativeTokenPredicate,
     Initializable,
@@ -31,6 +32,8 @@ contract NativeTokenPredicate is
     INativeTokenWallet public nativeTokenWallet;
     mapping(uint64 => bool) public unused1; // remove it before deploying to production
     uint64 public unused2; // remove it before deploying to production
+
+    /// @notice Tracks the ID of the last processed batch.
     uint64 public lastBatchId;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -62,9 +65,11 @@ contract NativeTokenPredicate is
     }
 
     /**
-     * @notice Function to be used for token deposits
-     * @param _data Data sent by the sender
-     * @dev Can be extended to include other signatures for more functionality
+     * @notice Handles token deposits.
+     * @param _data Encoded deposit data, including batch ID, TTL, and receiver details.
+     * @param _relayer Address of the relayer initiating the deposit.
+     * @return success Indicates whether the deposit operation succeeded.
+     * @dev Validates batch ID, TTL expiration, and performs deposits for receivers and the relayer.
      */
     function deposit(
         bytes calldata _data,
