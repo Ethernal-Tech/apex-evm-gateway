@@ -103,6 +103,46 @@ describe("Gateway Contract", function () {
     );
   });
 
+  it("Set feeAmount should fail if not called by owner", async () => {
+    const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
+
+    await expect(gateway.connect(receiver).setFeeAmount(200)).to.to.be.revertedWithCustomError(
+      gateway,
+      "OwnableUnauthorizedAccount"
+    );
+  });
+
+  it("Set feeAmount should succeed if called by owner", async () => {
+    const { owner, gateway } = await loadFixture(deployGatewayFixtures);
+
+    expect(await gateway.feeAmount()).to.equal(100);
+    await gateway.connect(owner).setFeeAmount(200);
+    expect(await gateway.feeAmount()).to.equal(200);
+  });
+
+  it("Withdraw should fail if briding amount is zero", async () => {
+    const { receiver, gateway, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
+
+    await gateway.deposit(
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      data
+    );
+
+    const value = { value: ethers.parseUnits("1", "wei") };
+
+    const receiverWithdrawZero = [
+      {
+        receiver: "something",
+        amount: 0,
+      },
+    ];
+
+    await expect(
+      gateway.connect(receiver).withdraw(1, receiverWithdrawZero, 100, value)
+    ).to.to.be.revertedWithCustomError(gateway, "BridgingZeroAmount");
+  });
+
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
     const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
 

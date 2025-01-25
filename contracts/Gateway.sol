@@ -17,15 +17,17 @@ contract Gateway is
 {
     NativeTokenPredicate public nativeTokenPredicate;
     IValidators public validators;
+    uint256 public feeAmount;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize() public initializer {
+    function initialize(uint256 _feeAmount) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        feeAmount = _feeAmount;
     }
 
     function _authorizeUpgrade(
@@ -65,12 +67,16 @@ contract Gateway is
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount
     ) external payable {
+        if (_feeAmount != feeAmount)
+            revert WrongFeeAmount(feeAmount, _feeAmount);
         uint256 _amountLength = _receivers.length;
 
         uint256 amountSum = _feeAmount;
 
         for (uint256 i; i < _amountLength; i++) {
-            amountSum += _receivers[i].amount;
+            uint256 _amount = _receivers[i].amount;
+            if (_amount == 0) revert BridgingZeroAmount();
+            amountSum += _amount;
         }
 
         if (msg.value != amountSum) {
@@ -108,6 +114,12 @@ contract Gateway is
         (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
+    }
+
+    function setFeeAmount(uint256 _feeAmount) external onlyOwner {
+        feeAmount = _feeAmount;
+
+        emit FeeAmountUpdated(_feeAmount);
     }
 
     receive() external payable {

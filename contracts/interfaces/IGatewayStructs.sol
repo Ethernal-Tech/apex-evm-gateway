@@ -38,15 +38,17 @@ interface IGatewayStructs {
     event TTLExpired(bytes data);
     event FundsDeposited(address indexed sender, uint256 value);
     event ValidatorsSetUpdated(bytes data);
+    event FeeAmountUpdated(uint256 fee);
 
     error NotGateway();
     error NotPredicate();
     error NotPredicateOrOwner();
     error InvalidSignature();
     error ZeroAddress();
-
     error WrongValue(uint256 expected, uint256 received);
     error BatchAlreadyExecuted();
     error TransferFailed();
     error WrongValidatorsSetValue();
+    error WrongFeeAmount(uint256 feeAmount, uint256 _feeAmount);
+    error BridgingZeroAmount();
 }
