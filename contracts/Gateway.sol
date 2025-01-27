@@ -67,17 +67,17 @@ contract Gateway is
     function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
-        uint256 _minFeeAmount
+        uint256 _feeAmount
     ) external payable {
-        if (_minFeeAmount < minFeeAmount)
-            revert InsufficientFeeAmount(minFeeAmount, _minFeeAmount);
+        if (_feeAmount < minFeeAmount)
+            revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
         uint256 _amountLength = _receivers.length;
 
-        uint256 amountSum = _minFeeAmount;
+        uint256 amountSum = _feeAmount;
 
         for (uint256 i; i < _amountLength; i++) {
             uint256 _amount = _receivers[i].amount;
-            if (_amount == 0 || _amount < minBridgingAmount) revert InvalidBridgingAmount(_amount, minBridgingAmount);
+            if (_amount < minBridgingAmount) revert InvalidBridgingAmount(_amount, minBridgingAmount);
             amountSum += _amount;
         }
 
@@ -91,7 +91,7 @@ contract Gateway is
             _destinationChainId,
             msg.sender,
             _receivers,
-            _minFeeAmount,
+            _feeAmount,
             amountSum
         );
     }
@@ -118,10 +118,11 @@ contract Gateway is
         if (!success) revert TransferFailed();
     }
 
-    function setMinFeeAmount(uint256 _minFeeAmount) external onlyOwner {
+    function setMinAmounts(uint256 _minFeeAmount, uint256 _minBridgingAmount) external onlyOwner {
         minFeeAmount = _minFeeAmount;
+        minBridgingAmount = _minBridgingAmount;
 
-        emit MinFeeAmountUpdated(_minFeeAmount);
+        emit MinAmountsUpdated(_minFeeAmount, _minBridgingAmount);
     }
 
     receive() external payable {

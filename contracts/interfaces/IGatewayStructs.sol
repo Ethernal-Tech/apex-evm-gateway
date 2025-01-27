@@ -38,7 +38,7 @@ interface IGatewayStructs {
     event TTLExpired(bytes data);
     event FundsDeposited(address indexed sender, uint256 value);
     event ValidatorsSetUpdated(bytes data);
-    event MinFeeAmountUpdated(uint256 fee);
+    event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
 
     error NotGateway();
     error NotPredicate();
