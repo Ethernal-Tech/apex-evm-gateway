@@ -33,6 +33,11 @@ contract NativeTokenPredicate is
     uint64 public unused2; // remove it before deploying to production
     uint64 public lastBatchId;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
