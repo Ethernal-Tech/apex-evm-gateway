@@ -52,7 +52,7 @@ export async function deployGatewayFixtures() {
 
   const gatewayProxy = await GatewayProxy.deploy(
     gatewayLogic.target,
-    Gateway.interface.encodeFunctionData("initialize", [100])
+    Gateway.interface.encodeFunctionData("initialize", [100, 50])
   );
 
   // //casting proxy contracts to contract logic

@@ -106,7 +106,7 @@ describe("Gateway Contract", function () {
   it("Set feeAmount should fail if not called by owner", async () => {
     const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
 
-    await expect(gateway.connect(receiver).setFeeAmount(200)).to.to.be.revertedWithCustomError(
+    await expect(gateway.connect(receiver).setMinFeeAmount(200)).to.to.be.revertedWithCustomError(
       gateway,
       "OwnableUnauthorizedAccount"
     );
@@ -115,9 +115,9 @@ describe("Gateway Contract", function () {
   it("Set feeAmount should succeed if called by owner", async () => {
     const { owner, gateway } = await loadFixture(deployGatewayFixtures);
 
-    expect(await gateway.feeAmount()).to.equal(100);
-    await gateway.connect(owner).setFeeAmount(200);
-    expect(await gateway.feeAmount()).to.equal(200);
+    expect(await gateway.minFeeAmount()).to.equal(100);
+    await gateway.connect(owner).setMinFeeAmount(200);
+    expect(await gateway.minFeeAmount()).to.equal(200);
   });
 
   it("Withdraw should fail if briding amount is zero", async () => {
@@ -140,7 +140,7 @@ describe("Gateway Contract", function () {
 
     await expect(
       gateway.connect(receiver).withdraw(1, receiverWithdrawZero, 100, value)
-    ).to.to.be.revertedWithCustomError(gateway, "BridgingZeroAmount");
+    ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
   });
 
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {

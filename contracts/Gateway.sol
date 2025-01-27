@@ -17,17 +17,19 @@ contract Gateway is
 {
     NativeTokenPredicate public nativeTokenPredicate;
     IValidators public validators;
-    uint256 public feeAmount;
+    uint256 public minFeeAmount;
+    uint256 public minBridgingAmount;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(uint256 _feeAmount) public initializer {
+    function initialize(uint256 _minFeeAmount, uint256 _minBridgingAmount) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-        feeAmount = _feeAmount;
+        minFeeAmount = _minFeeAmount;
+        minBridgingAmount = _minBridgingAmount;
     }
 
     function _authorizeUpgrade(
@@ -65,17 +67,17 @@ contract Gateway is
     function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
+        uint256 _minFeeAmount
     ) external payable {
-        if (_feeAmount != feeAmount)
-            revert WrongFeeAmount(feeAmount, _feeAmount);
+        if (_minFeeAmount < minFeeAmount)
+            revert InsufficientFeeAmount(minFeeAmount, _minFeeAmount);
         uint256 _amountLength = _receivers.length;
 
-        uint256 amountSum = _feeAmount;
+        uint256 amountSum = _minFeeAmount;
 
         for (uint256 i; i < _amountLength; i++) {
             uint256 _amount = _receivers[i].amount;
-            if (_amount == 0) revert BridgingZeroAmount();
+            if (_amount == 0 || _amount < minBridgingAmount) revert InvalidBridgingAmount(_amount, minBridgingAmount);
             amountSum += _amount;
         }
 
@@ -89,7 +91,7 @@ contract Gateway is
             _destinationChainId,
             msg.sender,
             _receivers,
-            _feeAmount,
+            _minFeeAmount,
             amountSum
         );
     }
@@ -116,10 +118,10 @@ contract Gateway is
         if (!success) revert TransferFailed();
     }
 
-    function setFeeAmount(uint256 _feeAmount) external onlyOwner {
-        feeAmount = _feeAmount;
+    function setMinFeeAmount(uint256 _minFeeAmount) external onlyOwner {
+        minFeeAmount = _minFeeAmount;
 
-        emit FeeAmountUpdated(_feeAmount);
+        emit MinFeeAmountUpdated(_minFeeAmount);
     }
 
     receive() external payable {
