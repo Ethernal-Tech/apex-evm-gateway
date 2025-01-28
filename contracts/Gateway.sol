@@ -17,15 +17,22 @@ contract Gateway is
 {
     NativeTokenPredicate public nativeTokenPredicate;
     IValidators public validators;
+    uint256 public minFeeAmount;
+    uint256 public minBridgingAmount;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize() public initializer {
+    function initialize(
+        uint256 _minFeeAmount,
+        uint256 _minBridgingAmount
+    ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        minFeeAmount = _minFeeAmount;
+        minBridgingAmount = _minBridgingAmount;
     }
 
     function _authorizeUpgrade(
@@ -65,12 +72,16 @@ contract Gateway is
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount
     ) external payable {
+        if (_feeAmount < minFeeAmount)
+            revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
         uint256 _amountLength = _receivers.length;
 
         uint256 amountSum = _feeAmount;
 
         for (uint256 i; i < _amountLength; i++) {
-            amountSum += _receivers[i].amount;
+            uint256 _amount = _receivers[i].amount;
+            if (_amount < minBridgingAmount) revert InvalidBridgingAmount(minBridgingAmount, _amount);
+            amountSum += _amount;
         }
 
         if (msg.value != amountSum) {
@@ -108,6 +119,16 @@ contract Gateway is
         (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
+    }
+
+    function setMinAmounts(
+        uint256 _minFeeAmount,
+        uint256 _minBridgingAmount
+    ) external onlyOwner {
+        minFeeAmount = _minFeeAmount;
+        minBridgingAmount = _minBridgingAmount;
+
+        emit MinAmountsUpdated(_minFeeAmount, _minBridgingAmount);
     }
 
     receive() external payable {
