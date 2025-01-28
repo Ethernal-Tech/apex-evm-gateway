@@ -80,8 +80,7 @@ contract Gateway is
 
         for (uint256 i; i < _amountLength; i++) {
             uint256 _amount = _receivers[i].amount;
-            if (_amount < minBridgingAmount)
-                revert InvalidBridgingAmount(minBridgingAmount, _amount);
+            if (_amount < minBridgingAmount) revert InvalidBridgingAmount(minBridgingAmount, _amount);
             amountSum += _amount;
         }
 

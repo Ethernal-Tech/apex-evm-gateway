@@ -49,9 +49,6 @@ interface IGatewayStructs {
     error BatchAlreadyExecuted();
     error TransferFailed();
     error WrongValidatorsSetValue();
-    error InsufficientFeeAmount(uint256 minFeeAmount, uint256 _feeAmount);
-    error InvalidBridgingAmount(
-        uint256 minBridgingAmount,
-        uint256 bridgingAmount
-    );
+    error InsufficientFeeAmount(uint256 minFeeAmount, uint256 feeAmount);
+    error InvalidBridgingAmount(uint256 minBridgingAmount, uint256 bridgingAmount );
 }
