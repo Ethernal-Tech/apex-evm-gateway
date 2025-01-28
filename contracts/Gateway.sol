@@ -25,7 +25,10 @@ contract Gateway is
         _disableInitializers();
     }
 
-    function initialize(uint256 _minFeeAmount, uint256 _minBridgingAmount) public initializer {
+    function initialize(
+        uint256 _minFeeAmount,
+        uint256 _minBridgingAmount
+    ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         minFeeAmount = _minFeeAmount;
@@ -77,7 +80,8 @@ contract Gateway is
 
         for (uint256 i; i < _amountLength; i++) {
             uint256 _amount = _receivers[i].amount;
-            if (_amount < minBridgingAmount) revert InvalidBridgingAmount(_amount, minBridgingAmount);
+            if (_amount < minBridgingAmount)
+                revert InvalidBridgingAmount(minBridgingAmount, _amount);
             amountSum += _amount;
         }
 
@@ -118,7 +122,10 @@ contract Gateway is
         if (!success) revert TransferFailed();
     }
 
-    function setMinAmounts(uint256 _minFeeAmount, uint256 _minBridgingAmount) external onlyOwner {
+    function setMinAmounts(
+        uint256 _minFeeAmount,
+        uint256 _minBridgingAmount
+    ) external onlyOwner {
         minFeeAmount = _minFeeAmount;
         minBridgingAmount = _minBridgingAmount;
 
