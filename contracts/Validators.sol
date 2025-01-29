@@ -8,6 +8,11 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 
+/**
+ * @title Validators
+ * @notice Manages validator chain data and BLS signature verification for the Gateway system.
+ * @dev Supports upgradeability using OpenZeppelin's UUPS module. Implements the IValidators interface.
+ */
 contract Validators is
     IValidators,
     Initializable,
@@ -43,6 +48,11 @@ contract Validators is
         address newImplementation
     ) internal override onlyOwner {}
 
+    /**
+     * @notice Sets the initial validators chain data.
+     * @param _validatorsChainData Array of validator chain data.
+     * @dev Deletes any existing data and replaces it with the provided array.
+     */
     function setValidatorsChainData(
         ValidatorChainData[] calldata _validatorsChainData
     ) external onlyOwner {
@@ -52,6 +62,11 @@ contract Validators is
         }
     }
 
+    /**
+     * @notice Updates the validators chain data with new values.
+     * @param _data Encoded data containing the validators set number, TTL, and new validator chain data.
+     * @dev Reverts if the provided validators set number is invalid. Emits `TTLExpired` if the TTL has expired.
+     */
     function updateValidatorsChainData(
         bytes calldata _data
     ) external onlyGateway {
@@ -88,6 +103,14 @@ contract Validators is
         return validatorsChainData;
     }
 
+    /**
+     * @notice Verifies the validity of a BLS signature.
+     * @param _hash Hash of the data to be verified.
+     * @param _signature BLS signature to validate.
+     * @param _bitmap Bitmap representing validator participation.
+     * @return valid Boolean indicating whether the signature is valid.
+     * @dev Calls the BLS precompile contract for verification. Uses gas limit `VALIDATOR_BLS_PRECOMPILE_GAS`.
+     */
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,

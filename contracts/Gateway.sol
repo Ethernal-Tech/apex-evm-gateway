@@ -9,6 +9,9 @@ import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 
+/// @title Gateway Contract
+/// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
+/// @dev Inherits functionality from OpenZeppelin's Initializable, OwnableUpgradeable, and UUPSUpgradeable.
 contract Gateway is
     IGateway,
     Initializable,
@@ -49,6 +52,11 @@ contract Gateway is
         validators = IValidators(_validators);
     }
 
+    /// @notice Deposits tokens into the system.
+    /// @param _signature The BLS signature for validation.
+    /// @param _bitmap The bitmap associated with the BLS signature.
+    /// @param _data The deposit data in bytes format.
+    /// @dev Emits either a `Deposit` or `TTLExpired` event based on success.
     function deposit(
         bytes calldata _signature,
         uint256 _bitmap,
@@ -67,6 +75,11 @@ contract Gateway is
         }
     }
 
+    /// @notice Withdraws tokens from the system.
+    /// @param _destinationChainId The ID of the destination chain.
+    /// @param _receivers The array of receivers and their withdrawal amounts.
+    /// @param _feeAmount The fee for the withdrawal process.
+    /// @dev Ensures that the sum of withdrawal amounts matches the value sent.
     function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
@@ -99,6 +112,11 @@ contract Gateway is
         );
     }
 
+    /// @notice Updates validator chain data.
+    /// @param _signature The BLS signature for validation.
+    /// @param _bitmap The bitmap associated with the BLS signature.
+    /// @param _data The new validator chain data in bytes format.
+    /// @dev Restricted to the owner of the contract.
     function updateValidatorsChainData(
         bytes calldata _signature,
         uint256 _bitmap,
@@ -112,6 +130,9 @@ contract Gateway is
         validators.updateValidatorsChainData(_data);
     }
 
+    /// @notice Transfers an amount to the native token wallet.
+    /// @param value The amount to be transferred.
+    /// @dev Reverts if the transfer fails.
     function transferAmountToWallet(uint256 value) internal {
         address nativeTokenWalletAddress = address(
             nativeTokenPredicate.nativeTokenWallet()
@@ -121,6 +142,10 @@ contract Gateway is
         if (!success) revert TransferFailed();
     }
 
+    /// @notice Sets the minimal amounts for fee and bridging.
+    /// @param _minFeeAmount The minimal fee amount to set
+    /// @param _minBridgingAmount The minimal bridging amount to set
+    /// @dev Restricted to the owner of the contract.
     function setMinAmounts(
         uint256 _minFeeAmount,
         uint256 _minBridgingAmount
@@ -131,6 +156,8 @@ contract Gateway is
         emit MinAmountsUpdated(_minFeeAmount, _minBridgingAmount);
     }
 
+    /// @notice Handles receiving Ether and transfers it to the native token wallet.
+    /// @dev Emits a `FundsDeposited` event upon receiving Ether.
     receive() external payable {
         transferAmountToWallet(msg.value);
 

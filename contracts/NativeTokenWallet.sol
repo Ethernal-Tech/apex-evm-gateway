@@ -9,10 +9,10 @@ import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 
 /**
-    @title NativeToken
-    @notice Native token contract
+ * @title NativeTokenWallet
+ * @notice A wallet contract to manage native token deposits and interactions.
+ * @dev Supports upgradeability using OpenZeppelin's UUPS module and adheres to IGatewayStructs and INativeTokenWallet interfaces.
  */
-// solhint-disable reason-string
 contract NativeTokenWallet is
     Initializable,
     OwnableUpgradeable,
@@ -42,11 +42,12 @@ contract NativeTokenWallet is
     }
 
     /**
-     * @notice Deposits an amount of tokens to a particular address
-     * @dev Can only be called by the predicate or owner address
-     * @param _account Account of the user to mint the tokens to
-     * @param _amount Amount of tokens to mint to the account
-     * @return bool Returns true if function call is successful
+     * @notice Deposits an amount of native tokens to a specific account.
+     * @param _account The address of the account to deposit tokens to.
+     * @param _amount The amount of tokens to deposit.
+     * @return success A boolean indicating whether the deposit was successful.
+     * @dev Can only be called by the predicate contract or the contract owner.
+     * Reverts if the transfer fails.
      */
     function deposit(
         address _account,
