@@ -8,6 +8,7 @@ import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
+import "hardhat/console.sol";
 
 /// @title Gateway Contract
 /// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
@@ -150,10 +151,12 @@ contract Gateway is
         uint256 _minFeeAmount,
         uint256 _minBridgingAmount
     ) external onlyOwner {
+        console.log("entered HEEEEJ");
         minFeeAmount = _minFeeAmount;
         minBridgingAmount = _minBridgingAmount;
 
         emit MinAmountsUpdated(_minFeeAmount, _minBridgingAmount);
+        console.log("exit HEEEEJ");
     }
 
     /// @notice Handles receiving Ether and transfers it to the native token wallet.
