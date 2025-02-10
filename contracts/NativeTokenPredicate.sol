@@ -77,8 +77,9 @@ contract NativeTokenPredicate is
     ) external onlyGateway nonReentrant returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
-        // _deposits.batchId can not go into past
-        if (_deposits.batchId != lastBatchId + 1) {
+        // _deposits.batchId can not go into past but can go into future
+        // this is not a bug, this is a mandatory by design and how oracles work
+        if (_deposits.batchId <= lastBatchId) {
             revert BatchAlreadyExecuted();
         }
 
