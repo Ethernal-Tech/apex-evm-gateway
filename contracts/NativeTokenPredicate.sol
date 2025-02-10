@@ -92,6 +92,9 @@ contract NativeTokenPredicate is
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;
 
+        // If any nativeTokenWallet.deposit call fails, the entire execution must revert.
+        // This is mandatory because all deposits (_receiversLength + fee)
+        // must be executed as an atomic operation.
         for (uint256 i; i < _receiversLength; i++) {
             nativeTokenWallet.deposit(
                 _receivers[i].receiver,
