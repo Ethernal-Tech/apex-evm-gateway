@@ -83,7 +83,7 @@ contract NativeTokenPredicate is
             revert BatchAlreadyExecuted();
         }
 
-        lastBatchId++;
+        lastBatchId = _deposits.batchId;
 
         if (_deposits.ttlExpired < block.number) {
             return false;
