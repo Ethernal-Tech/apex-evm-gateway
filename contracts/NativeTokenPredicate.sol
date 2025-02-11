@@ -31,9 +31,6 @@ contract NativeTokenPredicate is
     address public gateway;
     INativeTokenWallet public nativeTokenWallet;
 
-    // This field was used in the first version and is retained due to proxy pattern storage layout restrictions.
-    mapping(uint64 => bool) public unused1;
-
     /// @notice Tracks the ID of the last processed batch.
     uint64 public lastBatchId;
 
