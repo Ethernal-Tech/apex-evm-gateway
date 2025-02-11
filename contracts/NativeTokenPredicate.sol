@@ -30,8 +30,6 @@ contract NativeTokenPredicate is
 
     address public gateway;
     INativeTokenWallet public nativeTokenWallet;
-    mapping(uint64 => bool) public unused1; // remove it before deploying to production
-    uint64 public unused2; // remove it before deploying to production
 
     /// @notice Tracks the ID of the last processed batch.
     uint64 public lastBatchId;
@@ -77,12 +75,13 @@ contract NativeTokenPredicate is
     ) external onlyGateway nonReentrant returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
-        // _deposits.batchId can not go into past
-        if (_deposits.batchId != lastBatchId + 1) {
+        // _deposits.batchId cannot go into the past but can go into the future.
+        // This is not a bug; it is mandatory by design and aligns with how oracles work.
+        if (_deposits.batchId <= lastBatchId) {
             revert BatchAlreadyExecuted();
         }
 
-        lastBatchId++;
+        lastBatchId = _deposits.batchId;
 
         if (_deposits.ttlExpired < block.number) {
             return false;
@@ -91,6 +90,9 @@ contract NativeTokenPredicate is
         ReceiverDeposit[] memory _receivers = _deposits.receivers;
         uint256 _receiversLength = _receivers.length;
 
+        // If any nativeTokenWallet.deposit call fails, the entire execution must revert.
+        // This is mandatory because all deposits (_receiversLength + fee)
+        // must be executed as an atomic operation.
         for (uint256 i; i < _receiversLength; i++) {
             nativeTokenWallet.deposit(
                 _receivers[i].receiver,

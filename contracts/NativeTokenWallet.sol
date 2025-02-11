@@ -45,20 +45,17 @@ contract NativeTokenWallet is
      * @notice Deposits an amount of native tokens to a specific account.
      * @param _account The address of the account to deposit tokens to.
      * @param _amount The amount of tokens to deposit.
-     * @return success A boolean indicating whether the deposit was successful.
      * @dev Can only be called by the predicate contract or the contract owner.
      * Reverts if the transfer fails.
      */
     function deposit(
         address _account,
         uint256 _amount
-    ) external onlyPredicateOrOwner returns (bool) {
+    ) external onlyPredicateOrOwner {
         (bool success, ) = _account.call{value: _amount}("");
 
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
-
-        return true;
     }
 
     receive() external payable {}
