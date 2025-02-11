@@ -30,8 +30,6 @@ contract NativeTokenPredicate is
 
     address public gateway;
     INativeTokenWallet public nativeTokenWallet;
-    mapping(uint64 => bool) public unused1; // remove it before deploying to production
-    uint64 public unused2; // remove it before deploying to production
 
     /// @notice Tracks the ID of the last processed batch.
     uint64 public lastBatchId;
