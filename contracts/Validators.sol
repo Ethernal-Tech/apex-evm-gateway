@@ -29,6 +29,10 @@ contract Validators is
 
     uint256 public lastConfirmedValidatorsSet;
 
+    // When adding new variables use one slot from the gap (decrease the gap array size)
+    // Double check when setting structs or arrays
+    uint256[50] private __gap;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -128,6 +132,10 @@ contract Validators is
         );
 
         return callSuccess && abi.decode(returnData, (bool));
+    }
+
+    function version() public pure returns (string memory) {
+        return "1.0.0";
     }
 
     modifier onlyGateway() {

@@ -34,6 +34,10 @@ contract NativeTokenPredicate is
     /// @notice Tracks the ID of the last processed batch.
     uint64 public lastBatchId;
 
+    // When adding new variables use one slot from the gap (decrease the gap array size)
+    // Double check when setting structs or arrays
+    uint256[50] private __gap;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -105,11 +109,12 @@ contract NativeTokenPredicate is
         return true;
     }
 
+    function version() public pure returns (string memory) {
+        return "1.0.0";
+    }
+
     modifier onlyGateway() {
         if (msg.sender != address(gateway)) revert NotGateway();
         _;
     }
-
-    // slither-disable-next-line unused-state,naming-convention
-    uint256[50] private __gap;
 }

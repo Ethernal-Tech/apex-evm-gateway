@@ -23,6 +23,10 @@ contract Gateway is
     uint256 public minFeeAmount;
     uint256 public minBridgingAmount;
 
+    // When adding new variables use one slot from the gap (decrease the gap array size)
+    // Double check when setting structs or arrays
+    uint256[50] private __gap;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -93,7 +97,8 @@ contract Gateway is
 
         for (uint256 i; i < _amountLength; i++) {
             uint256 _amount = _receivers[i].amount;
-            if (_amount < minBridgingAmount) revert InvalidBridgingAmount(minBridgingAmount, _amount);
+            if (_amount < minBridgingAmount)
+                revert InvalidBridgingAmount(minBridgingAmount, _amount);
             amountSum += _amount;
         }
 
@@ -162,6 +167,10 @@ contract Gateway is
         transferAmountToWallet(msg.value);
 
         emit FundsDeposited(msg.sender, msg.value);
+    }
+
+    function version() public pure returns (string memory) {
+        return "1.0.0";
     }
 
     modifier onlyPredicate() {
