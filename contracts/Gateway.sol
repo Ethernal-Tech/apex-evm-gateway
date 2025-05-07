@@ -63,17 +63,21 @@ contract Gateway is
         uint256 _bitmap,
         bytes calldata _data
     ) external {
+        console.log("deposit 1");
         bytes32 _hash = keccak256(_data);
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
 
+        console.log("deposit 2");
         if (!valid) revert InvalidSignature();
 
+        console.log("deposit 3");
         bool success = nativeTokenPredicate.deposit(_data, msg.sender);
         if (success) {
             emit Deposit(_data);
         } else {
             emit TTLExpired(_data);
         }
+        console.log("deposit 4");
     }
 
     /// @notice Withdraws tokens from the system.
@@ -86,12 +90,14 @@ contract Gateway is
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount
     ) external payable {
+        console.log("withdraw 1");
         if (_feeAmount < minFeeAmount)
             revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
         uint256 _amountLength = _receivers.length;
 
         uint256 amountSum = _feeAmount;
 
+        console.log("withdraw 2");
         for (uint256 i; i < _amountLength; i++) {
             uint256 _amount = _receivers[i].amount;
             if (_amount < minBridgingAmount) revert InvalidBridgingAmount(minBridgingAmount, _amount);
@@ -101,6 +107,7 @@ contract Gateway is
         if (msg.value != amountSum) {
             revert WrongValue(amountSum, msg.value);
         }
+        console.log("withdraw 3");
 
         transferAmountToWallet(amountSum);
 
@@ -111,6 +118,7 @@ contract Gateway is
             _feeAmount,
             amountSum
         );
+        console.log("withdraw 4");
     }
 
     /// @notice Updates validator chain data.
