@@ -22,9 +22,11 @@ contract NativeTokenWalletV2 is
 {
     address public predicate;
 
+    uint256 public testValue;
+
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -66,6 +68,10 @@ contract NativeTokenWalletV2 is
 
     function version() public pure returns (string memory) {
         return "1.0.1";
+    }
+
+    function increaseTestValue() external onlyOwner {
+        testValue++;
     }
 
     modifier onlyPredicateOrOwner() {

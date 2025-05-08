@@ -120,6 +120,9 @@ async function main() {
   implementationAddress = ethers.getAddress("0x" + storage.slice(-40));
   console.log("Gateway implementation address after", implementationAddress);
   expect(versionAfter).to.equal("1.0.1");
+  let increaseTestValue = await proxyGatewayV2.increaseTestValue();
+  await increaseTestValue.wait();
+  expect(await proxyGatewayV2.testValue()).to.equal(1n);
 
   // NativeTokenPredicate
   versionBefore = await proxyNativeTokenPredicate.version();
@@ -156,6 +159,9 @@ async function main() {
   implementationAddress = ethers.getAddress("0x" + storage.slice(-40));
   console.log("NativeTokenPredicate implementation address after", implementationAddress);
   expect(versionAfter).to.equal("1.0.1");
+  increaseTestValue = await proxyNativeTokenPredicateV2.increaseTestValue();
+  await increaseTestValue.wait();
+  expect(await proxyNativeTokenPredicateV2.testValue()).to.equal(1n);
 
   // NativeTokenWallet
   versionBefore = await proxyNativeTokenWallet.version();
@@ -192,6 +198,9 @@ async function main() {
   implementationAddress = ethers.getAddress("0x" + storage.slice(-40));
   console.log("NativeTokenWallet implementation address after", implementationAddress);
   expect(versionAfter).to.equal("1.0.1");
+  increaseTestValue = await proxyNativeTokenWalletV2.increaseTestValue();
+  await increaseTestValue.wait();
+  expect(await proxyNativeTokenWalletV2.testValue()).to.equal(1n);
 
   // Validators
   versionBefore = await proxyValidators.version();
@@ -220,6 +229,9 @@ async function main() {
   implementationAddress = ethers.getAddress("0x" + storage.slice(-40));
   console.log("Validators implementation address after", implementationAddress);
   expect(versionAfter).to.equal("1.0.1");
+  increaseTestValue = await proxyValidatorsV2.increaseTestValue();
+  await increaseTestValue.wait();
+  expect(await proxyValidatorsV2.testValue()).to.equal(1n);
 }
 
 main();
