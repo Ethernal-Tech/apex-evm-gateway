@@ -22,6 +22,10 @@ contract NativeTokenWallet is
 {
     address public predicate;
 
+    // When adding new variables use one slot from the gap (decrease the gap array size)
+    // Double check when setting structs or arrays
+    uint256[50] private __gap;
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -59,6 +63,10 @@ contract NativeTokenWallet is
     }
 
     receive() external payable {}
+
+    function version() public pure returns (string memory) {
+        return "1.0.0";
+    }
 
     modifier onlyPredicateOrOwner() {
         if (msg.sender != predicate && msg.sender != owner())
