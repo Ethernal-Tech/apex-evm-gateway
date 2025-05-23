@@ -8,6 +8,7 @@ import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
+import {Utils} from "./Utils.sol";
 
 /// @title Gateway Contract
 /// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
@@ -16,12 +17,14 @@ contract Gateway is
     IGateway,
     Initializable,
     OwnableUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    Utils
 {
     NativeTokenPredicate public nativeTokenPredicate;
     IValidators public validators;
     uint256 public minFeeAmount;
     uint256 public minBridgingAmount;
+    address public ownerGovernor;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -34,22 +37,25 @@ contract Gateway is
 
     function initialize(
         uint256 _minFeeAmount,
-        uint256 _minBridgingAmount
+        uint256 _minBridgingAmount,
+        address _ownerGovernor
     ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        if (!_isContract(_ownerGovernor)) revert NotContractAddress();
         minFeeAmount = _minFeeAmount;
         minBridgingAmount = _minBridgingAmount;
+        ownerGovernor = _ownerGovernor;
     }
 
     function _authorizeUpgrade(
         address newImplementation
-    ) internal override onlyOwner {}
+    ) internal override onlyOwnerGovernor {}
 
     function setDependencies(
         address _nativeTokenPredicate,
         address _validators
-    ) external onlyOwner {
+    ) external reinitializer(2) onlyOwner {
         if (_nativeTokenPredicate == address(0) || _validators == address(0))
             revert ZeroAddress();
         nativeTokenPredicate = NativeTokenPredicate(_nativeTokenPredicate);
@@ -126,7 +132,7 @@ contract Gateway is
         bytes calldata _signature,
         uint256 _bitmap,
         bytes calldata _data
-    ) external onlyOwner {
+    ) external onlyOwnerGovernor {
         bytes32 _hash = keccak256(_data);
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
 
@@ -154,7 +160,7 @@ contract Gateway is
     function setMinAmounts(
         uint256 _minFeeAmount,
         uint256 _minBridgingAmount
-    ) external onlyOwner {
+    ) external onlyOwnerGovernor {
         minFeeAmount = _minFeeAmount;
         minBridgingAmount = _minBridgingAmount;
 
@@ -175,6 +181,11 @@ contract Gateway is
 
     modifier onlyPredicate() {
         if (msg.sender != address(nativeTokenPredicate)) revert NotPredicate();
+        _;
+    }
+
+    modifier onlyOwnerGovernor() {
+        if (msg.sender != ownerGovernor) revert NotOwnerGovernor();
         _;
     }
 }

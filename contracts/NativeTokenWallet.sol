@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
+import {Utils} from "./Utils.sol";
 
 /**
  * @title NativeTokenWallet
@@ -18,9 +19,11 @@ contract NativeTokenWallet is
     OwnableUpgradeable,
     UUPSUpgradeable,
     IGatewayStructs,
-    INativeTokenWallet
+    INativeTokenWallet,
+    Utils
 {
     address public predicate;
+    address public ownerGovernor;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -31,16 +34,20 @@ contract NativeTokenWallet is
         _disableInitializers();
     }
 
-    function initialize() public initializer {
+    function initialize(address _ownerGovernor) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        if (!_isContract(_ownerGovernor)) revert NotContractAddress();
+        ownerGovernor = _ownerGovernor;
     }
 
     function _authorizeUpgrade(
         address newImplementation
-    ) internal override onlyOwner {}
+    ) internal override onlyOwnerGovernor {}
 
-    function setDependencies(address _predicate) external onlyOwner {
+    function setDependencies(
+        address _predicate
+    ) external reinitializer(2) onlyOwner {
         if (_predicate == address(0)) revert ZeroAddress();
         predicate = _predicate;
     }
@@ -72,6 +79,11 @@ contract NativeTokenWallet is
         if (msg.sender != predicate && msg.sender != owner())
             revert NotPredicateOrOwner();
 
+        _;
+    }
+
+    modifier onlyOwnerGovernor() {
+        if (msg.sender != ownerGovernor) revert NotOwnerGovernor();
         _;
     }
 }

@@ -9,6 +9,12 @@ export async function deployGatewayFixtures() {
 
   const hre = require("hardhat");
 
+  const OwnerToken = await ethers.getContractFactory("OwnerToken");
+  const ownerTokenLogic = await OwnerToken.deploy();
+
+  const OwnerGovernor = await ethers.getContractFactory("OwnerGovernor");
+  const ownerGovernorLogic = await OwnerGovernor.deploy();
+
   const NativeTokenWallet = await ethers.getContractFactory("NativeTokenWallet");
   const nativeTokenWalletLogic = await NativeTokenWallet.deploy();
 
@@ -22,19 +28,31 @@ export async function deployGatewayFixtures() {
   const gatewayLogic = await Gateway.deploy();
 
   // // deployment of contract proxy
+  const OwnerTokenProxy = await ethers.getContractFactory("ERC1967Proxy");
+  const OwnerGovernorProxy = await ethers.getContractFactory("ERC1967Proxy");
   const NativeTokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
   const NativeTokenWalletProxy = await ethers.getContractFactory("ERC1967Proxy");
   const ValidatorscProxy = await ethers.getContractFactory("ERC1967Proxy");
   const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
 
+  const ownerTokenProxy = await OwnerTokenProxy.deploy(
+    ownerTokenLogic.target,
+    OwnerToken.interface.encodeFunctionData("initialize", [owner.address, owner.address])
+  );
+
+  const ownerGovernorProxy = await OwnerGovernorProxy.deploy(
+    ownerGovernorLogic.target,
+    OwnerGovernor.interface.encodeFunctionData("initialize", [await ownerTokenProxy.getAddress()])
+  );
+
   const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
     nativeTokenPredicateLogic.target,
-    NativeTokenPredicate.interface.encodeFunctionData("initialize", [])
+    NativeTokenPredicate.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
   );
 
   const nativeTokenWalletProxy = await NativeTokenWalletProxy.deploy(
     nativeTokenWalletLogic.target,
-    NativeTokenWallet.interface.encodeFunctionData("initialize", [])
+    NativeTokenWallet.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
   );
 
   const validatorsAddresses = [
@@ -47,15 +65,21 @@ export async function deployGatewayFixtures() {
 
   const validatorsProxy = await ValidatorscProxy.deploy(
     validatorscLogic.target,
-    Validators.interface.encodeFunctionData("initialize", [])
+    Validators.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
   );
 
   const gatewayProxy = await GatewayProxy.deploy(
     gatewayLogic.target,
-    Gateway.interface.encodeFunctionData("initialize", [100, 50])
+    Gateway.interface.encodeFunctionData("initialize", [100, 50, await ownerGovernorProxy.getAddress()])
   );
 
-  // //casting proxy contracts to contract logic
+  //casting proxy contracts to contract logic
+  const OwnerTokenDeployed = await ethers.getContractFactory("OwnerToken");
+  const ownerToken = OwnerTokenDeployed.attach(ownerTokenProxy.target);
+
+  const OwnerGovernorDeployed = await ethers.getContractFactory("OwnerToken");
+  const ownerGovernor = OwnerGovernorDeployed.attach(ownerGovernorProxy.target);
+
   const NativeTokenPredicateDeployed = await ethers.getContractFactory("NativeTokenPredicate");
   const nativeTokenPredicate = NativeTokenPredicateDeployed.attach(nativeTokenPredicateProxy.target);
 
@@ -101,7 +125,9 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  await validatorsc.setValidatorsChainData(validatorsCardanoData);
+  const ownerGovernorContract = await impersonateAsContractAndMintFunds(await ownerGovernor.getAddress());
+
+  await validatorsc.connect(ownerGovernorContract).setValidatorsChainData(validatorsCardanoData);
 
   await hre.network.provider.send("hardhat_setCode", [
     "0x0000000000000000000000000000000000002060",
@@ -142,6 +168,8 @@ export async function deployGatewayFixtures() {
     owner,
     receiver,
     validators,
+    ownerGovernor,
+    ownerGovernorContract,
     gateway,
     nativeTokenPredicate,
     nativeTokenWallet,

@@ -43,6 +43,7 @@ interface IGatewayStructs {
     error NotGateway();
     error NotPredicate();
     error NotPredicateOrOwner();
+    error NotUpgradeAdmin();
     error InvalidSignature();
     error ZeroAddress();
     error WrongValue(uint256 expected, uint256 received);
@@ -50,5 +51,10 @@ interface IGatewayStructs {
     error TransferFailed();
     error WrongValidatorsSetValue();
     error InsufficientFeeAmount(uint256 minFeeAmount, uint256 feeAmount);
-    error InvalidBridgingAmount(uint256 minBridgingAmount, uint256 bridgingAmount );
+    error InvalidBridgingAmount(
+        uint256 minBridgingAmount,
+        uint256 bridgingAmount
+    );
+    error NotContractAddress();
+    error NotOwnerGovernor();
 }

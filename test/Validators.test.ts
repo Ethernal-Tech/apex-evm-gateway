@@ -4,9 +4,12 @@ import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixt
 
 describe("Validators Contract", function () {
   it("setValidatorsChainData and validate initialization", async () => {
-    const { owner, validators, validatorsc, validatorsCardanoData } = await loadFixture(deployGatewayFixtures);
+    const { ownerGovernorContract, validators, validatorsc, validatorsCardanoData } = await loadFixture(
+      deployGatewayFixtures
+    );
 
-    await expect(validatorsc.connect(owner).setValidatorsChainData(validatorsCardanoData)).not.to.be.reverted;
+    await expect(validatorsc.connect(ownerGovernorContract).setValidatorsChainData(validatorsCardanoData)).not.to.be
+      .reverted;
 
     const chainData = await validatorsc.getValidatorsChainData();
 
@@ -71,10 +74,12 @@ describe("Validators Contract", function () {
     expect((await validatorsc.getValidatorsChainData()).length).to.equal(validatorsCardanoData.length);
   });
   it("UpdateValidators success", async () => {
-    const { owner, gateway, validatorsc, dataUpdateValidatorsChainData } = await loadFixture(deployGatewayFixtures);
+    const { ownerGovernorContract, gateway, validatorsc, dataUpdateValidatorsChainData } = await loadFixture(
+      deployGatewayFixtures
+    );
 
     await gateway
-      .connect(owner)
+      .connect(ownerGovernorContract)
       .updateValidatorsChainData(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",

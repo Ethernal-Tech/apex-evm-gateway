@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
+import {Utils} from "./Utils.sol";
 
 /**
  * @title Validators
@@ -17,13 +18,15 @@ contract Validators is
     IValidators,
     Initializable,
     OwnableUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    Utils
 {
     address public constant VALIDATOR_BLS_PRECOMPILE =
         0x0000000000000000000000000000000000002060;
     uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
 
     address private gateway;
+    address public ownerGovernor;
 
     ValidatorChainData[] private validatorsChainData;
 
@@ -38,19 +41,23 @@ contract Validators is
         _disableInitializers();
     }
 
-    function initialize() public initializer {
+    function initialize(address _ownerGovernor) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        if (!_isContract(_ownerGovernor)) revert NotContractAddress();
+        ownerGovernor = _ownerGovernor;
     }
 
-    function setDependencies(address _gateway) external onlyOwner {
+    function setDependencies(
+        address _gateway
+    ) external reinitializer(2) onlyOwner {
         if (_gateway == address(0)) revert ZeroAddress();
         gateway = _gateway;
     }
 
     function _authorizeUpgrade(
         address newImplementation
-    ) internal override onlyOwner {}
+    ) internal override onlyOwnerGovernor {}
 
     /**
      * @notice Sets the initial validators chain data.
@@ -59,7 +66,7 @@ contract Validators is
      */
     function setValidatorsChainData(
         ValidatorChainData[] calldata _validatorsChainData
-    ) external onlyOwner {
+    ) external onlyOwnerGovernor {
         delete validatorsChainData;
         for (uint i; i < _validatorsChainData.length; i++) {
             validatorsChainData.push(_validatorsChainData[i]);
@@ -140,6 +147,11 @@ contract Validators is
 
     modifier onlyGateway() {
         if (msg.sender != address(gateway)) revert NotGateway();
+        _;
+    }
+
+    modifier onlyOwnerGovernor() {
+        if (msg.sender != ownerGovernor) revert NotOwnerGovernor();
         _;
     }
 }

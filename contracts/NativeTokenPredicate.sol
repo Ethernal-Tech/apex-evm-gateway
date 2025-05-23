@@ -12,6 +12,7 @@ import {INativeTokenPredicate} from "./interfaces/INativeTokenPredicate.sol";
 import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
 import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
+import {Utils} from "./Utils.sol";
 
 /**
  * @title NativeTokenPredicate
@@ -24,11 +25,13 @@ contract NativeTokenPredicate is
     Initializable,
     OwnableUpgradeable,
     UUPSUpgradeable,
-    ReentrancyGuard
+    ReentrancyGuard,
+    Utils
 {
     using SafeERC20 for IERC20;
 
     address public gateway;
+    address public ownerGovernor;
     INativeTokenWallet public nativeTokenWallet;
 
     /// @notice Tracks the ID of the last processed batch.
@@ -43,26 +46,28 @@ contract NativeTokenPredicate is
         _disableInitializers();
     }
 
-    function initialize() public initializer {
+    function initialize(address _ownerGovernor) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        if (!_isContract(_ownerGovernor)) revert NotContractAddress();
+        ownerGovernor = _ownerGovernor;
     }
 
     function _authorizeUpgrade(
         address newImplementation
-    ) internal override onlyOwner {}
+    ) internal override onlyOwnerGovernor {}
 
     function setDependencies(
         address _gateway,
         address _nativeTokenWallet
-    ) external onlyOwner {
+    ) external reinitializer(2) onlyOwner {
         if (_gateway == address(0) || _nativeTokenWallet == address(0))
             revert ZeroAddress();
         gateway = _gateway;
         nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
     }
 
-    function resetBatchId() external onlyOwner {
+    function resetBatchId() external onlyOwnerGovernor {
         lastBatchId = 0;
     }
 
@@ -115,6 +120,11 @@ contract NativeTokenPredicate is
 
     modifier onlyGateway() {
         if (msg.sender != address(gateway)) revert NotGateway();
+        _;
+    }
+
+    modifier onlyOwnerGovernor() {
+        if (msg.sender != ownerGovernor) revert NotOwnerGovernor();
         _;
     }
 }
