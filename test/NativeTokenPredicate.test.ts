@@ -5,33 +5,69 @@ import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixt
 
 describe("NativeTokenPredicate Contract", function () {
   it("SetDependencies should fail if Gateway or NetiveToken is Zero Address", async () => {
-    const { owner, gateway, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { owner, ownerGovernorProxy, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(
-    //   nativeTokenPredicate.connect(owner).setDependencies(ethers.ZeroAddress, nativeTokenWallet.target)
-    // ).to.to.be.revertedWithCustomError(nativeTokenPredicate, "ZeroAddress");
+    const NativeTokenPredicate = await ethers.getContractFactory("NativeTokenPredicate");
+    const nativeTokenPredicateLogic = await NativeTokenPredicate.deploy();
+    const NativeTokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
 
-    // await expect(
-    //   nativeTokenPredicate.connect(owner).setDependencies(gateway.target, ethers.ZeroAddress)
-    // ).to.to.be.revertedWithCustomError(nativeTokenPredicate, "ZeroAddress");
+    const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
+      nativeTokenPredicateLogic.target,
+      NativeTokenPredicate.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
+    );
+
+    const NativeTokenPredicateDeployed = await ethers.getContractFactory("NativeTokenPredicate");
+    const nativeTokenPredicate = NativeTokenPredicateDeployed.attach(nativeTokenPredicateProxy.target);
+
+    await expect(
+      nativeTokenPredicate.connect(owner).setDependencies(ethers.ZeroAddress, nativeTokenWallet.target)
+    ).to.to.be.revertedWithCustomError(nativeTokenPredicate, "ZeroAddress");
+
+    await expect(
+      nativeTokenPredicate.connect(owner).setDependencies(gateway.target, ethers.ZeroAddress)
+    ).to.to.be.revertedWithCustomError(nativeTokenPredicate, "ZeroAddress");
   });
 
   it("SetDependencies should faild if not called by owner", async () => {
-    const { receiver, gateway, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { receiver, ownerGovernorProxy, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(
-    //   nativeTokenPredicate.connect(receiver).setDependencies(gateway.target, nativeTokenWallet.target)
-    // ).to.be.revertedWithCustomError(nativeTokenPredicate, "OwnableUnauthorizedAccount");
+    const NativeTokenPredicate = await ethers.getContractFactory("NativeTokenPredicate");
+    const nativeTokenPredicateLogic = await NativeTokenPredicate.deploy();
+    const NativeTokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
+
+    const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
+      nativeTokenPredicateLogic.target,
+      NativeTokenPredicate.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
+    );
+
+    const NativeTokenPredicateDeployed = await ethers.getContractFactory("NativeTokenPredicate");
+    const nativeTokenPredicate = NativeTokenPredicateDeployed.attach(nativeTokenPredicateProxy.target);
+
+    await expect(
+      nativeTokenPredicate.connect(receiver).setDependencies(gateway.target, nativeTokenWallet.target)
+    ).to.be.revertedWithCustomError(nativeTokenPredicate, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
-    const { owner, gateway, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { owner, ownerGovernorProxy, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(nativeTokenPredicate.connect(owner).setDependencies(gateway.target, nativeTokenWallet.target)).to.not
-    //   .be.reverted;
+    const NativeTokenPredicate = await ethers.getContractFactory("NativeTokenPredicate");
+    const nativeTokenPredicateLogic = await NativeTokenPredicate.deploy();
+    const NativeTokenPredicateProxy = await ethers.getContractFactory("ERC1967Proxy");
 
-    // expect(await nativeTokenPredicate.gateway()).to.equal(gateway.target);
-    // expect(await nativeTokenPredicate.nativeTokenWallet()).to.equal(nativeTokenWallet.target);
+    const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
+      nativeTokenPredicateLogic.target,
+      NativeTokenPredicate.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
+    );
+
+    const NativeTokenPredicateDeployed = await ethers.getContractFactory("NativeTokenPredicate");
+    const nativeTokenPredicate = NativeTokenPredicateDeployed.attach(nativeTokenPredicateProxy.target);
+
+    await expect(nativeTokenPredicate.connect(owner).setDependencies(gateway.target, nativeTokenWallet.target)).to.not
+      .be.reverted;
+
+    expect(await nativeTokenPredicate.gateway()).to.equal(gateway.target);
+    expect(await nativeTokenPredicate.nativeTokenWallet()).to.equal(nativeTokenWallet.target);
   });
 
   it("Deposit should fail if not called by Gateway", async () => {

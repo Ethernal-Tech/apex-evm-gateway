@@ -14,6 +14,8 @@ contract OwnerToken is
     ERC20PermitUpgradeable,
     UUPSUpgradeable
 {
+    address public ownerGovernor;
+
     /// @dev Reserved storage slots for future upgrades. When adding new variables
     ///      use one slot from the gap (decrease the gap array size).
     ///      Double check when setting structs or arrays.
@@ -35,7 +37,13 @@ contract OwnerToken is
         _mint(_recipient, 5 * 10 ** decimals());
     }
 
-    function mint(address to, uint256 amount) public onlyOwner {
+    function setDependencies(
+        address _ownerGovernor
+    ) external reinitializer(2) onlyOwner {
+        ownerGovernor = _ownerGovernor;
+    }
+
+    function mint(address to, uint256 amount) public onlyOwnerGovernor {
         _mint(to, amount);
     }
 
@@ -43,7 +51,13 @@ contract OwnerToken is
     /// @param newImplementation Address of the new implementation contract
     function _authorizeUpgrade(
         address newImplementation
-    ) internal override onlyOwner {}
+    ) internal override onlyOwnerGovernor {}
+
+    modifier onlyOwnerGovernor() {
+        if (msg.sender != ownerGovernor) revert NotOwnerGovernor();
+        _;
+    }
 
     error ZeroAddress();
+    error NotOwnerGovernor();
 }

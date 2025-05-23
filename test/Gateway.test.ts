@@ -5,29 +5,67 @@ import { deployGatewayFixtures } from "./fixtures";
 
 describe("Gateway Contract", function () {
   it("SetDependencies should fail if Gateway or NetiveToken are Zero Address", async () => {
-    const { owner, gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, ownerGovernorProxy, validatorsc } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(
-    //   gateway.connect(owner).setDependencies(ethers.ZeroAddress, validatorsc.target)
-    // ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
+    const Gateway = await ethers.getContractFactory("Gateway");
+    const gatewayLogic = await Gateway.deploy();
+    const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
+
+    const gatewayProxy = await GatewayProxy.deploy(
+      gatewayLogic.target,
+      Gateway.interface.encodeFunctionData("initialize", [100, 50, await ownerGovernorProxy.getAddress()])
+    );
+
+    const GatewayDeployed = await ethers.getContractFactory("Gateway");
+    const gateway = GatewayDeployed.attach(gatewayProxy.target);
+
+    await expect(
+      gateway.connect(owner).setDependencies(ethers.ZeroAddress, validatorsc.target)
+    ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
   });
 
   it("SetDependencies should fail if not called by owner", async () => {
-    const { receiver, gateway, nativeTokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { receiver, ownerGovernorProxy, nativeTokenPredicate, validatorsc } = await loadFixture(
+      deployGatewayFixtures
+    );
 
-    // await expect(
-    //   gateway.connect(receiver).setDependencies(nativeTokenPredicate.target, validatorsc.target)
-    // ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
+    const Gateway = await ethers.getContractFactory("Gateway");
+    const gatewayLogic = await Gateway.deploy();
+    const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
+
+    const gatewayProxy = await GatewayProxy.deploy(
+      gatewayLogic.target,
+      Gateway.interface.encodeFunctionData("initialize", [100, 50, await ownerGovernorProxy.getAddress()])
+    );
+
+    const GatewayDeployed = await ethers.getContractFactory("Gateway");
+    const gateway = GatewayDeployed.attach(gatewayProxy.target);
+
+    await expect(
+      gateway.connect(receiver).setDependencies(nativeTokenPredicate.target, validatorsc.target)
+    ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
-    const { owner, gateway, nativeTokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, ownerGovernorProxy, nativeTokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(gateway.connect(owner).setDependencies(nativeTokenPredicate.target, validatorsc.target)).to.not.be
-    //   .reverted;
+    const Gateway = await ethers.getContractFactory("Gateway");
+    const gatewayLogic = await Gateway.deploy();
+    const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
 
-    // expect(await gateway.nativeTokenPredicate()).to.equal(nativeTokenPredicate.target);
-    // expect(await gateway.validators()).to.equal(validatorsc.target);
+    const gatewayProxy = await GatewayProxy.deploy(
+      gatewayLogic.target,
+      Gateway.interface.encodeFunctionData("initialize", [100, 50, await ownerGovernorProxy.getAddress()])
+    );
+
+    const GatewayDeployed = await ethers.getContractFactory("Gateway");
+    const gateway = GatewayDeployed.attach(gatewayProxy.target);
+
+    await expect(gateway.connect(owner).setDependencies(nativeTokenPredicate.target, validatorsc.target)).to.not.be
+      .reverted;
+
+    expect(await gateway.nativeTokenPredicate()).to.equal(nativeTokenPredicate.target);
+    expect(await gateway.validators()).to.equal(validatorsc.target);
   });
 
   it("UpdateValidators should revert if not called by owner", async () => {

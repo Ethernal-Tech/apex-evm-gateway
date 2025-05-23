@@ -92,6 +92,8 @@ export async function deployGatewayFixtures() {
   const GatewayDeployed = await ethers.getContractFactory("Gateway");
   const gateway = GatewayDeployed.attach(gatewayProxy.target);
 
+  await ownerToken.setDependencies(ownerGovernor.target);
+
   await gateway.setDependencies(nativeTokenPredicate.target, validatorsc.target);
 
   await nativeTokenPredicate.setDependencies(gateway.target, nativeTokenWallet.target);
@@ -169,6 +171,7 @@ export async function deployGatewayFixtures() {
     receiver,
     validators,
     ownerGovernor,
+    ownerGovernorProxy,
     ownerGovernorContract,
     gateway,
     nativeTokenPredicate,

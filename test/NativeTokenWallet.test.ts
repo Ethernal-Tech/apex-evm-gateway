@@ -5,28 +5,64 @@ import { deployGatewayFixtures, impersonateAsContractAndMintFunds } from "./fixt
 
 describe("NativeTokenWallet Contract", function () {
   it("SetDependencies should fail if Predicate is Zero Address", async () => {
-    const { owner, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
+    const { owner, ownerGovernorProxy } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(nativeTokenWallet.connect(owner).setDependencies(ethers.ZeroAddress)).to.be.revertedWithCustomError(
-    //   nativeTokenWallet,
-    //   "ZeroAddress"
-    // );
+    const NativeTokenWallet = await ethers.getContractFactory("NativeTokenWallet");
+    const nativeTokenWalletLogic = await NativeTokenWallet.deploy();
+    const NativeTokenWalletProxy = await ethers.getContractFactory("ERC1967Proxy");
+
+    const nativeTokenWalletProxy = await NativeTokenWalletProxy.deploy(
+      nativeTokenWalletLogic.target,
+      NativeTokenWallet.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
+    );
+
+    const NativeTokenWalletDeployed = await ethers.getContractFactory("NativeTokenWallet");
+    const nativeTokenWallet = NativeTokenWalletDeployed.attach(nativeTokenWalletProxy.target);
+
+    await expect(nativeTokenWallet.connect(owner).setDependencies(ethers.ZeroAddress)).to.be.revertedWithCustomError(
+      nativeTokenWallet,
+      "ZeroAddress"
+    );
   });
 
   it("SetDependencies will fail if not called by owner", async () => {
-    const { receiver, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { receiver, ownerGovernorProxy, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(
-    //   nativeTokenWallet.connect(receiver).setDependencies(nativeTokenPredicate.target)
-    // ).to.be.revertedWithCustomError(nativeTokenPredicate, "OwnableUnauthorizedAccount");
+    const NativeTokenWallet = await ethers.getContractFactory("NativeTokenWallet");
+    const nativeTokenWalletLogic = await NativeTokenWallet.deploy();
+    const NativeTokenWalletProxy = await ethers.getContractFactory("ERC1967Proxy");
+
+    const nativeTokenWalletProxy = await NativeTokenWalletProxy.deploy(
+      nativeTokenWalletLogic.target,
+      NativeTokenWallet.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
+    );
+
+    const NativeTokenWalletDeployed = await ethers.getContractFactory("NativeTokenWallet");
+    const nativeTokenWallet = NativeTokenWalletDeployed.attach(nativeTokenWalletProxy.target);
+
+    await expect(
+      nativeTokenWallet.connect(receiver).setDependencies(nativeTokenPredicate.target)
+    ).to.be.revertedWithCustomError(nativeTokenPredicate, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
-    const { owner, nativeTokenWallet, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
+    const { owner, ownerGovernorProxy, nativeTokenPredicate } = await loadFixture(deployGatewayFixtures);
 
-    // await expect(nativeTokenWallet.connect(owner).setDependencies(nativeTokenPredicate.target)).to.not.be.reverted;
-    // expect(await nativeTokenWallet.predicate()).to.equal(nativeTokenPredicate.target);
-    // expect(await nativeTokenWallet.owner()).to.equal(owner.address);
+    const NativeTokenWallet = await ethers.getContractFactory("NativeTokenWallet");
+    const nativeTokenWalletLogic = await NativeTokenWallet.deploy();
+    const NativeTokenWalletProxy = await ethers.getContractFactory("ERC1967Proxy");
+
+    const nativeTokenWalletProxy = await NativeTokenWalletProxy.deploy(
+      nativeTokenWalletLogic.target,
+      NativeTokenWallet.interface.encodeFunctionData("initialize", [await ownerGovernorProxy.getAddress()])
+    );
+
+    const NativeTokenWalletDeployed = await ethers.getContractFactory("NativeTokenWallet");
+    const nativeTokenWallet = NativeTokenWalletDeployed.attach(nativeTokenWalletProxy.target);
+
+    await expect(nativeTokenWallet.connect(owner).setDependencies(nativeTokenPredicate.target)).to.not.be.reverted;
+    expect(await nativeTokenWallet.predicate()).to.equal(nativeTokenPredicate.target);
+    expect(await nativeTokenWallet.owner()).to.equal(owner.address);
   });
 
   it("Mint will fail if not called by Predicate or Owner", async function () {
