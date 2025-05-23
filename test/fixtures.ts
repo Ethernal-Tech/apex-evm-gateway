@@ -4,7 +4,20 @@ import { alwaysTrueBytecode } from "./constants";
 
 export async function deployGatewayFixtures() {
   // Contracts are deployed using the first signer/account by default
-  const [owner, receiver, validator1, validator2, validator3, validator4, validator5] = await ethers.getSigners();
+  const [
+    owner,
+    receiver,
+    validator1,
+    validator2,
+    validator3,
+    validator4,
+    validator5,
+    governor1,
+    governor2,
+    governor3,
+    governor4,
+    governor5,
+  ] = await ethers.getSigners();
   const validators = [validator1, validator2, validator3, validator4, validator5];
 
   const hre = require("hardhat");
@@ -77,7 +90,7 @@ export async function deployGatewayFixtures() {
   const OwnerTokenDeployed = await ethers.getContractFactory("OwnerToken");
   const ownerToken = OwnerTokenDeployed.attach(ownerTokenProxy.target);
 
-  const OwnerGovernorDeployed = await ethers.getContractFactory("OwnerToken");
+  const OwnerGovernorDeployed = await ethers.getContractFactory("OwnerGovernor");
   const ownerGovernor = OwnerGovernorDeployed.attach(ownerGovernorProxy.target);
 
   const NativeTokenPredicateDeployed = await ethers.getContractFactory("NativeTokenPredicate");
@@ -165,6 +178,18 @@ export async function deployGatewayFixtures() {
     [1, blockNumber + 100, [[[1, 2, 3, 4]]]]
   );
 
+  await ownerToken.transfer(governor1.address, 1n * 10n ** 18n);
+  await ownerToken.transfer(governor2.address, 1n * 10n ** 18n);
+  await ownerToken.transfer(governor3.address, 1n * 10n ** 18n);
+  await ownerToken.transfer(governor4.address, 1n * 10n ** 18n);
+  await ownerToken.transfer(governor5.address, 1n * 10n ** 18n);
+
+  await ownerToken.connect(governor1).delegate(governor1.address);
+  await ownerToken.connect(governor2).delegate(governor2.address);
+  await ownerToken.connect(governor3).delegate(governor3.address);
+  await ownerToken.connect(governor4).delegate(governor4.address);
+  await ownerToken.connect(governor5).delegate(governor5.address);
+
   return {
     hre,
     owner,
@@ -182,6 +207,11 @@ export async function deployGatewayFixtures() {
     data,
     dataUpdateValidatorsChainData,
     validatorsAddresses,
+    governor1,
+    governor2,
+    governor3,
+    governor4,
+    governor5,
   };
 }
 

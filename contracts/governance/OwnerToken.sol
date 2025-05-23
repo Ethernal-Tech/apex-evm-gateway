@@ -2,7 +2,9 @@
 pragma solidity ^0.8.24;
 
 import {ERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {ERC20VotesUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import {ERC20PermitUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import {NoncesUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -10,15 +12,13 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 contract OwnerToken is
     Initializable,
     ERC20Upgradeable,
+    ERC20VotesUpgradeable,
     OwnableUpgradeable,
     ERC20PermitUpgradeable,
     UUPSUpgradeable
 {
     address public ownerGovernor;
 
-    /// @dev Reserved storage slots for future upgrades. When adding new variables
-    ///      use one slot from the gap (decrease the gap array size).
-    ///      Double check when setting structs or arrays.
     uint256[50] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -30,9 +30,12 @@ contract OwnerToken is
         __ERC20_init("OwnerToken", "OTK");
         __Ownable_init(_owner);
         __ERC20Permit_init("OwnerToken");
+        __ERC20Votes_init(); // ✅ Must include this
         __UUPSUpgradeable_init();
-        if (_owner == address(0) || _recipient == address(0))
+
+        if (_owner == address(0) || _recipient == address(0)) {
             revert ZeroAddress();
+        }
 
         _mint(_recipient, 5 * 10 ** decimals());
     }
@@ -47,8 +50,26 @@ contract OwnerToken is
         _mint(to, amount);
     }
 
-    /// @notice Authorizes a new implementation for upgrade
-    /// @param newImplementation Address of the new implementation contract
+    // Required by Solidity to resolve multiple inheritance
+    function _update(
+        address from,
+        address to,
+        uint256 value
+    ) internal override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+        super._update(from, to, value);
+    }
+
+    function nonces(
+        address owner
+    )
+        public
+        view
+        override(ERC20PermitUpgradeable, NoncesUpgradeable)
+        returns (uint256)
+    {
+        return super.nonces(owner);
+    }
+
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwnerGovernor {}
