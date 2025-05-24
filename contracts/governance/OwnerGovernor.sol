@@ -52,6 +52,4 @@ contract OwnerGovernor is
     {
         return super.proposalThreshold();
     }
-
-    error TemporaryNotImplemented();
 }
