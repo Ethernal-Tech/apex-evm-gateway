@@ -75,12 +75,12 @@ contract Validators is
         bytes calldata _data
     ) external onlyGateway {
         (
-            uint64 batchId,
+            uint64 batchNonceId,
             uint256 _validatorsSetNumber,
             uint256 _ttl,
             ValidatorChainData[] memory _validatorsChainData
         ) = abi.decode(_data, (uint64, uint256, uint256, ValidatorChainData[]));
-        batchId; // dummy usage to suppress warning
+        batchNonceId; // dummy usage to suppress warning
 
         if (_validatorsSetNumber != (lastConfirmedValidatorsSet + 1)) {
             revert WrongValidatorsSetValue();
