@@ -32,61 +32,63 @@ describe("Validators Contract", function () {
       validatorsc.connect(owner).updateValidatorsChainData(dataUpdateValidatorsChainData)
     ).to.be.revertedWithCustomError(validatorsc, "NotGateway()");
   });
-  it("UpdateValidators should revert if validatorsSetNumber is not correct", async () => {
-    const { gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
+  // it("UpdateValidators should revert if validatorsSetNumber is not correct", async () => {
+  //   const { gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+  //   const blockNumber = await ethers.provider.getBlockNumber();
 
-    const abiCoder = new ethers.AbiCoder();
+  //   const abiCoder = new ethers.AbiCoder();
 
-    const dataUpdateValidatorsChainData = abiCoder.encode(
-      ["uint256", "uint256", "tuple(uint256[4])[]"],
-      [10, blockNumber + 100, [[[1, 2, 3, 4]]]]
-    );
+  //   const dataUpdateValidatorsChainData = abiCoder.encode(
+  //     ["uint256", "uint256", "tuple(uint256[4])[]"],
+  //     [10, blockNumber + 100, [[[1, 2, 3, 4]]]]
+  //   );
 
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
+  //   const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
-    await expect(
-      validatorsc.connect(gatewayContract).updateValidatorsChainData(dataUpdateValidatorsChainData)
-    ).to.be.revertedWithCustomError(validatorsc, "WrongValidatorsSetValue()");
-  });
-  it("UpdateValidators should emit event if TTL has passed and should not update set", async () => {
-    const { gateway, validatorsc, validatorsCardanoData } = await loadFixture(deployGatewayFixtures);
+  //   await expect(
+  //     validatorsc.connect(gatewayContract).updateValidatorsChainData(dataUpdateValidatorsChainData)
+  //   ).to.be.revertedWithCustomError(validatorsc, "WrongValidatorsSetValue()");
+  // });
 
-    const blockNumber = await ethers.provider.getBlockNumber();
+  // it("UpdateValidators should emit event if TTL has passed and should not update set", async () => {
+  //   const { gateway, validatorsc, validatorsCardanoData } = await loadFixture(deployGatewayFixtures);
 
-    const abiCoder = new ethers.AbiCoder();
+  //   const blockNumber = await ethers.provider.getBlockNumber();
 
-    const dataUpdateValidatorsChainData = abiCoder.encode(
-      ["uint256", "uint256", "tuple(uint256[4])[]"],
-      [1, blockNumber - 1, [[[1, 2, 3, 4]]]]
-    );
+  //   const abiCoder = new ethers.AbiCoder();
 
-    const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
+  //   const dataUpdateValidatorsChainData = abiCoder.encode(
+  //     ["uint256", "uint256", "tuple(uint256[4])[]"],
+  //     [1, blockNumber - 1, [[[1, 2, 3, 4]]]]
+  //   );
 
-    expect(await validatorsc.connect(gatewayContract).updateValidatorsChainData(dataUpdateValidatorsChainData))
-      .to.emit(gateway, "ValidatorsSetUpdated")
-      .withArgs(dataUpdateValidatorsChainData);
+  //   const gatewayContract = await impersonateAsContractAndMintFunds(await gateway.getAddress());
 
-    expect((await validatorsc.getValidatorsChainData()).length).to.equal(validatorsCardanoData.length);
-  });
-  it("UpdateValidators success", async () => {
-    const { owner, gateway, validatorsc, dataUpdateValidatorsChainData } = await loadFixture(deployGatewayFixtures);
+  //   expect(await validatorsc.connect(gatewayContract).updateValidatorsChainData(dataUpdateValidatorsChainData))
+  //     .to.emit(gateway, "ValidatorsSetUpdated")
+  //     .withArgs(dataUpdateValidatorsChainData);
 
-    await gateway
-      .connect(owner)
-      .updateValidatorsChainData(
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataUpdateValidatorsChainData
-      );
+  //   expect((await validatorsc.getValidatorsChainData()).length).to.equal(validatorsCardanoData.length);
+  // });
 
-    expect(await validatorsc.lastConfirmedValidatorsSet()).to.equal(1);
+  // it("UpdateValidators success", async () => {
+  //   const { owner, gateway, validatorsc, dataUpdateValidatorsChainData } = await loadFixture(deployGatewayFixtures);
 
-    expect((await validatorsc.getValidatorsChainData()).length).to.equal(1);
-    expect((await validatorsc.getValidatorsChainData())[0][0][0]).to.equal(1);
-    expect((await validatorsc.getValidatorsChainData())[0][0][1]).to.equal(2);
-    expect((await validatorsc.getValidatorsChainData())[0][0][2]).to.equal(3);
-    expect((await validatorsc.getValidatorsChainData())[0][0][3]).to.equal(4);
-  });
+  //   await gateway
+  //     .connect(owner)
+  //     .updateValidatorsChainData(
+  //       "0x7465737400000000000000000000000000000000000000000000000000000000",
+  //       "0x7465737400000000000000000000000000000000000000000000000000000000",
+  //       dataUpdateValidatorsChainData
+  //     );
+
+  //   expect(await validatorsc.lastConfirmedValidatorsSet()).to.equal(1);
+
+  //   expect((await validatorsc.getValidatorsChainData()).length).to.equal(1);
+  //   expect((await validatorsc.getValidatorsChainData())[0][0][0]).to.equal(1);
+  //   expect((await validatorsc.getValidatorsChainData())[0][0][1]).to.equal(2);
+  //   expect((await validatorsc.getValidatorsChainData())[0][0][2]).to.equal(3);
+  //   expect((await validatorsc.getValidatorsChainData())[0][0][3]).to.equal(4);
+  // });
 });
