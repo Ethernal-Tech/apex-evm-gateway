@@ -8,6 +8,7 @@ import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
+import "hardhat/console.sol";
 
 /// @title Gateway Contract
 /// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
@@ -132,7 +133,10 @@ contract Gateway is
 
         if (!valid) revert InvalidSignature();
 
-        validators.updateValidatorsChainData(_data);
+        bool success = validators.updateValidatorsChainData(_data);
+        if (success) {
+            emit ValidatorSetUpdatedGW(_data);
+        }
     }
 
     /// @notice Transfers an amount to the native token wallet.

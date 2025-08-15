@@ -73,32 +73,27 @@ contract Validators is
      */
     function updateValidatorsChainData(
         bytes calldata _data
-    ) external onlyGateway {
-        (
-            uint64 batchId,
-            uint256 _validatorsSetNumber,
-            uint256 _ttl,
-            ValidatorChainData[] memory _validatorsChainData
-        ) = abi.decode(_data, (uint64, uint256, uint256, ValidatorChainData[]));
-        batchId; // dummy usage to suppress warning
+    ) external onlyGateway returns (bool) {
+        ValidatorSetChange memory _validatorSetChange = abi.decode(_data, (ValidatorSetChange));
 
-        if (_validatorsSetNumber != (lastConfirmedValidatorsSet + 1)) {
+        if (_validatorSetChange._validatorsSetNumber != (lastConfirmedValidatorsSet + 1)) {
             revert WrongValidatorsSetValue();
         }
 
         lastConfirmedValidatorsSet++;
 
-        if (_ttl < block.number) {
+        if (_validatorSetChange._ttl < block.number) {
             emit TTLExpired(_data);
-            return;
+            return false;
         }
 
         delete validatorsChainData;
-        for (uint i; i < _validatorsChainData.length; i++) {
-            validatorsChainData.push(_validatorsChainData[i]);
+        for (uint i; i < _validatorSetChange._validatorsChainData.length; i++) {
+            validatorsChainData.push(_validatorSetChange._validatorsChainData[i]);
         }
 
         emit ValidatorsSetUpdated(_data);
+        return true;
     }
 
     function getValidatorsChainData()

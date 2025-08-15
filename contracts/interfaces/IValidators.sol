@@ -8,7 +8,7 @@ interface IValidators is IGatewayStructs {
         ValidatorChainData[] calldata _validatorsChainData
     ) external;
 
-    function updateValidatorsChainData(bytes calldata _data) external;
+    function updateValidatorsChainData(bytes calldata _data) external returns (bool);
 
     function getValidatorsChainData()
         external
