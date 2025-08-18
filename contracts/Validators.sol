@@ -74,9 +74,15 @@ contract Validators is
     function updateValidatorsChainData(
         bytes calldata _data
     ) external onlyGateway returns (bool) {
-        ValidatorSetChange memory _validatorSetChange = abi.decode(_data, (ValidatorSetChange));
+        ValidatorSetChange memory _validatorSetChange = abi.decode(
+            _data,
+            (ValidatorSetChange)
+        );
 
-        if (_validatorSetChange._validatorsSetNumber != (lastConfirmedValidatorsSet + 1)) {
+        if (
+            _validatorSetChange._validatorsSetNumber !=
+            (lastConfirmedValidatorsSet + 1)
+        ) {
             revert WrongValidatorsSetValue();
         }
 
@@ -89,7 +95,9 @@ contract Validators is
 
         delete validatorsChainData;
         for (uint i; i < _validatorSetChange._validatorsChainData.length; i++) {
-            validatorsChainData.push(_validatorSetChange._validatorsChainData[i]);
+            validatorsChainData.push(
+                _validatorSetChange._validatorsChainData[i]
+            );
         }
 
         emit ValidatorsSetUpdated(_data);

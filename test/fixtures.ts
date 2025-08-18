@@ -132,10 +132,12 @@ export async function deployGatewayFixtures() {
     [[1, blockNumber + 100, 1, [[address, 1000]]]]
   );
 
-  const dataUpdateValidatorsChainData = abiCoder.encode(
-    ["uint256", "uint256", "tuple(uint256[4])[]"],
-    [1, blockNumber + 100, [[[1, 2, 3, 4]]]]
-  );
+  const validatorSetChange = {
+    batchId: 1n,
+    _validatorsSetNumber: 1n,
+    _ttl: 9999999999n,
+    _validatorsChainData: [{ key: [123n, 456n, 789n, 101112n] }],
+  };
 
   return {
     hre,
@@ -149,8 +151,8 @@ export async function deployGatewayFixtures() {
     validatorsCardanoData,
     receiverWithdraw,
     data,
-    dataUpdateValidatorsChainData,
     validatorsAddresses,
+    validatorSetChange,
   };
 }
 
