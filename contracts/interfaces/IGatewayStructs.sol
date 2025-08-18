@@ -14,6 +14,13 @@ interface IGatewayStructs {
         uint256 feeAmount;
         ReceiverDeposit[] receivers;
     }
+    
+    struct ValidatorSetChange {
+        uint64 batchId;
+        uint256 _validatorsSetNumber;
+        uint256 _ttl;
+        ValidatorChainData[] _validatorsChainData;
+    }
 
     struct ReceiverDeposit {
         address receiver;
@@ -39,6 +46,7 @@ interface IGatewayStructs {
     event FundsDeposited(address indexed sender, uint256 value);
     event ValidatorsSetUpdated(bytes data);
     event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
+    event ValidatorSetUpdatedGW(bytes data);
 
     error NotGateway();
     error NotPredicate();

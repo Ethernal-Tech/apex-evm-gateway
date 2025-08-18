@@ -126,13 +126,16 @@ contract Gateway is
         bytes calldata _signature,
         uint256 _bitmap,
         bytes calldata _data
-    ) external onlyOwner {
+    ) external {
         bytes32 _hash = keccak256(_data);
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
 
         if (!valid) revert InvalidSignature();
 
-        validators.updateValidatorsChainData(_data);
+        bool success = validators.updateValidatorsChainData(_data);
+        if (success) {
+            emit ValidatorSetUpdatedGW(_data);
+        }
     }
 
     /// @notice Transfers an amount to the native token wallet.
