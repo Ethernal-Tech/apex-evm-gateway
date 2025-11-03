@@ -14,7 +14,7 @@ interface IGatewayStructs {
         uint256 feeAmount;
         ReceiverDeposit[] receivers;
     }
-    
+
     struct ValidatorSetChange {
         uint64 batchId;
         uint256 _validatorsSetNumber;
@@ -32,21 +32,31 @@ interface IGatewayStructs {
         uint256 amount;
     }
 
-    event Deposit(bytes data);
-
+    event Deposit(bytes data, uint256 coloredCoinId);
+    event DepositedColoredCoin(bytes data);
     event Withdraw(
         uint8 destinationChainId,
         address sender,
         ReceiverWithdraw[] receivers,
         uint256 feeAmount,
-        uint256 value
+        uint256 value,
+        uint256 coloredCoinId
     );
-
+    event WithdrawColoredCoin(
+        address sender,
+        string indexed receiver,
+        uint256 amount
+    );
     event TTLExpired(bytes data);
     event FundsDeposited(address indexed sender, uint256 value);
     event ValidatorsSetUpdated(bytes data);
     event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
     event ValidatorSetUpdatedGW(bytes data);
+    event ColoredCoinRegistered(
+        uint coloredCoinId,
+        address erc20Address,
+        bool isLayerZeroToken
+    );
 
     error NotGateway();
     error NotPredicate();
@@ -58,5 +68,10 @@ interface IGatewayStructs {
     error TransferFailed();
     error WrongValidatorsSetValue();
     error InsufficientFeeAmount(uint256 minFeeAmount, uint256 feeAmount);
-    error InvalidBridgingAmount(uint256 minBridgingAmount, uint256 bridgingAmount );
+    error InvalidBridgingAmount(
+        uint256 minBridgingAmount,
+        uint256 bridgingAmount
+    );
+    error NotContractAddress(address addr);
+    error ColoredCoinNotRegistered(uint256 coloredCoinId);
 }
