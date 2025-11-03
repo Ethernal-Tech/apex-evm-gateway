@@ -75,7 +75,8 @@ contract NativeTokenPredicate is
      */
     function deposit(
         bytes calldata _data,
-        address _relayer
+        address _relayer,
+        uint256 _coloredCoinId
     ) external onlyGateway nonReentrant returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
@@ -100,17 +101,45 @@ contract NativeTokenPredicate is
         for (uint256 i; i < _receiversLength; i++) {
             nativeTokenWallet.deposit(
                 _receivers[i].receiver,
-                _receivers[i].amount
+                _receivers[i].amount,
+                _coloredCoinId
             );
         }
 
-        nativeTokenWallet.deposit(_relayer, _deposits.feeAmount);
+        nativeTokenWallet.deposit(
+            _relayer,
+            _deposits.feeAmount,
+            _coloredCoinId
+        );
 
         return true;
     }
 
+    function withdraw(
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _coloredCoinId
+    ) external onlyGateway {
+        nativeTokenWallet.withdraw(_receivers, _coloredCoinId);
+    }
+
+    function setColoredCoinAsLayerZeroToken(
+        uint256 coloredCoinId
+    ) external onlyGateway {
+        nativeTokenWallet.setColoredCoinAsLayerZeroToken(coloredCoinId);
+    }
+
+    function setColoredCoinAddress(
+        uint256 _coloredCoinId,
+        address _coloredCoinAddress
+    ) external onlyGateway {
+        nativeTokenWallet.setColoredCoinAddress(
+            _coloredCoinId,
+            _coloredCoinAddress
+        );
+    }
+
     function version() public pure returns (string memory) {
-        return "1.0.0";
+        return "1.1.0";
     }
 
     modifier onlyGateway() {

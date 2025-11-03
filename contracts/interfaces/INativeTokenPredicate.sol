@@ -6,7 +6,8 @@ import {IGatewayStructs} from "./IGatewayStructs.sol";
 interface INativeTokenPredicate is IGatewayStructs {
     function deposit(
         bytes calldata data,
-        address relayer
+        address relayer,
+        uint256 coloredCoinId
     ) external returns (bool);
 
     function resetBatchId() external;
