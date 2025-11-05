@@ -53,8 +53,10 @@ interface IGatewayStructs {
     event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
     event ValidatorSetUpdatedGW(bytes data);
     event ColoredCoinRegistered(
+        string name,
+        string symbol,
         uint coloredCoinId,
-        address erc20Address,
+        address contractAddress,
         bool isLayerZeroToken
     );
 

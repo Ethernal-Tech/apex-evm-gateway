@@ -39,6 +39,14 @@ export async function deployGatewayFixtures() {
   const Gateway = await ethers.getContractFactory("Gateway");
   const gatewayLogic = await Gateway.deploy();
 
+  const MyToken = await ethers.getContractFactory("MyToken");
+  const myTokenLogic = await MyToken.deploy();
+  await myTokenLogic.waitForDeployment();
+
+  const TokenFactory = await ethers.getContractFactory("TokenFactory");
+  const tokenFactoryLogic = await TokenFactory.deploy();
+  await tokenFactoryLogic.waitForDeployment();
+
   // // deployment of contract proxy
   const NativeTokenPredicateProxy = await ethers.getContractFactory(
     "ERC1967Proxy"
@@ -48,6 +56,8 @@ export async function deployGatewayFixtures() {
   );
   const ValidatorscProxy = await ethers.getContractFactory("ERC1967Proxy");
   const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
+  const MyTokenProxy = await ethers.getContractFactory("ERC1967Proxy");
+  const TokenFactoryProxy = await ethers.getContractFactory("ERC1967Proxy");
 
   const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
     nativeTokenPredicateLogic.target,
@@ -77,6 +87,19 @@ export async function deployGatewayFixtures() {
     Gateway.interface.encodeFunctionData("initialize", [100, 50])
   );
 
+  const myTokenProxy = await MyTokenProxy.deploy(
+    myTokenLogic.target,
+    MyToken.interface.encodeFunctionData("initialize", ["Test Token", "TTK"])
+  );
+
+  const tokenFactoryProxy = await TokenFactoryProxy.deploy(
+    tokenFactoryLogic.target,
+    TokenFactory.interface.encodeFunctionData("initialize", [
+      myTokenLogic.target,
+      gatewayProxy.target,
+    ])
+  );
+
   // //casting proxy contracts to contract logic
   const NativeTokenPredicateDeployed = await ethers.getContractFactory(
     "NativeTokenPredicate"
@@ -98,10 +121,18 @@ export async function deployGatewayFixtures() {
   const GatewayDeployed = await ethers.getContractFactory("Gateway");
   const gateway = GatewayDeployed.attach(gatewayProxy.target);
 
+  const MyTokenDeployed = await ethers.getContractFactory("MyToken");
+  const myToken = MyTokenDeployed.attach(myTokenProxy.target);
+
+  const TokenFactoryDeployed = await ethers.getContractFactory("TokenFactory");
+  const tokenFactory = TokenFactoryDeployed.attach(tokenFactoryProxy.target);
+
   await gateway.setDependencies(
     nativeTokenPredicate.target,
     validatorsc.target
   );
+
+  await gateway.setAdditionalDependenciesAndSync(tokenFactory.target);
 
   await nativeTokenPredicate.setDependencies(
     gateway.target,
@@ -206,6 +237,7 @@ export async function deployGatewayFixtures() {
     receiver,
     validators,
     gateway,
+    myToken,
     nativeTokenPredicate,
     nativeTokenWallet,
     validatorsc,

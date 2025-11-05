@@ -17,11 +17,10 @@ contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
 
     function initialize(
         string memory name_,
-        string memory symbol_,
-        address initialOwner
+        string memory symbol_
     ) external initializer {
         __ERC20_init(name_, symbol_);
-        __Ownable_init(initialOwner);
+        __Ownable_init(msg.sender);
     }
 
     function mint(address to, uint256 amount) external onlyOwner {

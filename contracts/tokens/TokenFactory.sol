@@ -6,8 +6,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
-
 import "./MyToken.sol";
+import "hardhat/console.sol";
 
 /**
  * @title TokenFactory
@@ -16,10 +16,8 @@ import "./MyToken.sol";
 contract TokenFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     ProxyAdmin public proxyAdmin;
 
-    mapping(string => address) public tokenAddressByName;
-    address[] public allTokenAddresses;
-
     address public gatewayAddress;
+
     address public implementation; // base ERC20 implementation used for proxies
 
     uint256[50] private __gap;
@@ -50,43 +48,22 @@ contract TokenFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     /// @notice Creates a new upgradeable ERC20 token proxy
     function createToken(
         string memory _name,
-        string memory _symbol,
-        uint256 _coloredCoinId
-    ) external onlyGateway {
-        require(
-            tokenAddressByName[_name] == address(0),
-            "Token name already exists"
-        );
-
+        string memory _symbol
+    ) external onlyGateway returns (address _contractAddress) {
         TransparentUpgradeableProxy proxy = new TransparentUpgradeableProxy(
             implementation,
             address(proxyAdmin),
             ""
         );
 
-        MyToken(address(proxy)).initialize(_name, _symbol, msg.sender);
+        MyToken(address(proxy)).initialize(_name, _symbol);
 
-        tokenAddressByName[_name] = address(proxy);
-        allTokenAddresses.push(address(proxy));
-
-        emit TokenCreated(_name, _symbol, _coloredCoinId, address(proxy));
-    }
-
-    /// @notice View all deployed tokens
-    function getAllTokens() external view returns (address[] memory) {
-        return allTokenAddresses;
+        return address(proxy);
     }
 
     modifier onlyGateway() {
         if (msg.sender != gatewayAddress) revert NotGateway();
         _;
     }
-
-    event TokenCreated(
-        string name,
-        string symbol,
-        uint256 coloredCoinId,
-        address tokenProxy
-    );
     error NotGateway();
 }

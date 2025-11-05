@@ -88,27 +88,26 @@ contract Gateway is
         string memory _name,
         string memory _symbol
     ) external onlyOwner {
-        if (_lzERC20Address == address(0)) {
-            tokenFactory.createToken(_name, _symbol, ++coloredCoinIdCounter);
-            emit ColoredCoinRegistered(
-                coloredCoinIdCounter,
-                _lzERC20Address,
-                false
-            );
+        bool isNotLayerZero = _lzERC20Address == address(0);
+        address _contractAddress;
+        if (isNotLayerZero) {
+            _contractAddress = tokenFactory.createToken(_name, _symbol);
         } else if (!_isContract(_lzERC20Address)) {
             revert NotContractAddress(_lzERC20Address);
-        } else {
-            nativeTokenPredicate.setColoredCoinAddress(
-                ++coloredCoinIdCounter,
-                _lzERC20Address
-            );
-
-            emit ColoredCoinRegistered(
-                coloredCoinIdCounter,
-                _lzERC20Address,
-                true
-            );
         }
+
+        nativeTokenPredicate.setColoredCoinAddress(
+            ++coloredCoinIdCounter,
+            (isNotLayerZero ? _contractAddress : _lzERC20Address)
+        );
+
+        emit ColoredCoinRegistered(
+            _name,
+            _symbol,
+            coloredCoinIdCounter,
+            (isNotLayerZero ? _contractAddress : _lzERC20Address),
+            !isNotLayerZero
+        );
     }
 
     /// @notice Deposits tokens into the system
