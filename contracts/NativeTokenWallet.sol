@@ -134,6 +134,8 @@ contract NativeTokenWallet is
         uint256 _coloredCoinId,
         address _coloredCoinAddress
     ) external onlyPredicate {
+        if (isLayerZeroToken[_coloredCoinId])
+            revert ColoredCoinAddressAlreadyRegistered(_coloredCoinAddress);
         coloredCoinAddress[_coloredCoinId] = _coloredCoinAddress;
     }
 

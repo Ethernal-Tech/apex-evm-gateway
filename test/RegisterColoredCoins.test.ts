@@ -42,6 +42,16 @@ describe("Register colored coins tests", function () {
       ).to.equal(myToken.target);
     });
 
+    it("Should set isLayerZeroToken on true when register colored coin LayerZero is success", async () => {
+      await gateway.connect(owner).registerColoredCoin(myToken.target, "", "");
+
+      expect(
+        await nativeTokenWallet.isLayerZeroToken(
+          await gateway.coloredCoinIdCounter()
+        )
+      ).to.equal(true);
+    });
+
     it("Should emit coloredCoin registered event when new LayerZero colored coin is registered", async () => {
       expect(
         await gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
@@ -55,8 +65,30 @@ describe("Register colored coins tests", function () {
           true
         );
     });
+
+    it("Should revert if LayerZero coloredCoinAddress is already registered", async () => {
+      const coloredCoinIdBefore = await gateway.coloredCoinIdCounter();
+
+      expect(
+        await gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
+      ).not.to.be.reverted;
+
+      expect(
+        await gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
+      )
+        .to.be.revertedWithCustomError(
+          nativeTokenWallet,
+          "ColoredCoinAddressAlreadyRegistered"
+        )
+        .withArgs(myToken.target);
+    });
   });
   describe("Register colored coin ERC20", function () {
+    it("Should revert if createToken is not called by Gateway", async () => {
+      await expect(
+        tokenFactory.connect(validators[1]).createToken("", "")
+      ).to.be.revertedWithCustomError(tokenFactory, "NotGateway");
+    });
     it("Should increase coloredCoinAddressIdCounter on register colored coin ERC20 success", async () => {
       const coloredCoinIdBefore = await gateway.coloredCoinIdCounter();
 
@@ -69,6 +101,28 @@ describe("Register colored coins tests", function () {
       expect(await gateway.coloredCoinIdCounter()).to.equal(
         coloredCoinIdBefore + BigInt(1)
       );
+
+      expect(
+        await gateway
+          .connect(owner)
+          .registerColoredCoin(ethers.ZeroAddress, "Test Token2", "TTK2")
+      ).not.to.be.reverted;
+
+      expect(await gateway.coloredCoinIdCounter()).to.equal(
+        coloredCoinIdBefore + BigInt(2)
+      );
+    });
+
+    it("Should set isLayerZeroToken on true when register colored coin LayerZero is success", async () => {
+      await gateway
+        .connect(owner)
+        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+
+      expect(
+        await nativeTokenWallet.isLayerZeroToken(
+          await gateway.coloredCoinIdCounter()
+        )
+      ).to.equal(false);
     });
 
     it("Should set coloredCoinAddress on register colored coin ERC20", async () => {
@@ -118,6 +172,7 @@ describe("Register colored coins tests", function () {
   let validators: any;
   let gateway: any;
   let myToken: any;
+  let tokenFactory: any;
 
   let nativeTokenWallet: any;
 
@@ -127,6 +182,7 @@ describe("Register colored coins tests", function () {
     validators = fixture.validators;
     gateway = fixture.gateway;
     myToken = fixture.myToken;
+    tokenFactory = fixture.tokenFactory;
     nativeTokenWallet = fixture.nativeTokenWallet;
   });
 });
