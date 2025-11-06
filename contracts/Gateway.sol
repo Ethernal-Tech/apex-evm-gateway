@@ -88,9 +88,9 @@ contract Gateway is
         string memory _name,
         string memory _symbol
     ) external onlyOwner {
-        bool isNotLayerZero = _lzERC20Address == address(0);
+        bool isLayerZero = _lzERC20Address != address(0);
         address _contractAddress;
-        if (isNotLayerZero) {
+        if (!isLayerZero) {
             _contractAddress = tokenFactory.createToken(_name, _symbol);
         } else if (!_isContract(_lzERC20Address)) {
             revert NotContractAddress(_lzERC20Address);
@@ -98,15 +98,21 @@ contract Gateway is
 
         nativeTokenPredicate.setColoredCoinAddress(
             ++coloredCoinIdCounter,
-            (isNotLayerZero ? _contractAddress : _lzERC20Address)
+            (isLayerZero ? _lzERC20Address : _contractAddress)
         );
+
+        if (isLayerZero) {
+            nativeTokenPredicate.setColoredCoinAsLayerZeroToken(
+                coloredCoinIdCounter
+            );
+        }
 
         emit ColoredCoinRegistered(
             _name,
             _symbol,
             coloredCoinIdCounter,
-            (isNotLayerZero ? _contractAddress : _lzERC20Address),
-            !isNotLayerZero
+            (isLayerZero ? _lzERC20Address : _contractAddress),
+            isLayerZero
         );
     }
 
@@ -139,6 +145,7 @@ contract Gateway is
             msg.sender,
             _coloredCoinId
         );
+
         if (success) {
             emit Deposit(_data, _coloredCoinId);
         } else {

@@ -240,6 +240,7 @@ export async function deployGatewayFixtures() {
     myToken,
     nativeTokenPredicate,
     nativeTokenWallet,
+    tokenFactory,
     validatorsc,
     validatorsCardanoData,
     receiverWithdraw,
