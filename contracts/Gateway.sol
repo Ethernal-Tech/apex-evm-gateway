@@ -11,6 +11,7 @@ import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 import {TokenFactory} from "./tokens/TokenFactory.sol";
+import {Utils} from "./Utils.sol";
 
 /// @title Gateway Contract
 /// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
@@ -19,6 +20,7 @@ contract Gateway is
     IGateway,
     Initializable,
     OwnableUpgradeable,
+    Utils,
     UUPSUpgradeable
 {
     using SafeERC20 for IERC20;
@@ -169,13 +171,18 @@ contract Gateway is
         uint256 _feeAmount,
         uint256 _coloredCoinId
     ) external payable {
+        if (_coloredCoinId > coloredCoinIdCounter)
+            revert ColoredCoinNotRegistered(_coloredCoinId);
+
         if (_feeAmount < minFeeAmount)
             revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
+
+        uint256 amountSum;
 
         if (_coloredCoinId == 0) {
             uint256 _amountLength = _receivers.length;
 
-            uint256 amountSum = _feeAmount;
+            amountSum = _feeAmount;
 
             for (uint256 i; i < _amountLength; i++) {
                 uint256 _amount = _receivers[i].amount;
@@ -189,29 +196,28 @@ contract Gateway is
             }
 
             _transferAmountToWallet(amountSum);
-
-            emit Withdraw(
-                _destinationChainId,
-                msg.sender,
-                _receivers,
-                _feeAmount,
-                amountSum,
-                _coloredCoinId
-            );
         } else {
+            if (_receivers.length != 1) {
+                revert InvalidReceiversLengthForColoredCoin(_receivers.length);
+            }
+
+            if (msg.sender != _stringToAddress(_receivers[0].receiver)) {
+                revert InvalidBurnAddress(_receivers[0].receiver);
+            }
+
             nativeTokenPredicate.withdraw(_receivers, _coloredCoinId);
 
             _transferAmountToWallet(_feeAmount);
-
-            emit Withdraw(
-                _destinationChainId,
-                msg.sender,
-                _receivers,
-                _feeAmount,
-                _feeAmount,
-                _coloredCoinId
-            );
         }
+
+        emit Withdraw(
+            _destinationChainId,
+            msg.sender,
+            _receivers,
+            _feeAmount,
+            (_coloredCoinId == 0 ? amountSum : _feeAmount),
+            _coloredCoinId
+        );
     }
 
     /// @notice Updates validator chain data.

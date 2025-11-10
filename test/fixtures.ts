@@ -89,14 +89,19 @@ export async function deployGatewayFixtures() {
 
   const myTokenProxy = await MyTokenProxy.deploy(
     myTokenLogic.target,
-    MyToken.interface.encodeFunctionData("initialize", ["Test Token", "TTK"])
+    MyToken.interface.encodeFunctionData("initialize", [
+      "Test Token",
+      "TTK",
+      nativeTokenWalletProxy.target,
+    ])
   );
 
   const tokenFactoryProxy = await TokenFactoryProxy.deploy(
     tokenFactoryLogic.target,
     TokenFactory.interface.encodeFunctionData("initialize", [
-      myTokenLogic.target,
       gatewayProxy.target,
+      myTokenLogic.target,
+      nativeTokenWalletProxy.target,
     ])
   );
 
@@ -188,7 +193,7 @@ export async function deployGatewayFixtures() {
 
   const receiverWithdraw = [
     {
-      receiver: "something",
+      receiver: receiver.address,
       amount: 100,
     },
   ];
@@ -212,6 +217,11 @@ export async function deployGatewayFixtures() {
 
   await owner.sendTransaction({
     to: gatewayContractAddress,
+    value: ethers.parseUnits("1", "ether"),
+  });
+
+  await owner.sendTransaction({
+    to: receiver.address,
     value: ethers.parseUnits("1", "ether"),
   });
 

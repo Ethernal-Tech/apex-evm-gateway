@@ -7,7 +7,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import "./MyToken.sol";
-import "hardhat/console.sol";
 
 /**
  * @title TokenFactory
@@ -20,6 +19,8 @@ contract TokenFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     address public implementation; // base ERC20 implementation used for proxies
 
+    address public nativeTokenWalletAddress;
+
     uint256[50] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -29,8 +30,9 @@ contract TokenFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     /// @notice Initializes the factory (called once)
     function initialize(
+        address _gatewayAddress,
         address _implementation,
-        address _gatewayAddress
+        address _nativeTokenWalletAddress
     ) external initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
@@ -38,6 +40,7 @@ contract TokenFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         proxyAdmin = new ProxyAdmin(msg.sender);
         gatewayAddress = _gatewayAddress;
         implementation = _implementation;
+        nativeTokenWalletAddress = _nativeTokenWalletAddress;
     }
 
     /// @notice Authorize upgrades (only owner)
@@ -56,7 +59,11 @@ contract TokenFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable {
             ""
         );
 
-        MyToken(address(proxy)).initialize(_name, _symbol);
+        MyToken(address(proxy)).initialize(
+            _name,
+            _symbol,
+            nativeTokenWalletAddress
+        );
 
         return address(proxy);
     }

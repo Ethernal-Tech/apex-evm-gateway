@@ -10,6 +10,7 @@ import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 import {MyToken} from "./tokens/MyToken.sol";
+import {Utils} from "./Utils.sol";
 
 /**
  * @title NativeTokenWallet
@@ -20,6 +21,7 @@ contract NativeTokenWallet is
     Initializable,
     OwnableUpgradeable,
     UUPSUpgradeable,
+    Utils,
     IGatewayStructs,
     INativeTokenWallet
 {
@@ -96,32 +98,11 @@ contract NativeTokenWallet is
             }
         } else {
             MyToken coloredCoin = MyToken(coloredCoinAddress[_coloredCoinId]);
-            uint256 receiversLength = _receivers.length;
-            for (uint256 i; i < receiversLength; i++) {
-                coloredCoin.burn(
-                    _stringToAddress(_receivers[i].receiver),
-                    _receivers[i].amount
-                );
-            }
+            coloredCoin.burn(
+                _stringToAddress(_receivers[0].receiver),
+                _receivers[0].amount
+            );
         }
-    }
-
-    function _stringToAddress(string memory s) internal pure returns (address) {
-        bytes memory b = bytes(s);
-        require(b.length == 42, "Invalid address length"); // "0x" + 40 hex chars
-        uint160 result = 0;
-        for (uint i = 2; i < 42; i++) {
-            result *= 16;
-            uint8 c = uint8(b[i]);
-            if (c >= 48 && c <= 57)
-                result += c - 48; // 0-9
-            else if (c >= 65 && c <= 70)
-                result += c - 55; // A-F
-            else if (c >= 97 && c <= 102)
-                result += c - 87; // a-f
-            else revert("Invalid hex character");
-        }
-        return address(result);
     }
 
     function setColoredCoinAsLayerZeroToken(
