@@ -142,12 +142,12 @@ describe("Transfering ERC20 colored coins", function () {
       );
 
       const value = { value: ethers.parseUnits("200", "wei") };
-      const withdrawTx = await gateway.withdraw(
-        1,
-        receiverWithdraw,
-        100,
-        0,
-        value
+      await gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdraw, 100, 1, value);
+
+      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
+        decodedAmount - BigInt(receiverWithdraw[0].amount)
       );
     });
   });
