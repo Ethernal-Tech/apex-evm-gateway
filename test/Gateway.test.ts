@@ -81,7 +81,9 @@ describe("Gateway Contract", function () {
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
     expect(withdrawEvent?.args?.sender).to.equal(receiver);
-    expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+    expect(withdrawEvent?.args?.receivers[0].receiver).to.equal(
+      receiver.address
+    );
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
     expect(withdrawEvent?.args?.value).to.equal(200);
@@ -205,7 +207,9 @@ describe("Gateway Contract", function () {
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
-      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal(
+        receiver.address
+      );
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
       expect(withdrawEvent?.args?.value).to.equal(200);
@@ -278,7 +282,9 @@ describe("Gateway Contract", function () {
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
-      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
+      expect(withdrawEvent?.args?.receivers[0].receiver).to.equal(
+        receiver.address
+      );
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
       expect(withdrawEvent?.args?.value).to.equal(200);

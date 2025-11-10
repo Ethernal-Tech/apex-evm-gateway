@@ -42,7 +42,7 @@ describe("Register colored coins tests", function () {
       ).to.equal(myToken.target);
     });
 
-    it("Should set isLayerZeroToken on true when register colored coin LayerZero is success", async () => {
+    it("Should set isLayerZeroToken to true when register colored coin LayerZero is success", async () => {
       await gateway.connect(owner).registerColoredCoin(myToken.target, "", "");
 
       expect(
@@ -113,7 +113,7 @@ describe("Register colored coins tests", function () {
       );
     });
 
-    it("Should set isLayerZeroToken on true when register colored coin LayerZero is success", async () => {
+    it("Should set isLayerZeroToken to false when register colored coin ERC20 is success", async () => {
       await gateway
         .connect(owner)
         .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
@@ -133,14 +133,14 @@ describe("Register colored coins tests", function () {
       const receipt = await tx.wait();
 
       const event = receipt.logs
-        .map((log) => {
+        .map((log: any) => {
           try {
             return gateway.interface.parseLog(log);
           } catch {
             return null;
           }
         })
-        .find((log) => log && log.name === "ColoredCoinRegistered");
+        .find((log: any) => log && log.name === "ColoredCoinRegistered");
 
       const contractAddress = event.args.contractAddress;
 

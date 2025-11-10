@@ -17,10 +17,11 @@ contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
 
     function initialize(
         string memory name_,
-        string memory symbol_
+        string memory symbol_,
+        address _walletAddress
     ) external initializer {
         __ERC20_init(name_, symbol_);
-        __Ownable_init(msg.sender);
+        __Ownable_init(_walletAddress);
     }
 
     function mint(address to, uint256 amount) external onlyOwner {
@@ -29,16 +30,6 @@ contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
 
     function burn(address from, uint256 amount) external onlyOwner {
         _burn(from, amount);
-    }
-
-    function burnFrom(address account, uint256 amount) external {
-        uint256 currentAllowance = allowance(account, msg.sender);
-        require(
-            currentAllowance >= amount,
-            "ERC20: burn amount exceeds allowance"
-        );
-        _approve(account, msg.sender, currentAllowance - amount);
-        _burn(account, amount);
     }
 
     uint256[50] private __gap;
