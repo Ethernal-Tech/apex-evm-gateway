@@ -77,6 +77,6 @@ interface IGatewayStructs {
     error NotContractAddress(address addr);
     error ColoredCoinNotRegistered(uint256 coloredCoinId);
     error ColoredCoinAddressAlreadyRegistered(address addr);
-    error InvalidReceiversLengthForColoredCoin(uint256 length);
+    error InvalidNumberOfBurnAddresses(uint256 length);
     error InvalidBurnAddress(string addr);
 }
