@@ -228,10 +228,9 @@ export async function deployGatewayFixtures() {
   //data encoding
   const blockNumber = await ethers.provider.getBlockNumber();
   const abiCoder = new ethers.AbiCoder();
-  const address = ethers.Wallet.createRandom().address;
   const data = abiCoder.encode(
     ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-    [[1, blockNumber + 100, 1, [[address, 1000]]]]
+    [[1, blockNumber + 100, 1, [[receiver.address, 1000]]]]
   );
 
   const validatorSetChange = {
