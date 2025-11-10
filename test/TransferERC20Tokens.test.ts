@@ -1,5 +1,4 @@
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
@@ -171,6 +170,65 @@ describe("Transfering ERC20 colored coins", function () {
       await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
         decodedAmount - BigInt(receiverWithdraw[0].amount)
       );
+    });
+
+    it("Should burn required amount of tokens for the sender (receiver)", async () => {
+      const tx = await gateway
+        .connect(owner)
+        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+
+      const receipt = await tx.wait();
+
+      const event = receipt.logs
+        .map((log: any) => {
+          try {
+            return gateway.interface.parseLog(log);
+          } catch {
+            return null;
+          }
+        })
+        .find((log: any) => log && log.name === "ColoredCoinRegistered");
+
+      const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+
+      const contractAddress = event.args.contractAddress;
+
+      const myTokenERC20 = await ethers.getContractAt(
+        "IERC20",
+        contractAddress
+      );
+
+      const decoded = abiCoder.decode(
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
+        data
+      );
+
+      const [tupleValue] = decoded;
+      const [[decodedAddress, decodedAmount]] = tupleValue[3];
+
+      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
+        0
+      );
+
+      await gateway.deposit(
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        data,
+        1
+      );
+
+      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
+        decodedAmount
+      );
+
+      const value = { value: ethers.parseUnits("200", "wei") };
+      expect(
+        await gateway
+          .connect(receiver)
+          .withdraw(1, receiverWithdraw, 100, 1, value)
+      )
+        .to.emit(gateway, "Withdraw")
+        .withArgs(receiver.address, 1, receiverWithdraw, 100, 1);
     });
   });
 

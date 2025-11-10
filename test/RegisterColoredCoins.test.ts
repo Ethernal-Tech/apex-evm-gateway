@@ -67,8 +67,6 @@ describe("Register colored coins tests", function () {
     });
 
     it("Should revert if LayerZero coloredCoinAddress is already registered", async () => {
-      const coloredCoinIdBefore = await gateway.coloredCoinIdCounter();
-
       expect(
         await gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
       ).not.to.be.reverted;
