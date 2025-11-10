@@ -198,7 +198,7 @@ contract Gateway is
             _transferAmountToWallet(amountSum);
         } else {
             if (_receivers.length != 1) {
-                revert InvalidReceiversLengthForColoredCoin(_receivers.length);
+                revert InvalidNumberOfBurnAddresses(_receivers.length);
             }
 
             if (msg.sender != _stringToAddress(_receivers[0].receiver)) {

@@ -92,6 +92,28 @@ describe("Transfering ERC20 colored coins", function () {
         .withArgs(receiver.address);
     });
 
+    it("Should revert with there is more then one address to burn ERC20 colored coins from", async () => {
+      const tx = await gateway
+        .connect(owner)
+        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+
+      const receiverWithdrawDouble = [
+        {
+          receiver: receiver.address,
+          amount: 100,
+        },
+        {
+          receiver: receiver.address,
+          amount: 100,
+        },
+      ];
+
+      const value = { value: ethers.parseUnits("200", "wei") };
+      await expect(gateway.withdraw(1, receiverWithdrawDouble, 100, 1, value))
+        .to.be.revertedWithCustomError(gateway, "InvalidNumberOfBurnAddresses")
+        .withArgs(2);
+    });
+
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
       const tx = await gateway
         .connect(owner)
