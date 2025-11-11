@@ -76,7 +76,7 @@ contract NativeTokenWallet is
             if (!success) revert TransferFailed();
         } else if (isLayerZeroToken[_coloredCoinId]) {
             IERC20 coloredCoin = IERC20(coloredCoinAddress[_coloredCoinId]);
-            coloredCoin.safeTransfer(_account, _amount);
+            coloredCoin.safeTransferFrom(_account, address(this), _amount);
         } else {
             MyToken coloredCoin = MyToken(coloredCoinAddress[_coloredCoinId]);
             coloredCoin.mint(_account, _amount);

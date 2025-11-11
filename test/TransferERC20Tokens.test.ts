@@ -70,7 +70,7 @@ describe("Transfering ERC20 colored coins", function () {
       );
     });
   });
-  describe("Withdraw/Burn of ERC20 tokens", function () {
+  describe("Withdraw/Burn of ERC20 colored coins", function () {
     it("Should revert if coloredCoinId is not valid", async () => {
       const value = { value: ethers.parseUnits("200", "wei") };
       await expect(
@@ -87,7 +87,7 @@ describe("Transfering ERC20 colored coins", function () {
 
       const value = { value: ethers.parseUnits("200", "wei") };
       await expect(gateway.withdraw(1, receiverWithdraw, 100, 1, value))
-        .to.be.revertedWithCustomError(gateway, "InvalidBurnAddress")
+        .to.be.revertedWithCustomError(gateway, "InvalidBurnOrLockAddress")
         .withArgs(receiver.address);
     });
 
@@ -109,7 +109,10 @@ describe("Transfering ERC20 colored coins", function () {
 
       const value = { value: ethers.parseUnits("200", "wei") };
       await expect(gateway.withdraw(1, receiverWithdrawDouble, 100, 1, value))
-        .to.be.revertedWithCustomError(gateway, "InvalidNumberOfBurnAddresses")
+        .to.be.revertedWithCustomError(
+          gateway,
+          "InvalidNumberOfBurnOrLockAddresses"
+        )
         .withArgs(2);
     });
 
@@ -172,14 +175,14 @@ describe("Transfering ERC20 colored coins", function () {
       );
     });
 
-    it("Should burn required amount of tokens for the sender (receiver)", async () => {
-      const tx = await gateway
+    it("Should emit Withdraw event when tokens are ERC20 tokens are burnt", async () => {
+      let tx = await gateway
         .connect(owner)
         .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
 
-      const receipt = await tx.wait();
+      let receipt = await tx.wait();
 
-      const event = receipt.logs
+      let event = receipt.logs
         .map((log: any) => {
           try {
             return gateway.interface.parseLog(log);
@@ -222,13 +225,21 @@ describe("Transfering ERC20 colored coins", function () {
       );
 
       const value = { value: ethers.parseUnits("200", "wei") };
-      expect(
-        await gateway
-          .connect(receiver)
-          .withdraw(1, receiverWithdraw, 100, 1, value)
-      )
-        .to.emit(gateway, "Withdraw")
-        .withArgs(receiver.address, 1, receiverWithdraw, 100, 1);
+      tx = await gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdraw, 100, 1, value);
+      receipt = await tx.wait();
+
+      event = receipt.logs.find(
+        (log: any) => log.fragment && log.fragment.name === "Withdraw"
+      );
+
+      expect(event?.args?.destinationChainId).to.equal(1);
+      expect(event?.args?.sender).to.equal(receiver);
+      expect(event?.args?.receivers[0].receiver).to.equal(receiver);
+      expect(event?.args?.receivers[0].amount).to.equal(100);
+      expect(event?.args?.feeAmount).to.equal(100);
+      expect(event?.args?.coloredCoinId).to.equal(1);
     });
   });
 
