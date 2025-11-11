@@ -53,17 +53,11 @@ describe("Register colored coins tests", function () {
     });
 
     it("Should emit coloredCoin registered event when new LayerZero colored coin is registered", async () => {
-      expect(
-        await gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
+      await expect(
+        gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
       )
         .to.emit(gateway, "ColoredCoinRegistered")
-        .withArgs(
-          "",
-          "",
-          await gateway.coloredCoinIdCounter(),
-          myToken.target,
-          true
-        );
+        .withArgs("", "", 1, myToken.target, true);
     });
 
     it("Should revert if LayerZero coloredCoinAddress is already registered", async () => {
@@ -150,19 +144,13 @@ describe("Register colored coins tests", function () {
     });
 
     it("Should emit coloredCoin registered event when new ERC20 colored coin is registered", async () => {
-      expect(
-        await gateway
+      await expect(
+        gateway
           .connect(owner)
           .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK")
       )
         .to.emit(gateway, "ColoredCoinRegistered")
-        .withArgs(
-          "Test Token",
-          "TTK",
-          await gateway.coloredCoinIdCounter(),
-          anyValue,
-          false
-        );
+        .withArgs("Test Token", "TTK", 1, anyValue, false);
     });
   });
 

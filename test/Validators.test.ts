@@ -68,10 +68,10 @@ describe("Validators Contract", function () {
       await gateway.getAddress()
     );
 
-    expect(
-      await validatorsc.connect(gatewayContract).updateValidatorsChainData(data)
+    await expect(
+      validatorsc.connect(gatewayContract).updateValidatorsChainData(data)
     )
-      .to.emit(gateway, "ValidatorsSetUpdated")
+      .to.emit(validatorsc, "TTLExpired")
       .withArgs(data);
 
     expect((await validatorsc.getValidatorsChainData()).length).to.equal(
@@ -100,6 +100,7 @@ describe("Validators Contract", function () {
     expect(await validatorsc.lastConfirmedValidatorsSet()).to.equal(1);
 
     expect((await validatorsc.getValidatorsChainData()).length).to.equal(1);
+
     expect((await validatorsc.getValidatorsChainData())[0][0][0]).to.equal(
       validatorSetChange._validatorsChainData[0].key[0]
     );

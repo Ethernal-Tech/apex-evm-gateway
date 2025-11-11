@@ -106,11 +106,7 @@ contract NativeTokenPredicate is
             );
         }
 
-        nativeTokenWallet.deposit(
-            _relayer,
-            _deposits.feeAmount,
-            _coloredCoinId
-        );
+        nativeTokenWallet.deposit(_relayer, _deposits.feeAmount, 0);
 
         return true;
     }

@@ -263,7 +263,7 @@ export async function impersonateAsContractAndMintFunds(
   contractAddress: string
 ) {
   const hre = require("hardhat");
-  const address = await contractAddress.toLowerCase();
+  const address = contractAddress.toLowerCase();
   // impersonate as an contract on specified address
   await hre.network.provider.request({
     method: "hardhat_impersonateAccount",
@@ -271,7 +271,7 @@ export async function impersonateAsContractAndMintFunds(
   });
 
   const signer = await ethers.getSigner(address);
-  // minting 100000000000000000000 tokens to signer
+  // setting 100000000000000000000 tokens to signer
   await ethers.provider.send("hardhat_setBalance", [
     signer.address,
     "0x56BC75E2D63100000",

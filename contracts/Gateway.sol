@@ -198,11 +198,11 @@ contract Gateway is
             _transferAmountToWallet(amountSum);
         } else {
             if (_receivers.length != 1) {
-                revert InvalidNumberOfBurnAddresses(_receivers.length);
+                revert InvalidNumberOfBurnOrLockAddresses(_receivers.length);
             }
 
             if (msg.sender != _stringToAddress(_receivers[0].receiver)) {
-                revert InvalidBurnAddress(_receivers[0].receiver);
+                revert InvalidBurnOrLockAddress(_receivers[0].receiver);
             }
 
             nativeTokenPredicate.withdraw(_receivers, _coloredCoinId);
