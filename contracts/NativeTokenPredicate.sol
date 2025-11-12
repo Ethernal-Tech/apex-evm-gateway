@@ -129,6 +129,10 @@ contract NativeTokenPredicate is
         nativeTokenWallet.setTokenAddress(_tokenId, _tokenAddress);
     }
 
+    function getTokenAddress(uint256 _tokenId) external view returns (address) {
+        return nativeTokenWallet.tokenAddress(_tokenId);
+    }
+
     function version() public pure returns (string memory) {
         return "1.1.0";
     }
