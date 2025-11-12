@@ -68,9 +68,14 @@ contract TokenFactory is Initializable, UUPSUpgradeable, OwnableUpgradeable {
         return address(proxy);
     }
 
+    function version() public pure returns (string memory) {
+        return "1.0.0";
+    }
+
     modifier onlyGateway() {
         if (msg.sender != gatewayAddress) revert NotGateway();
         _;
     }
+
     error NotGateway();
 }
