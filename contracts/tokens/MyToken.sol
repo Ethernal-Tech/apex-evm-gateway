@@ -24,6 +24,8 @@ contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         __Ownable_init(_walletAddress);
     }
 
+    uint256[50] private __gap;
+
     function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
     }
@@ -32,5 +34,7 @@ contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         _burn(from, amount);
     }
 
-    uint256[50] private __gap;
+    function version() public pure returns (string memory) {
+        return "1.0.0";
+    }
 }
