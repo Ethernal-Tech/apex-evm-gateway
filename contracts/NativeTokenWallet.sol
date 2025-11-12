@@ -84,6 +84,17 @@ contract NativeTokenWallet is
         }
     }
 
+    /// @notice Processes withdrawals of tokens to one or more receivers based on the token type.
+    /// @dev
+    /// - If the token is a registered Lock/Unlock token, tokens are transferred directly to each receiver.
+    /// - If the token is a native bridged token (non-Lock/Unlock), the tokens are burned from the sender’s balance.
+    /// - This function can only be called by the predicate contract authorized to manage withdrawals.
+    /// @param _receivers An array of `ReceiverWithdraw` structs containing each receiver's address (as a string)
+    ///        and the corresponding withdrawal amount.
+    /// @param _tokenId The unique ID of the token being withdrawn, used to look up its address and type.
+    /// @custom:modifier onlyPredicate Restricts the call to the authorized predicate contract.
+    /// @custom:reverts None Explicitly, but will revert if token transfer or burn fails.
+    /// @custom:security Consider verifying receiver addresses before transfer to avoid accidental burns or misdirected transfers.
     function withdraw(
         ReceiverWithdraw[] calldata _receivers,
         uint256 _tokenId
