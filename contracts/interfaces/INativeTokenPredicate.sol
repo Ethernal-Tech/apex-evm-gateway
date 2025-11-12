@@ -7,7 +7,7 @@ interface INativeTokenPredicate is IGatewayStructs {
     function deposit(
         bytes calldata data,
         address relayer,
-        uint256 coloredCoinId
+        uint256 tokenId
     ) external returns (bool);
 
     function resetBatchId() external;

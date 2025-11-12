@@ -30,19 +30,16 @@ contract Gateway is
     uint256 public minFeeAmount;
     uint256 public minBridgingAmount;
 
-    //Array of addresses of LZ ERC20 smart contracts registered in the gateway
-    mapping(address => bool) public registeredColoredCoins;
+    //Mapping for previously registered LockUnlock tokens
+    mapping(address => bool) public isLockUnlockTokenRegistered;
 
     TokenFactory public tokenFactory;
 
-    uint256 public coloredCoinIdCounter;
-
-    // true for coloredCoinId from LayerZero
-    mapping(uint256 => bool) public isLayerZeroColoredCoin;
+    uint256 public tokenIdCounter;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[47] private __gap;
+    uint256[48] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -85,45 +82,46 @@ contract Gateway is
         tokenFactory = TokenFactory(_tokenFactoryAddresses);
     }
 
-    function registerColoredCoin(
-        address _lzERC20Address,
+    function registerToken(
+        address _lockUnlockSCAddress,
         string memory _name,
         string memory _symbol
     ) external onlyOwner {
-        bool isLayerZero = _lzERC20Address != address(0);
+        bool isLockUnlock = _lockUnlockSCAddress != address(0);
         address _contractAddress;
-        if (!isLayerZero) {
+        if (!isLockUnlock) {
             _contractAddress = tokenFactory.createToken(_name, _symbol);
-        } else if (!_isContract(_lzERC20Address)) {
-            revert NotContractAddress(_lzERC20Address);
+        } else if (!_isContract(_lockUnlockSCAddress)) {
+            revert NotContractAddress(_lockUnlockSCAddress);
+        } else if (isLockUnlockTokenRegistered[_lockUnlockSCAddress]) {
+            revert TokenAddressAlreadyRegistered(_lockUnlockSCAddress);
         }
 
-        nativeTokenPredicate.setColoredCoinAddress(
-            ++coloredCoinIdCounter,
-            (isLayerZero ? _lzERC20Address : _contractAddress)
+        nativeTokenPredicate.setTokenAddress(
+            ++tokenIdCounter,
+            (isLockUnlock ? _lockUnlockSCAddress : _contractAddress)
         );
 
-        if (isLayerZero) {
-            nativeTokenPredicate.setColoredCoinAsLayerZeroToken(
-                coloredCoinIdCounter
-            );
+        if (isLockUnlock) {
+            isLockUnlockTokenRegistered[_lockUnlockSCAddress] = true;
+            nativeTokenPredicate.setTokenAsLockUnlockToken(tokenIdCounter);
         }
 
-        emit ColoredCoinRegistered(
+        emit TokenRegistered(
             _name,
             _symbol,
-            coloredCoinIdCounter,
-            (isLayerZero ? _lzERC20Address : _contractAddress),
-            isLayerZero
+            tokenIdCounter,
+            (isLockUnlock ? _lockUnlockSCAddress : _contractAddress),
+            isLockUnlock
         );
     }
 
     /// @notice Deposits tokens into the system
-    /// @notice Case 1: currency, native tokens will be transferd from nativeTokenWallet to receivers address
-    /// @notice Case 2: layerZeroERC20, colored coins will be transfered from sender to  nativeTokenWallet address
-    /// on layerZeroERC20 address, even will be emited
-    /// @notice Case 3: colored coins, will be minted and transfered to receivers account
-    /// on coloredCoin ERC
+    /// @notice Case 1: currency - native tokens will be transferd from nativeTokenWallet to receivers address
+    /// @notice Case 2: LockUnlock - token will be transfered from sender to nativeTokenWallet address
+    /// on LockUnlock ERC20 address, even will be emited
+    /// @notice Case 3: MintBurn - tokens will be minted and transfered to receivers account
+    /// on MintBurn ERC20
     /// @param _signature The BLS signature for validation.
     /// @param _bitmap The bitmap associated with the BLS signature.
     /// @param _data The deposit data in bytes format.
@@ -132,10 +130,9 @@ contract Gateway is
         bytes calldata _signature,
         uint256 _bitmap,
         bytes calldata _data,
-        uint256 _coloredCoinId
+        uint256 _tokenId
     ) external {
-        if (_coloredCoinId > coloredCoinIdCounter)
-            revert ColoredCoinNotRegistered(_coloredCoinId);
+        if (_tokenId > tokenIdCounter) revert TokenNotRegistered(_tokenId);
 
         bytes32 _hash = keccak256(_data);
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
@@ -145,11 +142,11 @@ contract Gateway is
         bool success = nativeTokenPredicate.deposit(
             _data,
             msg.sender,
-            _coloredCoinId
+            _tokenId
         );
 
         if (success) {
-            emit Deposit(_data, _coloredCoinId);
+            emit Deposit(_data, _tokenId);
         } else {
             emit TTLExpired(_data);
         }
@@ -157,10 +154,10 @@ contract Gateway is
 
     /// @notice Withdraws tokens from the system.
     /// @notice Case 1: currency, native tokens will be transfered from senderto nativeTokenWallet
-    /// @notice Case 2: layerZeroERC20, colored coins will be transfered from nativeTokenWallet address
-    /// to receiver addres on layerZeroERC20, even will be emited
-    /// @notice Case 3: colored coins, speficied amount of coloredCoins will be removed from senders address and burnt
-    /// on coloredCoin ERC
+    /// @notice Case 2: LockUnlock tokens will be transfered from nativeTokenWallet address
+    /// to receiver addres on LockUnlock ERC20, even will be emited
+    /// @notice Case 3: MintBurn tokens swill be removed from senders address and burnt
+    /// on MintBurn ERC20
     /// @param _destinationChainId The ID of the destination chain.
     /// @param _receivers The array of receivers and their withdrawal amounts.
     /// @param _feeAmount The fee for the withdrawal process.
@@ -169,17 +166,17 @@ contract Gateway is
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
         uint256 _feeAmount,
-        uint256 _coloredCoinId
+        uint256 _tokenCoinId
     ) external payable {
-        if (_coloredCoinId > coloredCoinIdCounter)
-            revert ColoredCoinNotRegistered(_coloredCoinId);
+        if (_tokenCoinId > tokenIdCounter)
+            revert TokenNotRegistered(_tokenCoinId);
 
         if (_feeAmount < minFeeAmount)
             revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
 
         uint256 amountSum;
 
-        if (_coloredCoinId == 0) {
+        if (_tokenCoinId == 0) {
             uint256 _amountLength = _receivers.length;
 
             amountSum = _feeAmount;
@@ -205,7 +202,7 @@ contract Gateway is
                 revert InvalidBurnOrLockAddress(_receivers[0].receiver);
             }
 
-            nativeTokenPredicate.withdraw(_receivers, _coloredCoinId);
+            nativeTokenPredicate.withdraw(_receivers, _tokenCoinId);
 
             _transferAmountToWallet(_feeAmount);
         }
@@ -215,8 +212,8 @@ contract Gateway is
             msg.sender,
             _receivers,
             _feeAmount,
-            (_coloredCoinId == 0 ? amountSum : _feeAmount),
-            _coloredCoinId
+            (_tokenCoinId == 0 ? amountSum : _feeAmount),
+            _tokenCoinId
         );
     }
 

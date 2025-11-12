@@ -32,17 +32,17 @@ interface IGatewayStructs {
         uint256 amount;
     }
 
-    event Deposit(bytes data, uint256 coloredCoinId);
-    event DepositedColoredCoin(bytes data);
+    event Deposit(bytes data, uint256 tokenId);
+    event DepositedToken(bytes data);
     event Withdraw(
         uint8 destinationChainId,
         address sender,
         ReceiverWithdraw[] receivers,
         uint256 feeAmount,
         uint256 value,
-        uint256 coloredCoinId
+        uint256 tokenId
     );
-    event WithdrawColoredCoin(
+    event WithdrawToken(
         address sender,
         string indexed receiver,
         uint256 amount
@@ -52,12 +52,12 @@ interface IGatewayStructs {
     event ValidatorsSetUpdated(bytes data);
     event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
     event ValidatorSetUpdatedGW(bytes data);
-    event ColoredCoinRegistered(
+    event TokenRegistered(
         string name,
         string symbol,
-        uint coloredCoinId,
+        uint256 tokenId,
         address contractAddress,
-        bool isLayerZeroToken
+        bool isLockUnlockToken
     );
 
     error NotGateway();
@@ -75,8 +75,8 @@ interface IGatewayStructs {
         uint256 bridgingAmount
     );
     error NotContractAddress(address addr);
-    error ColoredCoinNotRegistered(uint256 coloredCoinId);
-    error ColoredCoinAddressAlreadyRegistered(address addr);
+    error TokenNotRegistered(uint256 tokenId);
+    error TokenAddressAlreadyRegistered(address addr);
     error InvalidNumberOfBurnOrLockAddresses(uint256 length);
     error InvalidBurnOrLockAddress(string addr);
 }

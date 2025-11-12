@@ -3,9 +3,9 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
 
-describe("Transfering ERC20 colored coins", function () {
-  describe("Deposit/Minting of ERC20 tokens", function () {
-    it("Should revert if coloredCoinId is not valid", async () => {
+describe("Transfering MintBurn tokens", function () {
+  describe("Deposit/Minting of MintBurn tokens", function () {
+    it("Should revert if tokenId is not valid", async () => {
       await expect(
         gateway
           .connect(validators[1])
@@ -16,14 +16,14 @@ describe("Transfering ERC20 colored coins", function () {
             1
           )
       )
-        .to.be.revertedWithCustomError(gateway, "ColoredCoinNotRegistered")
+        .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(1);
     });
 
     it("Should mint required amount of tokens for the receiver", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -35,7 +35,7 @@ describe("Transfering ERC20 colored coins", function () {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "ColoredCoinRegistered");
+        .find((log: any) => log && log.name === "TokenRegistered");
 
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
@@ -70,20 +70,20 @@ describe("Transfering ERC20 colored coins", function () {
       );
     });
   });
-  describe("Withdraw/Burn of ERC20 colored coins", function () {
-    it("Should revert if coloredCoinId is not valid", async () => {
+  describe("Withdraw/Burn of MintBurn tokens", function () {
+    it("Should revert if tokenId is not valid", async () => {
       const value = { value: ethers.parseUnits("200", "wei") };
       await expect(
         gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, 1, value)
       )
-        .to.be.revertedWithCustomError(gateway, "ColoredCoinNotRegistered")
+        .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(1);
     });
 
     it("Should revert with InvalidBurnAddress if function caller is not 'receiver'", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
 
       const value = { value: ethers.parseUnits("200", "wei") };
       await expect(gateway.withdraw(1, receiverWithdraw, 100, 1, value))
@@ -91,10 +91,10 @@ describe("Transfering ERC20 colored coins", function () {
         .withArgs(receiver.address);
     });
 
-    it("Should revert with there is more then one address to burn ERC20 colored coins from", async () => {
+    it("Should revert with there is more then one address to burn MintBurn tokens from", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
 
       const receiverWithdrawDouble = [
         {
@@ -119,7 +119,7 @@ describe("Transfering ERC20 colored coins", function () {
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -131,7 +131,7 @@ describe("Transfering ERC20 colored coins", function () {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "ColoredCoinRegistered");
+        .find((log: any) => log && log.name === "TokenRegistered");
 
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
@@ -178,7 +178,7 @@ describe("Transfering ERC20 colored coins", function () {
     it("Should emit Withdraw event when tokens are ERC20 tokens are burnt", async () => {
       let tx = await gateway
         .connect(owner)
-        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
 
       let receipt = await tx.wait();
 
@@ -190,7 +190,7 @@ describe("Transfering ERC20 colored coins", function () {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "ColoredCoinRegistered");
+        .find((log: any) => log && log.name === "TokenRegistered");
 
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
@@ -239,7 +239,7 @@ describe("Transfering ERC20 colored coins", function () {
       expect(event?.args?.receivers[0].receiver).to.equal(receiver);
       expect(event?.args?.receivers[0].amount).to.equal(100);
       expect(event?.args?.feeAmount).to.equal(100);
-      expect(event?.args?.coloredCoinId).to.equal(1);
+      expect(event?.args?.tokenId).to.equal(1);
     });
   });
 

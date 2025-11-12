@@ -29,10 +29,11 @@ contract NativeTokenWallet is
 
     address public predicate;
 
-    /// mapping coloredCoinId to bool indicating if the colored coin is registered
-    mapping(uint256 => bool) public isLayerZeroToken;
+    /// mapping tokenId to bool indicating token is LockUnlock token
+    mapping(uint256 => bool) public isLockUnlockToken;
 
-    mapping(uint256 => address) public coloredCoinAddress;
+    /// mapping tokenId to token address
+    mapping(uint256 => address) public tokenAddress;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -67,57 +68,55 @@ contract NativeTokenWallet is
     function deposit(
         address _account,
         uint256 _amount,
-        uint256 _coloredCoinId
+        uint256 _tokenId
     ) external onlyPredicateOrOwner {
-        if (_coloredCoinId == 0) {
+        if (_tokenId == 0) {
             (bool success, ) = _account.call{value: _amount}("");
 
             // Revert the transaction if the transfer fails
             if (!success) revert TransferFailed();
-        } else if (isLayerZeroToken[_coloredCoinId]) {
-            IERC20 coloredCoin = IERC20(coloredCoinAddress[_coloredCoinId]);
-            coloredCoin.safeTransferFrom(_account, address(this), _amount);
+        } else if (isLockUnlockToken[_tokenId]) {
+            IERC20 token = IERC20(tokenAddress[_tokenId]);
+            token.safeTransferFrom(_account, address(this), _amount);
         } else {
-            MyToken coloredCoin = MyToken(coloredCoinAddress[_coloredCoinId]);
-            coloredCoin.mint(_account, _amount);
+            MyToken token = MyToken(tokenAddress[_tokenId]);
+            token.mint(_account, _amount);
         }
     }
 
     function withdraw(
         ReceiverWithdraw[] calldata _receivers,
-        uint256 _coloredCoinId
+        uint256 _tokenId
     ) external override onlyPredicate {
-        if (isLayerZeroToken[_coloredCoinId]) {
-            IERC20 coloredCoin = IERC20(coloredCoinAddress[_coloredCoinId]);
+        if (isLockUnlockToken[_tokenId]) {
+            IERC20 token = IERC20(tokenAddress[_tokenId]);
             uint256 receiversLength = _receivers.length;
             for (uint256 i; i < receiversLength; i++) {
-                coloredCoin.safeTransfer(
+                token.safeTransfer(
                     _stringToAddress(_receivers[i].receiver),
                     _receivers[i].amount
                 );
             }
         } else {
-            MyToken coloredCoin = MyToken(coloredCoinAddress[_coloredCoinId]);
-            coloredCoin.burn(
+            MyToken token = MyToken(tokenAddress[_tokenId]);
+            token.burn(
                 _stringToAddress(_receivers[0].receiver),
                 _receivers[0].amount
             );
         }
     }
 
-    function setColoredCoinAsLayerZeroToken(
-        uint256 coloredCoinId
-    ) external onlyPredicate {
-        isLayerZeroToken[coloredCoinId] = true;
+    function setTokenAsLockUnlockToken(uint256 tokenId) external onlyPredicate {
+        isLockUnlockToken[tokenId] = true;
     }
 
-    function setColoredCoinAddress(
-        uint256 _coloredCoinId,
-        address _coloredCoinAddress
+    function setTokenAddress(
+        uint256 _tokenId,
+        address _tokenAddress
     ) external onlyPredicate {
-        if (isLayerZeroToken[_coloredCoinId])
-            revert ColoredCoinAddressAlreadyRegistered(_coloredCoinAddress);
-        coloredCoinAddress[_coloredCoinId] = _coloredCoinAddress;
+        if (isLockUnlockToken[_tokenId])
+            revert TokenAddressAlreadyRegistered(_tokenAddress);
+        tokenAddress[_tokenId] = _tokenAddress;
     }
 
     receive() external payable {}
