@@ -27,4 +27,6 @@ interface INativeTokenWallet is IGatewayStructs {
     function setTokenAsLockUnlockToken(uint256 tokenId) external;
 
     function setTokenAddress(uint256 tokenId, address tokenAddress) external;
+
+    function tokenAddress(uint256 tokenId) external view returns (address);
 }

@@ -261,13 +261,11 @@ contract Gateway is
         emit MinAmountsUpdated(_minFeeAmount, _minBridgingAmount);
     }
 
-    function _isContract(address addr) internal view returns (bool) {
-        uint256 size;
-        assembly {
-            size := extcodesize(addr)
-        }
-        return size > 0;
+    function getTokenAddress(uint256 _tokenId) external view returns (address) {
+        return nativeTokenPredicate.getTokenAddress(_tokenId);
     }
+
+    /// @notice Validates the BLS signature.
 
     function _validateSignature(
         bytes calldata _signature,
@@ -278,6 +276,14 @@ contract Gateway is
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
 
         if (!valid) revert InvalidSignature();
+    }
+
+    function _isContract(address addr) internal view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return size > 0;
     }
 
     /// @notice Handles receiving Ether and transfers it to the native token wallet.
