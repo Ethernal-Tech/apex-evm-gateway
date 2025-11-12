@@ -82,6 +82,23 @@ contract Gateway is
         tokenFactory = TokenFactory(_tokenFactoryAddresses);
     }
 
+    /// @notice Registers a new token, either by deploying a new ERC20 token via the TokenFactory
+    ///         or by linking an existing Lock/Unlock smart contract.
+    /// @dev
+    /// - If `_lockUnlockSCAddress` is the zero address, a new token is created using `tokenFactory`.
+    /// - If `_lockUnlockSCAddress` is non-zero, the function validates that it is a contract
+    ///   and not already registered as a Lock/Unlock token.
+    /// - Assigns a new `tokenId` and sets the token address in `nativeTokenPredicate`.
+    /// - Marks tokens linked to Lock/Unlock contracts for special handling.
+    /// - Emits a `TokenRegistered` event with the token’s metadata.
+    /// @param _lockUnlockSCAddress Address of an existing Lock/Unlock token contract,
+    ///        or `address(0)` if a new token should be created.
+    /// @param _name Name of the token to be registered or created.
+    /// @param _symbol Symbol of the token to be registered or created.
+    /// @custom:modifier onlyOwner Only the contract owner can register tokens.
+    /// @custom:reverts NotContractAddress If `_lockUnlockSCAddress` is not a valid contract.
+    /// @custom:reverts TokenAddressAlreadyRegistered If `_lockUnlockSCAddress` was already registered.
+    /// @custom:emits TokenRegistered Emitted after successful registration of a token.
     function registerToken(
         address _lockUnlockSCAddress,
         string memory _name,
