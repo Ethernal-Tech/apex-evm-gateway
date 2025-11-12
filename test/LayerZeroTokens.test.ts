@@ -6,9 +6,9 @@ import {
   impersonateAsContractAndMintFunds,
 } from "./fixtures";
 
-describe("Transfering LayerZero colored coins", function () {
-  describe("Deposit/Locking of LayerZero tokens", function () {
-    it("Should revert if coloredCoinId is not valid", async () => {
+describe("Transfering LockUnlock tokens", function () {
+  describe("Deposit/Locking of LockUnlock tokens", function () {
+    it("Should revert if tokenId is not valid", async () => {
       await expect(
         gateway
           .connect(validators[1])
@@ -19,12 +19,12 @@ describe("Transfering LayerZero colored coins", function () {
             1
           )
       )
-        .to.be.revertedWithCustomError(gateway, "ColoredCoinNotRegistered")
+        .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(1);
     });
 
     it("Should lock required amount of tokens for the receiver", async () => {
-      await gateway.connect(owner).registerColoredCoin(myToken.target, "", "");
+      await gateway.connect(owner).registerToken(myToken.target, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -66,9 +66,9 @@ describe("Transfering LayerZero colored coins", function () {
       ).to.eventually.equal(decodedAmount);
     });
   });
-  describe("Withdraw/Unlocking of LayerZero colored coins", function () {
+  describe("Withdraw/Unlocking of LockUnlock tokens", function () {
     it("Should unlock required amount of tokens for the sender (receiver)", async () => {
-      await gateway.connect(owner).registerColoredCoin(myToken.target, "", "");
+      await gateway.connect(owner).registerToken(myToken.target, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -120,8 +120,8 @@ describe("Transfering LayerZero colored coins", function () {
         nativeTokenWalletBalance - BigInt(receiverWithdraw[0].amount)
       );
     });
-    it("Should emit Withdraw event when LayerZero tokens are unlocked", async () => {
-      await gateway.connect(owner).registerColoredCoin(myToken.target, "", "");
+    it("Should emit Withdraw event when LockUnlock tokens are unlocked", async () => {
+      await gateway.connect(owner).registerToken(myToken.target, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -163,7 +163,7 @@ describe("Transfering LayerZero colored coins", function () {
       expect(event?.args?.receivers[0].receiver).to.equal(receiver);
       expect(event?.args?.receivers[0].amount).to.equal(100);
       expect(event?.args?.feeAmount).to.equal(100);
-      expect(event?.args?.coloredCoinId).to.equal(1);
+      expect(event?.args?.tokenId).to.equal(1);
     });
   });
 

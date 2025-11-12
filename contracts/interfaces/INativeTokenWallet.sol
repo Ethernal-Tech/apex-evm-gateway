@@ -17,21 +17,14 @@ interface INativeTokenWallet is IGatewayStructs {
      * @param amount Amount of tokens to mint to the account
      * Reverts if the transfer fails.
      */
-    function deposit(
-        address account,
-        uint256 amount,
-        uint256 coloredCoinId
-    ) external;
+    function deposit(address account, uint256 amount, uint256 tokenId) external;
 
     function withdraw(
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _coloredCoinId
+        ReceiverWithdraw[] calldata receivers,
+        uint256 tokenId
     ) external;
 
-    function setColoredCoinAsLayerZeroToken(uint256 coloredCoinId) external;
+    function setTokenAsLockUnlockToken(uint256 tokenId) external;
 
-    function setColoredCoinAddress(
-        uint256 coloredCoinId,
-        address coloredCoinAddress
-    ) external;
+    function setTokenAddress(uint256 tokenId, address tokenAddress) external;
 }

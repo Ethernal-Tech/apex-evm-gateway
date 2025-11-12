@@ -87,7 +87,7 @@ describe("Gateway Contract", function () {
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
     expect(withdrawEvent?.args?.value).to.equal(200);
-    expect(withdrawEvent?.args?.coloredCoinId).to.equal(0);
+    expect(withdrawEvent?.args?.tokenId).to.equal(0);
   });
 
   it("Withdraw should fail if not enough value is submitted", async () => {
@@ -213,7 +213,7 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
       expect(withdrawEvent?.args?.value).to.equal(200);
-      expect(withdrawEvent?.args?.coloredCoinId).to.equal(0);
+      expect(withdrawEvent?.args?.tokenId).to.equal(0);
     }
   });
 
@@ -288,7 +288,7 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
       expect(withdrawEvent?.args?.value).to.equal(200);
-      expect(withdrawEvent?.args?.coloredCoinId).to.equal(0);
+      expect(withdrawEvent?.args?.tokenId).to.equal(0);
     }
   });
   it("Direct Deposit should emit FundsDeposited event", async function () {

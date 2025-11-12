@@ -4,123 +4,113 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
 
-describe("Register colored coins tests", function () {
-  describe("Register colored coin LayerZero", function () {
-    it("Should revert if registerColoredCoin is not called by Owner", async () => {
+describe("Register tokens tests", function () {
+  describe("Register LockUnlock tokens", function () {
+    it("Should revert if registerToken is not called by Owner", async () => {
       await expect(
-        gateway
-          .connect(validators[1])
-          .registerColoredCoin(ethers.ZeroAddress, "", "")
+        gateway.connect(validators[1]).registerToken(ethers.ZeroAddress, "", "")
       ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
     });
 
-    it("Should revert if _lzERC20Address is not zero and not contract address", async () => {
-      await expect(gateway.connect(owner).registerColoredCoin(owner, "", ""))
+    it("Should revert if _lockUnlockSCAddress is not zero and not contract address", async () => {
+      await expect(gateway.connect(owner).registerToken(owner, "", ""))
         .to.be.revertedWithCustomError(gateway, "NotContractAddress")
         .withArgs(owner);
     });
 
-    it("Should increase coloredCoinAddressIdCounter on register colored coin LayerZero success", async () => {
-      const coloredCoinIdBefore = await gateway.coloredCoinIdCounter();
+    it("Should increase tokenIdCounter on register LockUnlock token success", async () => {
+      const tokenIdBefore = await gateway.tokenIdCounter();
 
-      expect(
-        await gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
-      ).not.to.be.reverted;
+      expect(await gateway.connect(owner).registerToken(myToken.target, "", ""))
+        .not.to.be.reverted;
 
-      expect(await gateway.coloredCoinIdCounter()).to.equal(
-        coloredCoinIdBefore + BigInt(1)
+      expect(await gateway.tokenIdCounter()).to.equal(
+        tokenIdBefore + BigInt(1)
       );
     });
 
-    it("Should set coloredCoinAddress on register colored coin LayerZero success", async () => {
-      await gateway.connect(owner).registerColoredCoin(myToken.target, "", "");
+    it("Should set tokenAddress on register LockUnlock token success", async () => {
+      await gateway.connect(owner).registerToken(myToken.target, "", "");
 
       expect(
-        await nativeTokenWallet.coloredCoinAddress(
-          await gateway.coloredCoinIdCounter()
-        )
+        await nativeTokenWallet.tokenAddress(await gateway.tokenIdCounter())
       ).to.equal(myToken.target);
     });
 
-    it("Should set isLayerZeroToken to true when register colored coin LayerZero is success", async () => {
-      await gateway.connect(owner).registerColoredCoin(myToken.target, "", "");
+    it("Should set isLockUnlockToken to true when register LockUnlock token is success", async () => {
+      await gateway.connect(owner).registerToken(myToken.target, "", "");
 
       expect(
-        await nativeTokenWallet.isLayerZeroToken(
-          await gateway.coloredCoinIdCounter()
+        await nativeTokenWallet.isLockUnlockToken(
+          await gateway.tokenIdCounter()
         )
       ).to.equal(true);
     });
 
-    it("Should emit coloredCoin registered event when new LayerZero colored coin is registered", async () => {
-      await expect(
-        gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
-      )
-        .to.emit(gateway, "ColoredCoinRegistered")
+    it("Should emit TokenRegistered event when new LockUnlock token is registered", async () => {
+      await expect(gateway.connect(owner).registerToken(myToken.target, "", ""))
+        .to.emit(gateway, "TokenRegistered")
         .withArgs("", "", 1, myToken.target, true);
     });
 
-    it("Should revert if LayerZero coloredCoinAddress is already registered", async () => {
-      expect(
-        await gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
-      ).not.to.be.reverted;
+    it("Should revert if LockUnlock token is already registered", async () => {
+      await expect(gateway.connect(owner).registerToken(myToken.target, "", ""))
+        .not.to.be.reverted;
 
-      expect(
-        await gateway.connect(owner).registerColoredCoin(myToken.target, "", "")
-      )
+      await expect(gateway.connect(owner).registerToken(myToken.target, "", ""))
         .to.be.revertedWithCustomError(
           nativeTokenWallet,
-          "ColoredCoinAddressAlreadyRegistered"
+          "TokenAddressAlreadyRegistered"
         )
         .withArgs(myToken.target);
     });
   });
-  describe("Register colored coin ERC20", function () {
+  describe("Register MintBurn token", function () {
     it("Should revert if createToken is not called by Gateway", async () => {
       await expect(
         tokenFactory.connect(validators[1]).createToken("", "")
       ).to.be.revertedWithCustomError(tokenFactory, "NotGateway");
     });
-    it("Should increase coloredCoinAddressIdCounter on register colored coin ERC20 success", async () => {
-      const coloredCoinIdBefore = await gateway.coloredCoinIdCounter();
+    it("Should increase tokenIdCounter on register MintBurn token success", async () => {
+      const tokenIdBefore = await gateway.tokenIdCounter();
 
       expect(
         await gateway
           .connect(owner)
-          .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK")
+          .registerToken(ethers.ZeroAddress, "Test Token", "TTK")
       ).not.to.be.reverted;
 
-      expect(await gateway.coloredCoinIdCounter()).to.equal(
-        coloredCoinIdBefore + BigInt(1)
+      expect(await gateway.tokenIdCounter()).to.equal(
+        tokenIdBefore + BigInt(1)
       );
 
       expect(
         await gateway
           .connect(owner)
-          .registerColoredCoin(ethers.ZeroAddress, "Test Token2", "TTK2")
+          .registerToken(ethers.ZeroAddress, "Test Token2", "TTK2")
       ).not.to.be.reverted;
 
-      expect(await gateway.coloredCoinIdCounter()).to.equal(
-        coloredCoinIdBefore + BigInt(2)
+      expect(await gateway.tokenIdCounter()).to.equal(
+        tokenIdBefore + BigInt(2)
       );
     });
 
-    it("Should set isLayerZeroToken to false when register colored coin ERC20 is success", async () => {
+    it("Should set isLockUnlockToken to false when register MintBurn token is success", async () => {
       await gateway
         .connect(owner)
-        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
 
       expect(
-        await nativeTokenWallet.isLayerZeroToken(
-          await gateway.coloredCoinIdCounter()
+        await nativeTokenWallet.isLockUnlockToken(
+          await gateway.tokenIdCounter()
         )
       ).to.equal(false);
     });
 
-    it("Should set coloredCoinAddress on register colored coin ERC20", async () => {
+    it("Should set tokenAddress on register MintBurn token", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -132,24 +122,22 @@ describe("Register colored coins tests", function () {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "ColoredCoinRegistered");
+        .find((log: any) => log && log.name === "TokenRegistered");
 
       const contractAddress = event.args.contractAddress;
 
       expect(
-        await nativeTokenWallet.coloredCoinAddress(
-          await gateway.coloredCoinIdCounter()
-        )
+        await nativeTokenWallet.tokenAddress(await gateway.tokenIdCounter())
       ).to.equal(contractAddress);
     });
 
-    it("Should emit coloredCoin registered event when new ERC20 colored coin is registered", async () => {
+    it("Should emit tokenRegistered event when new MintBurn token is registered", async () => {
       await expect(
         gateway
           .connect(owner)
-          .registerColoredCoin(ethers.ZeroAddress, "Test Token", "TTK")
+          .registerToken(ethers.ZeroAddress, "Test Token", "TTK")
       )
-        .to.emit(gateway, "ColoredCoinRegistered")
+        .to.emit(gateway, "TokenRegistered")
         .withArgs("Test Token", "TTK", 1, anyValue, false);
     });
   });
