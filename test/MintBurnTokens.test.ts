@@ -70,6 +70,7 @@ describe("Transfering MintBurn tokens", function () {
       );
     });
   });
+
   describe("Withdraw/Burn of MintBurn tokens", function () {
     it("Should revert if tokenId is not valid", async () => {
       const value = { value: ethers.parseUnits("200", "wei") };
@@ -243,7 +244,7 @@ describe("Transfering MintBurn tokens", function () {
     });
   });
 
-  const tokenID = 1
+  const tokenID = 1;
   let owner: any;
   let validators: any;
   let gateway: any;
