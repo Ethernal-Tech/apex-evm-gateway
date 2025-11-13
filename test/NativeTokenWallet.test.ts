@@ -10,7 +10,9 @@ describe("NativeTokenWallet Contract", function () {
   it("SetDependencies should fail if Predicate is Zero Address", async () => {
     await expect(
       nativeTokenWallet.connect(owner).setDependencies(ethers.ZeroAddress)
-    ).to.be.revertedWithCustomError(nativeTokenWallet, "ZeroAddress");
+    )
+      .to.be.revertedWithCustomError(nativeTokenWallet, "NotContractAddress")
+      .withArgs(ethers.ZeroAddress);
   });
 
   it("SetDependencies will fail if not called by owner", async () => {
@@ -30,7 +32,7 @@ describe("NativeTokenWallet Contract", function () {
         .connect(owner)
         .setDependencies(nativeTokenPredicate.target)
     ).to.not.be.reverted;
-    expect(await nativeTokenWallet.predicate()).to.equal(
+    expect(await nativeTokenWallet.predicateAddress()).to.equal(
       nativeTokenPredicate.target
     );
     expect(await nativeTokenWallet.owner()).to.equal(owner.address);
@@ -38,8 +40,8 @@ describe("NativeTokenWallet Contract", function () {
 
   it("Mint will fail if not called by Predicate or Owner", async function () {
     await expect(
-      nativeTokenWallet.connect(receiver).deposit(receiver.address, 100, 0)
-    ).to.be.revertedWithCustomError(nativeTokenWallet, "NotPredicateOrOwner");
+      nativeTokenWallet.deposit(receiver.address, 100, 0)
+    ).to.be.revertedWithCustomError(nativeTokenWallet, "NotPredicate");
   });
 
   it("Deposit success", async function () {
@@ -52,7 +54,14 @@ describe("NativeTokenWallet Contract", function () {
       nativeTokenWalletAddress
     );
 
-    await nativeTokenWallet.deposit(receiver.address, randomAmount, 0);
+    const nativeTokenPredicateContract =
+      await impersonateAsContractAndMintFunds(
+        await nativeTokenPredicate.target
+      );
+
+    await nativeTokenWallet
+      .connect(nativeTokenPredicateContract)
+      .deposit(receiver.address, randomAmount, 0);
 
     const receiverBalanceAfter = await ethers.provider.getBalance(receiver);
     const nativeTokenWalletAfter = await ethers.provider.getBalance(

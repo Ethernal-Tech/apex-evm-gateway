@@ -8,10 +8,11 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {INativeTokenPredicate} from "./interfaces/INativeTokenPredicate.sol";
-import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
 import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
+import {INativeTokenPredicate} from "./interfaces/INativeTokenPredicate.sol";
+import {NativeTokenWallet} from "./NativeTokenWallet.sol";
+import {Utils} from "./Utils.sol";
 
 /**
  * @title NativeTokenPredicate
@@ -23,13 +24,14 @@ contract NativeTokenPredicate is
     INativeTokenPredicate,
     Initializable,
     OwnableUpgradeable,
+    ReentrancyGuard,
     UUPSUpgradeable,
-    ReentrancyGuard
+    Utils
 {
     using SafeERC20 for IERC20;
 
+    NativeTokenWallet public nativeTokenWallet;
     address public gateway;
-    INativeTokenWallet public nativeTokenWallet;
 
     /// @notice Tracks the ID of the last processed batch.
     uint64 public lastBatchId;
@@ -53,13 +55,18 @@ contract NativeTokenPredicate is
     ) internal override onlyOwner {}
 
     function setDependencies(
-        address _gateway,
-        address _nativeTokenWallet
+        address _gatewayAddress,
+        address _nativeTokenWalletAddress
     ) external onlyOwner {
-        if (_gateway == address(0) || _nativeTokenWallet == address(0))
-            revert ZeroAddress();
-        gateway = _gateway;
-        nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
+        if (!_isContract(_gatewayAddress))
+            revert NotContractAddress(_gatewayAddress);
+        if (!_isContract(_nativeTokenWalletAddress))
+            revert NotContractAddress(_nativeTokenWalletAddress);
+
+        gateway = _gatewayAddress;
+        nativeTokenWallet = NativeTokenWallet(
+            payable(_nativeTokenWalletAddress)
+        );
     }
 
     function resetBatchId() external onlyOwner {
@@ -138,7 +145,7 @@ contract NativeTokenPredicate is
     }
 
     function version() public pure returns (string memory) {
-        return "1.1.0";
+        return "1.0.0";
     }
 
     modifier onlyGateway() {

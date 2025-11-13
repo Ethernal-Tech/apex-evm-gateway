@@ -134,10 +134,9 @@ export async function deployGatewayFixtures() {
 
   await gateway.setDependencies(
     nativeTokenPredicate.target,
+    tokenFactory.target,
     validatorsc.target
   );
-
-  await gateway.setAdditionalDependenciesAndSync(tokenFactory.target);
 
   await nativeTokenPredicate.setDependencies(
     gateway.target,

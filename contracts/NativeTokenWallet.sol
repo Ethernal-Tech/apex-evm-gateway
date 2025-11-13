@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
-import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 import {MyToken} from "./tokens/MyToken.sol";
+import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 import {Utils} from "./Utils.sol";
 
 /**
@@ -27,7 +27,7 @@ contract NativeTokenWallet is
 {
     using SafeERC20 for IERC20;
 
-    address public predicate;
+    address public predicateAddress;
 
     /// mapping tokenId to bool indicating token is LockUnlock token
     mapping(uint256 => bool) public isLockUnlockToken;
@@ -37,7 +37,7 @@ contract NativeTokenWallet is
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[48] private __gap;
+    uint256[50] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -53,9 +53,10 @@ contract NativeTokenWallet is
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(address _predicate) external onlyOwner {
-        if (_predicate == address(0)) revert ZeroAddress();
-        predicate = _predicate;
+    function setDependencies(address _predicateAddress) external onlyOwner {
+        if (!_isContract(_predicateAddress))
+            revert NotContractAddress(_predicateAddress);
+        predicateAddress = _predicateAddress;
     }
 
     /**
@@ -69,7 +70,7 @@ contract NativeTokenWallet is
         address _account,
         uint256 _amount,
         uint256 _tokenId
-    ) external onlyPredicateOrOwner {
+    ) external onlyPredicate {
         if (_tokenId == 0) {
             (bool success, ) = _account.call{value: _amount}("");
 
@@ -131,18 +132,11 @@ contract NativeTokenWallet is
     receive() external payable {}
 
     function version() public pure returns (string memory) {
-        return "1.1.0";
-    }
-
-    modifier onlyPredicateOrOwner() {
-        if (msg.sender != predicate && msg.sender != owner())
-            revert NotPredicateOrOwner();
-
-        _;
+        return "1.0.0";
     }
 
     modifier onlyPredicate() {
-        if (msg.sender != predicate) revert NotPredicate();
+        if (msg.sender != predicateAddress) revert NotPredicate();
         _;
     }
 }
