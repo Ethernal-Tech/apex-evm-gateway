@@ -86,14 +86,17 @@ contract Gateway is
     /// - If `_lockUnlockSCAddress` is the zero address, a new token is created using `tokenFactory`.
     /// - If `_lockUnlockSCAddress` is non-zero, the function validates that it is a contract
     ///   and not already registered as a Lock/Unlock token.
-    /// - Assigns a new `tokenId` and sets the token address in `nativeTokenPredicate`.
-    /// - Marks tokens linked to Lock/Unlock contracts for special handling.
+    /// - A new `tokenId` must be provided and must not be already registered.
+    /// - Sets the token address in `nativeTokenPredicate` and, if applicable, marks it as a Lock/Unlock token.
     /// - Emits a `TokenRegistered` event with the token’s metadata.
     /// @param _lockUnlockSCAddress Address of an existing Lock/Unlock token contract,
     ///        or `address(0)` if a new token should be created.
+    /// @param _tokenId Unique identifier for the token to register.
     /// @param _name Name of the token to be registered or created.
     /// @param _symbol Symbol of the token to be registered or created.
     /// @custom:modifier onlyOwner Only the contract owner can register tokens.
+    /// @custom:reverts ZeroTokenId If `_tokenId` is zero.
+    /// @custom:reverts TokenIdAlreadyRegistered If `_tokenId` has already been registered.
     /// @custom:reverts NotContractAddress If `_lockUnlockSCAddress` is not a valid contract.
     /// @custom:reverts TokenAddressAlreadyRegistered If `_lockUnlockSCAddress` was already registered.
     /// @custom:emits TokenRegistered Emitted after successful registration of a token.
@@ -149,6 +152,7 @@ contract Gateway is
     /// @param _signature The BLS signature for validation.
     /// @param _bitmap The bitmap associated with the BLS signature.
     /// @param _data The deposit data in bytes format.
+    /// @param _tokenId The token ID being deposited. Must be registered unless zero.
     /// @dev Emits either a `Deposit` or `TTLExpired` event based on success.
     function deposit(
         bytes calldata _signature,
@@ -186,6 +190,7 @@ contract Gateway is
     /// @param _destinationChainId The ID of the destination chain.
     /// @param _receivers The array of receivers and their withdrawal amounts.
     /// @param _feeAmount The fee for the withdrawal process.
+    /// @param _tokenCoinId The token ID representing the asset type. Zero for native currency.
     /// @dev Ensures that the sum of withdrawal amounts matches the value sent.
     function withdraw(
         uint8 _destinationChainId,
@@ -193,11 +198,6 @@ contract Gateway is
         uint256 _feeAmount,
         uint256 _tokenCoinId
     ) external payable {
-        if (
-            _tokenCoinId != 0 &&
-            !nativeTokenPredicate.isTokenRegistered(_tokenCoinId)
-        ) revert TokenNotRegistered(_tokenCoinId);
-
         if (_feeAmount < minFeeAmount)
             revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
 
@@ -221,6 +221,10 @@ contract Gateway is
 
             _transferAmountToWallet(amountSum);
         } else {
+            if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {
+                revert TokenNotRegistered(_tokenCoinId);
+            }
+
             if (_receivers.length != 1) {
                 revert InvalidNumberOfBurnOrLockAddresses(_receivers.length);
             }
