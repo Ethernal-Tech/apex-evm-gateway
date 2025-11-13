@@ -8,10 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
-import {IValidators} from "./interfaces/IValidators.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
 import {TokenFactory} from "./tokens/TokenFactory.sol";
 import {Utils} from "./Utils.sol";
+import {Validators} from "./Validators.sol";
 
 /// @title Gateway Contract
 /// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
@@ -26,18 +26,17 @@ contract Gateway is
     using SafeERC20 for IERC20;
 
     NativeTokenPredicate public nativeTokenPredicate;
-    IValidators public validators;
+    Validators public validators;
+    TokenFactory public tokenFactory;
     uint256 public minFeeAmount;
     uint256 public minBridgingAmount;
 
     //Mapping for previously registered LockUnlock tokens
     mapping(address => bool) public isLockUnlockTokenRegistered;
 
-    TokenFactory public tokenFactory;
-
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[48] private __gap;
+    uint256[50] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -59,25 +58,24 @@ contract Gateway is
     ) internal override onlyOwner {}
 
     function setDependencies(
-        address _nativeTokenPredicate,
-        address _validators
+        address _nativeTokenPredicateAddress,
+        address _tokenFactoryAddress,
+        address _validatorsAddress
     ) external onlyOwner {
-        if (_nativeTokenPredicate == address(0) || _validators == address(0))
-            revert ZeroAddress();
-        nativeTokenPredicate = NativeTokenPredicate(_nativeTokenPredicate);
-        validators = IValidators(_validators);
-    }
+        if (!_isContract(_nativeTokenPredicateAddress))
+            revert NotContractAddress(_nativeTokenPredicateAddress);
 
-    /// @notice Sets the external contract dependencies.
-    /// @dev This function can only be called by the upgrade admin. It verifies that the provided address is a contract.
-    /// @param _tokenFactoryAddresses The address of the deployed TokenFactory contract.
-    function setAdditionalDependenciesAndSync(
-        address _tokenFactoryAddresses
-    ) external onlyOwner {
-        if (!_isContract(_tokenFactoryAddresses))
-            revert NotContractAddress(_tokenFactoryAddresses);
+        if (!_isContract(_tokenFactoryAddress))
+            revert NotContractAddress(_tokenFactoryAddress);
 
-        tokenFactory = TokenFactory(_tokenFactoryAddresses);
+        if (!_isContract(_validatorsAddress))
+            revert NotContractAddress(_validatorsAddress);
+
+        nativeTokenPredicate = NativeTokenPredicate(
+            _nativeTokenPredicateAddress
+        );
+        tokenFactory = TokenFactory(_tokenFactoryAddress);
+        validators = Validators(_validatorsAddress);
     }
 
     /// @notice Registers a new token, either by deploying a new ERC20 token via the TokenFactory
@@ -266,18 +264,6 @@ contract Gateway is
         }
     }
 
-    /// @notice Transfers an amount to the native token wallet.
-    /// @param value The amount to be transferred.
-    /// @dev Reverts if the transfer fails.
-    function _transferAmountToWallet(uint256 value) internal {
-        address nativeTokenWalletAddress = address(
-            nativeTokenPredicate.nativeTokenWallet()
-        );
-        (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
-        // Revert the transaction if the transfer fails
-        if (!success) revert TransferFailed();
-    }
-
     /// @notice Sets the minimal amounts for fee and bridging.
     /// @param _minFeeAmount The minimal fee amount to set
     /// @param _minBridgingAmount The minimal bridging amount to set
@@ -309,12 +295,16 @@ contract Gateway is
         if (!valid) revert InvalidSignature();
     }
 
-    function _isContract(address addr) internal view returns (bool) {
-        uint256 size;
-        assembly {
-            size := extcodesize(addr)
-        }
-        return size > 0;
+    /// @notice Transfers an amount to the native token wallet.
+    /// @param value The amount to be transferred.
+    /// @dev Reverts if the transfer fails.
+    function _transferAmountToWallet(uint256 value) internal {
+        address nativeTokenWalletAddress = address(
+            nativeTokenPredicate.nativeTokenWallet()
+        );
+        (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
+        // Revert the transaction if the transfer fails
+        if (!success) revert TransferFailed();
     }
 
     /// @notice Handles receiving Ether and transfers it to the native token wallet.
@@ -326,7 +316,7 @@ contract Gateway is
     }
 
     function version() public pure returns (string memory) {
-        return "1.1.0";
+        return "1.0.0";
     }
 
     modifier onlyPredicate() {

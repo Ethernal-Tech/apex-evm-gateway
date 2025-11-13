@@ -2,21 +2,32 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
+import { token } from "../typechain-types/@openzeppelin/contracts";
 
 describe("Gateway Contract", function () {
   it("SetDependencies should fail if Gateway or NetiveToken are Zero Address", async () => {
     await expect(
       gateway
         .connect(owner)
-        .setDependencies(ethers.ZeroAddress, validatorsc.target)
-    ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
+        .setDependencies(
+          ethers.ZeroAddress,
+          tokenFactory.target,
+          validatorsc.target
+        )
+    )
+      .to.to.be.revertedWithCustomError(gateway, "NotContractAddress")
+      .withArgs(ethers.ZeroAddress);
   });
 
   it("SetDependencies should fail if not called by owner", async () => {
     await expect(
       gateway
         .connect(receiver)
-        .setDependencies(nativeTokenPredicate.target, validatorsc.target)
+        .setDependencies(
+          nativeTokenPredicate.target,
+          tokenFactory.target,
+          validatorsc.target
+        )
     ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
@@ -24,7 +35,11 @@ describe("Gateway Contract", function () {
     await expect(
       gateway
         .connect(owner)
-        .setDependencies(nativeTokenPredicate.target, validatorsc.target)
+        .setDependencies(
+          nativeTokenPredicate.target,
+          tokenFactory.target,
+          validatorsc.target
+        )
     ).to.not.be.reverted;
 
     expect(await gateway.nativeTokenPredicate()).to.equal(
@@ -347,6 +362,7 @@ describe("Gateway Contract", function () {
   let gateway: any;
   let nativeTokenPredicate: any;
   let nativeTokenWallet: any;
+  let tokenFactory: any;
   let validatorsc: any;
   let receiverWithdraw: any;
   let data: any;
@@ -359,6 +375,7 @@ describe("Gateway Contract", function () {
     gateway = fixture.gateway;
     nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
+    tokenFactory = fixture.tokenFactory;
     validatorsc = fixture.validatorsc;
     receiverWithdraw = fixture.receiverWithdraw;
     data = fixture.data;

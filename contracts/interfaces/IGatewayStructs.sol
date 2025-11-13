@@ -34,6 +34,18 @@ interface IGatewayStructs {
 
     event Deposit(bytes data, uint256 tokenId);
     event DepositedToken(bytes data);
+    event FundsDeposited(address indexed sender, uint256 value);
+    event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
+    event TokenRegistered(
+        string name,
+        string symbol,
+        uint256 tokenId,
+        address contractAddress,
+        bool isLockUnlockToken
+    );
+    event TTLExpired(bytes data);
+    event ValidatorSetUpdatedGW(bytes data);
+    event ValidatorsSetUpdated(bytes data);
     event Withdraw(
         uint8 destinationChainId,
         address sender,
@@ -47,38 +59,24 @@ interface IGatewayStructs {
         string indexed receiver,
         uint256 amount
     );
-    event TTLExpired(bytes data);
-    event FundsDeposited(address indexed sender, uint256 value);
-    event ValidatorsSetUpdated(bytes data);
-    event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
-    event ValidatorSetUpdatedGW(bytes data);
-    event TokenRegistered(
-        string name,
-        string symbol,
-        uint256 tokenId,
-        address contractAddress,
-        bool isLockUnlockToken
-    );
 
-    error NotGateway();
-    error NotPredicate();
-    error NotPredicateOrOwner();
-    error InvalidSignature();
-    error ZeroAddress();
-    error WrongValue(uint256 expected, uint256 received);
     error BatchAlreadyExecuted();
-    error TransferFailed();
-    error WrongValidatorsSetValue();
     error InsufficientFeeAmount(uint256 minFeeAmount, uint256 feeAmount);
     error InvalidBridgingAmount(
         uint256 minBridgingAmount,
         uint256 bridgingAmount
     );
-    error NotContractAddress(address addr);
-    error TokenNotRegistered(uint256 tokenId);
-    error ZeroTokenId();
-    error TokenIdAlreadyRegistered(uint256 tokenId);
-    error TokenAddressAlreadyRegistered(address addr);
-    error InvalidNumberOfBurnOrLockAddresses(uint256 length);
     error InvalidBurnOrLockAddress(string addr);
+    error InvalidNumberOfBurnOrLockAddresses(uint256 length);
+    error InvalidSignature();
+    error NotContractAddress(address addr);
+    error NotGateway();
+    error NotPredicate();
+    error TokenAddressAlreadyRegistered(address addr);
+    error TokenIdAlreadyRegistered(uint256 tokenId);
+    error TokenNotRegistered(uint256 tokenId);
+    error TransferFailed();
+    error WrongValidatorsSetValue();
+    error WrongValue(uint256 expected, uint256 received);
+    error ZeroTokenId();
 }

@@ -12,13 +12,23 @@ describe("NativeTokenPredicate Contract", function () {
       nativeTokenPredicate
         .connect(owner)
         .setDependencies(ethers.ZeroAddress, nativeTokenWallet.target)
-    ).to.to.be.revertedWithCustomError(nativeTokenPredicate, "ZeroAddress");
+    )
+      .to.to.be.revertedWithCustomError(
+        nativeTokenPredicate,
+        "NotContractAddress"
+      )
+      .withArgs(ethers.ZeroAddress);
 
     await expect(
       nativeTokenPredicate
         .connect(owner)
         .setDependencies(gateway.target, ethers.ZeroAddress)
-    ).to.to.be.revertedWithCustomError(nativeTokenPredicate, "ZeroAddress");
+    )
+      .to.to.be.revertedWithCustomError(
+        nativeTokenPredicate,
+        "NotContractAddress"
+      )
+      .withArgs(ethers.ZeroAddress);
   });
 
   it("SetDependencies should faild if not called by owner", async () => {

@@ -21,4 +21,12 @@ contract Utils {
         }
         return address(result);
     }
+
+    function _isContract(address addr) internal view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return size > 0;
+    }
 }
