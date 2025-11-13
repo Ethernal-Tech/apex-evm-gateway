@@ -8,64 +8,62 @@ describe("Register tokens tests", function () {
   describe("Register LockUnlock tokens", function () {
     it("Should revert if registerToken is not called by Owner", async () => {
       await expect(
-        gateway.connect(validators[1]).registerToken(ethers.ZeroAddress, tokenID, "", "")
+        gateway
+          .connect(validators[1])
+          .registerToken(ethers.ZeroAddress, tokenId, "", "")
       ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
     });
 
     it("Should revert if _lockUnlockSCAddress is not zero and not contract address", async () => {
-      await expect(gateway.connect(owner).registerToken(owner, tokenID, "", ""))
+      await expect(gateway.connect(owner).registerToken(owner, tokenId, "", ""))
         .to.be.revertedWithCustomError(gateway, "NotContractAddress")
         .withArgs(owner);
     });
 
     it("Should revert if register token with zero token id", async () => {
-      await expect(gateway.connect(owner).registerToken(myToken.target, 0, "", ""))
-        .to.be.revertedWithCustomError(gateway, "ZeroTokenId");
+      await expect(
+        gateway.connect(owner).registerToken(myToken.target, 0, "", "")
+      ).to.be.revertedWithCustomError(gateway, "ZeroTokenId");
     });
 
-    it("Should revert if register token with the same token id", async () => {
-      expect(await gateway.connect(owner).registerToken(myToken.target, tokenID, "", ""))
-        .not.to.be.reverted;
+    it("Should revert when registering token with Id that was previously registered", async () => {
+      expect(
+        await gateway
+          .connect(owner)
+          .registerToken(myToken.target, tokenId, "", "")
+      ).not.to.be.reverted;
 
-      await expect(gateway.connect(owner).registerToken(myToken.target, tokenID, "", ""))
+      await expect(
+        gateway.connect(owner).registerToken(myToken.target, tokenId, "", "")
+      )
         .to.be.revertedWithCustomError(gateway, "TokenIdAlreadyRegistered")
-        .withArgs(tokenID);
+        .withArgs(tokenId);
     });
 
     it("Should set tokenAddress on register LockUnlock token success", async () => {
-      await gateway.connect(owner).registerToken(myToken.target, tokenID, "", "");
+      await gateway
+        .connect(owner)
+        .registerToken(myToken.target, tokenId, "", "");
 
-      expect(
-        await nativeTokenWallet.tokenAddress(tokenID)
-      ).to.equal(myToken.target);
+      expect(await nativeTokenWallet.tokenAddress(tokenId)).to.equal(
+        myToken.target
+      );
     });
 
     it("Should set isLockUnlockToken to true when register LockUnlock token is success", async () => {
-      await gateway.connect(owner).registerToken(myToken.target, tokenID, "", "");
+      await gateway
+        .connect(owner)
+        .registerToken(myToken.target, tokenId, "", "");
 
-      expect(
-        await nativeTokenWallet.isLockUnlockToken(
-          tokenID
-        )
-      ).to.equal(true);
+      expect(await nativeTokenWallet.isLockUnlockToken(tokenId)).to.equal(true);
     });
 
     it("Should emit TokenRegistered event when new LockUnlock token is registered", async () => {
-      await expect(gateway.connect(owner).registerToken(myToken.target, tokenID, "", ""))
+      await expect(
+        gateway.connect(owner).registerToken(myToken.target, tokenId, "", "")
+      )
         .to.emit(gateway, "TokenRegistered")
         .withArgs("", "", 1, myToken.target, true);
-    });
-
-    it("Should revert if LockUnlock token is already registered", async () => {
-      await expect(gateway.connect(owner).registerToken(myToken.target, tokenID, "", ""))
-        .not.to.be.reverted;
-
-      await expect(gateway.connect(owner).registerToken(myToken.target, tokenID + 1, "", ""))
-        .to.be.revertedWithCustomError(
-          nativeTokenWallet,
-          "TokenAddressAlreadyRegistered"
-        )
-        .withArgs(myToken.target);
     });
   });
   describe("Register MintBurn token", function () {
@@ -75,50 +73,20 @@ describe("Register tokens tests", function () {
       ).to.be.revertedWithCustomError(tokenFactory, "NotGateway");
     });
 
-    it("Should revert if register token with zero token id", async () => {
-      await expect(gateway.connect(owner).registerToken(ethers.ZeroAddress, 0, "Test Token", "TTK"))
-        .to.be.revertedWithCustomError(gateway, "ZeroTokenId");
-    });
-
-    it("Should revert if register token with the same token id", async () => {
-      expect(await gateway.connect(owner).registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK"))
-        .not.to.be.reverted;
-
-      await expect(gateway.connect(owner).registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK"))
-        .to.be.revertedWithCustomError(gateway, "TokenIdAlreadyRegistered")
-        .withArgs(tokenID);
-    });
-
-    it("Should increase tokenId on register MintBurn token success", async () => {
-      expect(
-        await gateway
-          .connect(owner)
-          .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK")
-      ).not.to.be.reverted;
-
-      expect(
-        await gateway
-          .connect(owner)
-          .registerToken(ethers.ZeroAddress, tokenID + 1, "Test Token2", "TTK2")
-      ).not.to.be.reverted;
-    });
-
     it("Should set isLockUnlockToken to false when register MintBurn token is success", async () => {
       await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
-      expect(
-        await nativeTokenWallet.isLockUnlockToken(
-          tokenID
-        )
-      ).to.equal(false);
+      expect(await nativeTokenWallet.isLockUnlockToken(tokenId)).to.equal(
+        false
+      );
     });
 
     it("Should set tokenAddress on register MintBurn token", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -134,23 +102,23 @@ describe("Register tokens tests", function () {
 
       const contractAddress = event.args.contractAddress;
 
-      expect(
-        await nativeTokenWallet.tokenAddress(tokenID)
-      ).to.equal(contractAddress);
+      expect(await nativeTokenWallet.tokenAddress(tokenId)).to.equal(
+        contractAddress
+      );
     });
 
     it("Should emit tokenRegistered event when new MintBurn token is registered", async () => {
       await expect(
         gateway
           .connect(owner)
-          .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK")
+          .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK")
       )
         .to.emit(gateway, "TokenRegistered")
         .withArgs("Test Token", "TTK", 1, anyValue, false);
     });
   });
 
-  const tokenID = 1
+  const tokenId = 1;
   let owner: any;
   let validators: any;
   let gateway: any;

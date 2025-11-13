@@ -31,9 +31,6 @@ contract Gateway is
     uint256 public minFeeAmount;
     uint256 public minBridgingAmount;
 
-    //Mapping for previously registered LockUnlock tokens
-    mapping(address => bool) public isLockUnlockTokenRegistered;
-
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
     uint256[50] private __gap;
@@ -118,8 +115,6 @@ contract Gateway is
             _contractAddress = tokenFactory.createToken(_name, _symbol);
         } else if (!_isContract(_lockUnlockSCAddress)) {
             revert NotContractAddress(_lockUnlockSCAddress);
-        } else if (isLockUnlockTokenRegistered[_lockUnlockSCAddress]) {
-            revert TokenAddressAlreadyRegistered(_lockUnlockSCAddress);
         }
 
         nativeTokenPredicate.setTokenAddress(
@@ -128,7 +123,6 @@ contract Gateway is
         );
 
         if (isLockUnlock) {
-            isLockUnlockTokenRegistered[_lockUnlockSCAddress] = true;
             nativeTokenPredicate.setTokenAsLockUnlockToken(_tokenId);
         }
 

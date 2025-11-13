@@ -15,8 +15,6 @@ interface INativeTokenPredicate is IGatewayStructs {
         uint256 tokenId
     ) external;
 
-    function setTokenAsLockUnlockToken(uint256 tokenId) external;
-
     function setTokenAddress(uint256 tokenId, address tokenAddress) external;
 
     function resetBatchId() external;
