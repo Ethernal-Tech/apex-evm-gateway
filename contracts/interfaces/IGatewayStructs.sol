@@ -76,6 +76,8 @@ interface IGatewayStructs {
     );
     error NotContractAddress(address addr);
     error TokenNotRegistered(uint256 tokenId);
+    error ZeroTokenId();
+    error TokenIdAlreadyRegistered(uint256 tokenId);
     error TokenAddressAlreadyRegistered(address addr);
     error InvalidNumberOfBurnOrLockAddresses(uint256 length);
     error InvalidBurnOrLockAddress(string addr);

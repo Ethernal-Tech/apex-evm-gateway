@@ -23,7 +23,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should mint required amount of tokens for the receiver", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -83,7 +83,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should revert with InvalidBurnAddress if function caller is not 'receiver'", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
 
       const value = { value: ethers.parseUnits("200", "wei") };
       await expect(gateway.withdraw(1, receiverWithdraw, 100, 1, value))
@@ -94,7 +94,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should revert with there is more then one address to burn MintBurn tokens from", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
 
       const receiverWithdrawDouble = [
         {
@@ -119,7 +119,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -178,7 +178,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should emit Withdraw event when tokens are ERC20 tokens are burnt", async () => {
       let tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
 
       let receipt = await tx.wait();
 
@@ -243,6 +243,7 @@ describe("Transfering MintBurn tokens", function () {
     });
   });
 
+  const tokenID = 1
   let owner: any;
   let validators: any;
   let gateway: any;
