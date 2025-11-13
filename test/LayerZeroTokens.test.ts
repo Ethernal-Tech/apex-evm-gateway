@@ -24,7 +24,7 @@ describe("Transfering LockUnlock tokens", function () {
     });
 
     it("Should lock required amount of tokens for the receiver", async () => {
-      await gateway.connect(owner).registerToken(myToken.target, "", "");
+      await gateway.connect(owner).registerToken(myToken.target, tokenID, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -68,7 +68,7 @@ describe("Transfering LockUnlock tokens", function () {
   });
   describe("Withdraw/Unlocking of LockUnlock tokens", function () {
     it("Should unlock required amount of tokens for the sender (receiver)", async () => {
-      await gateway.connect(owner).registerToken(myToken.target, "", "");
+      await gateway.connect(owner).registerToken(myToken.target, tokenID, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -121,7 +121,7 @@ describe("Transfering LockUnlock tokens", function () {
       );
     });
     it("Should emit Withdraw event when LockUnlock tokens are unlocked", async () => {
-      await gateway.connect(owner).registerToken(myToken.target, "", "");
+      await gateway.connect(owner).registerToken(myToken.target, tokenID, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -167,6 +167,7 @@ describe("Transfering LockUnlock tokens", function () {
     });
   });
 
+  const tokenID = 1
   let owner: any;
   let validators: any;
   let gateway: any;

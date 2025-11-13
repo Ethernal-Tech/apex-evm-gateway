@@ -125,8 +125,6 @@ contract NativeTokenWallet is
         uint256 _tokenId,
         address _tokenAddress
     ) external onlyPredicate {
-        if (isLockUnlockToken[_tokenId])
-            revert TokenAddressAlreadyRegistered(_tokenAddress);
         tokenAddress[_tokenId] = _tokenAddress;
     }
 

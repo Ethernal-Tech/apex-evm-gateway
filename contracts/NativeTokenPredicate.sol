@@ -133,6 +133,10 @@ contract NativeTokenPredicate is
         return nativeTokenWallet.tokenAddress(_tokenId);
     }
 
+    function isTokenRegistered(uint256 _tokenId) external view returns (bool) {
+        return nativeTokenWallet.tokenAddress(_tokenId) != address(0);
+    }
+
     function version() public pure returns (string memory) {
         return "1.1.0";
     }

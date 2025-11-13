@@ -35,11 +35,9 @@ contract Gateway is
 
     TokenFactory public tokenFactory;
 
-    uint256 public tokenIdCounter;
-
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[47] private __gap;
+    uint256[48] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -101,9 +99,18 @@ contract Gateway is
     /// @custom:emits TokenRegistered Emitted after successful registration of a token.
     function registerToken(
         address _lockUnlockSCAddress,
+        uint256 _tokenId,
         string memory _name,
         string memory _symbol
     ) external onlyOwner {
+        if (_tokenId == 0) {
+            revert ZeroTokenId();
+        }
+
+        if (nativeTokenPredicate.isTokenRegistered(_tokenId)) {
+            revert TokenIdAlreadyRegistered(_tokenId);
+        }
+
         bool isLockUnlock = _lockUnlockSCAddress != address(0);
         address _contractAddress;
         if (!isLockUnlock) {
@@ -115,19 +122,19 @@ contract Gateway is
         }
 
         nativeTokenPredicate.setTokenAddress(
-            ++tokenIdCounter,
+            _tokenId,
             (isLockUnlock ? _lockUnlockSCAddress : _contractAddress)
         );
 
         if (isLockUnlock) {
             isLockUnlockTokenRegistered[_lockUnlockSCAddress] = true;
-            nativeTokenPredicate.setTokenAsLockUnlockToken(tokenIdCounter);
+            nativeTokenPredicate.setTokenAsLockUnlockToken(_tokenId);
         }
 
         emit TokenRegistered(
             _name,
             _symbol,
-            tokenIdCounter,
+            _tokenId,
             (isLockUnlock ? _lockUnlockSCAddress : _contractAddress),
             isLockUnlock
         );
@@ -149,7 +156,8 @@ contract Gateway is
         bytes calldata _data,
         uint256 _tokenId
     ) external {
-        if (_tokenId > tokenIdCounter) revert TokenNotRegistered(_tokenId);
+        if (_tokenId != 0 && !nativeTokenPredicate.isTokenRegistered(_tokenId))
+            revert TokenNotRegistered(_tokenId);
 
         bytes32 _hash = keccak256(_data);
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
@@ -185,8 +193,10 @@ contract Gateway is
         uint256 _feeAmount,
         uint256 _tokenCoinId
     ) external payable {
-        if (_tokenCoinId > tokenIdCounter)
-            revert TokenNotRegistered(_tokenCoinId);
+        if (
+            _tokenCoinId != 0 &&
+            !nativeTokenPredicate.isTokenRegistered(_tokenCoinId)
+        ) revert TokenNotRegistered(_tokenCoinId);
 
         if (_feeAmount < minFeeAmount)
             revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
