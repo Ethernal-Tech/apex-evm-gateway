@@ -103,12 +103,11 @@ contract Validators is
         emit ValidatorsSetUpdated(_data);
         return true;
     }
-
-    // remove later
-    function syncValidators() external {
-        lastConfirmedValidatorsSet--;
-    }
-
+    
+    /**
+     * @notice Retrieves the current validators chain data.
+     * @return Array of validator chain data.
+     */
     function getValidatorsChainData()
         external
         view
