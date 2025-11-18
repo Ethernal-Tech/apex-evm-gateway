@@ -86,12 +86,12 @@ contract Validators is
             revert WrongValidatorsSetValue();
         }
 
-        lastConfirmedValidatorsSet++;
-
         if (_validatorSetChange._ttl < block.number) {
             emit TTLExpired(_data);
             return false;
         }
+
+        lastConfirmedValidatorsSet++;
 
         delete validatorsChainData;
         for (uint i; i < _validatorSetChange._validatorsChainData.length; i++) {
@@ -102,6 +102,11 @@ contract Validators is
 
         emit ValidatorsSetUpdated(_data);
         return true;
+    }
+
+    // remove later
+    function syncValidators() external {
+        lastConfirmedValidatorsSet--;
     }
 
     function getValidatorsChainData()
