@@ -86,12 +86,12 @@ contract Validators is
             revert WrongValidatorsSetValue();
         }
 
-        lastConfirmedValidatorsSet++;
-
         if (_validatorSetChange._ttl < block.number) {
             emit TTLExpired(_data);
             return false;
         }
+
+        lastConfirmedValidatorsSet++;
 
         delete validatorsChainData;
         for (uint i; i < _validatorSetChange._validatorsChainData.length; i++) {
@@ -103,7 +103,11 @@ contract Validators is
         emit ValidatorsSetUpdated(_data);
         return true;
     }
-
+    
+    /**
+     * @notice Retrieves the current validators chain data.
+     * @return Array of validator chain data.
+     */
     function getValidatorsChainData()
         external
         view
@@ -140,7 +144,7 @@ contract Validators is
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.0";
+        return "1.1.1";
     }
 
     modifier onlyGateway() {
