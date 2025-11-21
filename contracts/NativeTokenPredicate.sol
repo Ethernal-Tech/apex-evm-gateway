@@ -8,10 +8,11 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {INativeTokenPredicate} from "./interfaces/INativeTokenPredicate.sol";
-import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
 import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
+import {INativeTokenPredicate} from "./interfaces/INativeTokenPredicate.sol";
+import {NativeTokenWallet} from "./NativeTokenWallet.sol";
+import {Utils} from "./Utils.sol";
 
 /**
  * @title NativeTokenPredicate
@@ -23,13 +24,14 @@ contract NativeTokenPredicate is
     INativeTokenPredicate,
     Initializable,
     OwnableUpgradeable,
+    ReentrancyGuard,
     UUPSUpgradeable,
-    ReentrancyGuard
+    Utils
 {
     using SafeERC20 for IERC20;
 
+    NativeTokenWallet public nativeTokenWallet;
     address public gateway;
-    INativeTokenWallet public nativeTokenWallet;
 
     /// @notice Tracks the ID of the last processed batch.
     uint64 public lastBatchId;
@@ -53,13 +55,18 @@ contract NativeTokenPredicate is
     ) internal override onlyOwner {}
 
     function setDependencies(
-        address _gateway,
-        address _nativeTokenWallet
+        address _gatewayAddress,
+        address _nativeTokenWalletAddress
     ) external onlyOwner {
-        if (_gateway == address(0) || _nativeTokenWallet == address(0))
-            revert ZeroAddress();
-        gateway = _gateway;
-        nativeTokenWallet = INativeTokenWallet(_nativeTokenWallet);
+        if (!_isContract(_gatewayAddress))
+            revert NotContractAddress(_gatewayAddress);
+        if (!_isContract(_nativeTokenWalletAddress))
+            revert NotContractAddress(_nativeTokenWalletAddress);
+
+        gateway = _gatewayAddress;
+        nativeTokenWallet = NativeTokenWallet(
+            payable(_nativeTokenWalletAddress)
+        );
     }
 
     function resetBatchId() external onlyOwner {
@@ -75,7 +82,8 @@ contract NativeTokenPredicate is
      */
     function deposit(
         bytes calldata _data,
-        address _relayer
+        address _relayer,
+        uint256 _tokenId
     ) external onlyGateway nonReentrant returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
@@ -100,13 +108,40 @@ contract NativeTokenPredicate is
         for (uint256 i; i < _receiversLength; i++) {
             nativeTokenWallet.deposit(
                 _receivers[i].receiver,
-                _receivers[i].amount
+                _receivers[i].amount,
+                _tokenId
             );
         }
 
-        nativeTokenWallet.deposit(_relayer, _deposits.feeAmount);
+        nativeTokenWallet.deposit(_relayer, _deposits.feeAmount, 0);
 
         return true;
+    }
+
+    function withdraw(
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _tokenId
+    ) external onlyGateway {
+        nativeTokenWallet.withdraw(_receivers, _tokenId);
+    }
+
+    function setTokenAsLockUnlockToken(uint256 _tokenId) external onlyGateway {
+        nativeTokenWallet.setTokenAsLockUnlockToken(_tokenId);
+    }
+
+    function setTokenAddress(
+        uint256 _tokenId,
+        address _tokenAddress
+    ) external onlyGateway {
+        nativeTokenWallet.setTokenAddress(_tokenId, _tokenAddress);
+    }
+
+    function getTokenAddress(uint256 _tokenId) external view returns (address) {
+        return nativeTokenWallet.tokenAddress(_tokenId);
+    }
+
+    function isTokenRegistered(uint256 _tokenId) external view returns (bool) {
+        return nativeTokenWallet.tokenAddress(_tokenId) != address(0);
     }
 
     function version() public pure returns (string memory) {

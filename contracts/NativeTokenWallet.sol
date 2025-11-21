@@ -4,9 +4,13 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
+import {MyToken} from "./tokens/MyToken.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
+import {Utils} from "./Utils.sol";
 
 /**
  * @title NativeTokenWallet
@@ -17,10 +21,19 @@ contract NativeTokenWallet is
     Initializable,
     OwnableUpgradeable,
     UUPSUpgradeable,
+    Utils,
     IGatewayStructs,
     INativeTokenWallet
 {
-    address public predicate;
+    using SafeERC20 for IERC20;
+
+    address public predicateAddress;
+
+    /// mapping tokenId to bool indicating token is LockUnlock token
+    mapping(uint256 => bool) public isLockUnlockToken;
+
+    /// mapping tokenId to token address
+    mapping(uint256 => address) public tokenAddress;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -40,9 +53,10 @@ contract NativeTokenWallet is
         address newImplementation
     ) internal override onlyOwner {}
 
-    function setDependencies(address _predicate) external onlyOwner {
-        if (_predicate == address(0)) revert ZeroAddress();
-        predicate = _predicate;
+    function setDependencies(address _predicateAddress) external onlyOwner {
+        if (!_isContract(_predicateAddress))
+            revert NotContractAddress(_predicateAddress);
+        predicateAddress = _predicateAddress;
     }
 
     /**
@@ -54,12 +68,65 @@ contract NativeTokenWallet is
      */
     function deposit(
         address _account,
-        uint256 _amount
-    ) external onlyPredicateOrOwner {
-        (bool success, ) = _account.call{value: _amount}("");
+        uint256 _amount,
+        uint256 _tokenId
+    ) external onlyPredicate {
+        if (_tokenId == 0) {
+            (bool success, ) = _account.call{value: _amount}("");
 
-        // Revert the transaction if the transfer fails
-        if (!success) revert TransferFailed();
+            // Revert the transaction if the transfer fails
+            if (!success) revert TransferFailed();
+        } else if (isLockUnlockToken[_tokenId]) {
+            IERC20 token = IERC20(tokenAddress[_tokenId]);
+            token.safeTransferFrom(_account, address(this), _amount);
+        } else {
+            MyToken token = MyToken(tokenAddress[_tokenId]);
+            token.mint(_account, _amount);
+        }
+    }
+
+    /// @notice Processes withdrawals of tokens to one or more receivers based on the token type.
+    /// @dev
+    /// - If the token is a registered Lock/Unlock token, tokens are transferred directly to each receiver.
+    /// - If the token is a native bridged token (non-Lock/Unlock), the tokens are burned from the sender’s balance.
+    /// - This function can only be called by the predicate contract authorized to manage withdrawals.
+    /// @param _receivers An array of `ReceiverWithdraw` structs containing each receiver's address (as a string)
+    ///        and the corresponding withdrawal amount.
+    /// @param _tokenId The unique ID of the token being withdrawn, used to look up its address and type.
+    /// @custom:modifier onlyPredicate Restricts the call to the authorized predicate contract.
+    /// @custom:reverts None Explicitly, but will revert if token transfer or burn fails.
+    /// @custom:security Consider verifying receiver addresses before transfer to avoid accidental burns or misdirected transfers.
+    function withdraw(
+        ReceiverWithdraw[] calldata _receivers,
+        uint256 _tokenId
+    ) external override onlyPredicate {
+        if (isLockUnlockToken[_tokenId]) {
+            IERC20 token = IERC20(tokenAddress[_tokenId]);
+            uint256 receiversLength = _receivers.length;
+            for (uint256 i; i < receiversLength; i++) {
+                token.safeTransfer(
+                    _stringToAddress(_receivers[i].receiver),
+                    _receivers[i].amount
+                );
+            }
+        } else {
+            MyToken token = MyToken(tokenAddress[_tokenId]);
+            token.burn(
+                _stringToAddress(_receivers[0].receiver),
+                _receivers[0].amount
+            );
+        }
+    }
+
+    function setTokenAsLockUnlockToken(uint256 tokenId) external onlyPredicate {
+        isLockUnlockToken[tokenId] = true;
+    }
+
+    function setTokenAddress(
+        uint256 _tokenId,
+        address _tokenAddress
+    ) external onlyPredicate {
+        tokenAddress[_tokenId] = _tokenAddress;
     }
 
     receive() external payable {}
@@ -68,10 +135,8 @@ contract NativeTokenWallet is
         return "1.0.0";
     }
 
-    modifier onlyPredicateOrOwner() {
-        if (msg.sender != predicate && msg.sender != owner())
-            revert NotPredicateOrOwner();
-
+    modifier onlyPredicate() {
+        if (msg.sender != predicateAddress) revert NotPredicate();
         _;
     }
 }

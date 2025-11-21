@@ -7,18 +7,27 @@ interface IGateway is IGatewayStructs {
     function deposit(
         bytes calldata _signature,
         uint256 _bitmap,
-        bytes calldata _data
+        bytes calldata _data,
+        uint256 tokenId
     ) external;
 
     function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
+        uint256 _feeAmount,
+        uint256 _tokenId
     ) external payable;
 
     function updateValidatorsChainData(
         bytes calldata _signature,
         uint256 _bitmap,
         bytes calldata _data
+    ) external;
+
+    function registerToken(
+        address lockUnlockSCAddress,
+        uint256 tokenId,
+        string memory name,
+        string memory symbol
     ) external;
 }
