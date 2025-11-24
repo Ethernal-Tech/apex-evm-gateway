@@ -5,21 +5,6 @@ import { deployGatewayFixtures } from "./fixtures";
 
 describe("Transfering MintBurn tokens", function () {
   describe("Deposit/Minting of MintBurn tokens", function () {
-    it("Should revert if tokenId is not valid", async () => {
-      await expect(
-        gateway
-          .connect(validators[1])
-          .deposit(
-            "0x7465737400000000000000000000000000000000000000000000000000000000",
-            "0x7465737400000000000000000000000000000000000000000000000000000000",
-            data,
-            1
-          )
-      )
-        .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
-        .withArgs(1);
-    });
-
     it("Should mint required amount of tokens for the receiver", async () => {
       const tx = await gateway
         .connect(owner)
@@ -47,8 +32,8 @@ describe("Transfering MintBurn tokens", function () {
       );
 
       const decoded = abiCoder.decode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        data
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        dataNonZeroToken
       );
 
       const [tupleValue] = decoded;
@@ -61,8 +46,7 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        data,
-        1
+        dataNonZeroToken
       );
 
       await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
@@ -75,7 +59,9 @@ describe("Transfering MintBurn tokens", function () {
     it("Should revert if tokenId is not valid", async () => {
       const value = { value: ethers.parseUnits("200", "wei") };
       await expect(
-        gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, 1, value)
+        gateway
+          .connect(receiver)
+          .withdraw(1, receiverWithdrawNonZeroToken, 100, value)
       )
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(1);
@@ -87,34 +73,9 @@ describe("Transfering MintBurn tokens", function () {
         .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
 
       const value = { value: ethers.parseUnits("200", "wei") };
-      await expect(gateway.withdraw(1, receiverWithdraw, 100, 1, value))
+      await expect(gateway.withdraw(1, receiverWithdrawMixToken, 100, value))
         .to.be.revertedWithCustomError(gateway, "InvalidBurnOrLockAddress")
         .withArgs(receiver.address);
-    });
-
-    it("Should revert with there is more then one address to burn MintBurn tokens from", async () => {
-      const tx = await gateway
-        .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
-
-      const receiverWithdrawDouble = [
-        {
-          receiver: receiver.address,
-          amount: 100,
-        },
-        {
-          receiver: receiver.address,
-          amount: 100,
-        },
-      ];
-
-      const value = { value: ethers.parseUnits("200", "wei") };
-      await expect(gateway.withdraw(1, receiverWithdrawDouble, 100, 1, value))
-        .to.be.revertedWithCustomError(
-          gateway,
-          "InvalidNumberOfBurnOrLockAddresses"
-        )
-        .withArgs(2);
     });
 
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
@@ -145,7 +106,7 @@ describe("Transfering MintBurn tokens", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        data
+        dataNonZeroToken
       );
 
       const [tupleValue] = decoded;
@@ -158,25 +119,24 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        data,
-        1
+        dataNonZeroToken
       );
 
       await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
         decodedAmount
       );
 
-      const value = { value: ethers.parseUnits("200", "wei") };
+      const value = { value: ethers.parseUnits("100", "wei") };
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdraw, 100, 1, value);
+        .withdraw(1, receiverWithdrawNonZeroToken, 100, value);
 
       await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
-        decodedAmount - BigInt(receiverWithdraw[0].amount)
+        decodedAmount - BigInt(receiverWithdrawNonZeroToken[0].amount)
       );
     });
 
-    it("Should emit Withdraw event when tokens are ERC20 tokens are burnt", async () => {
+    it("Should emit Withdraw event when ERC20 tokens are burnt", async () => {
       let tx = await gateway
         .connect(owner)
         .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
@@ -203,8 +163,8 @@ describe("Transfering MintBurn tokens", function () {
       );
 
       const decoded = abiCoder.decode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        data
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        dataNonZeroToken
       );
 
       const [tupleValue] = decoded;
@@ -217,8 +177,7 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        data,
-        1
+        dataNonZeroToken
       );
 
       await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
@@ -228,7 +187,7 @@ describe("Transfering MintBurn tokens", function () {
       const value = { value: ethers.parseUnits("200", "wei") };
       tx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdraw, 100, 1, value);
+        .withdraw(1, receiverWithdrawZeroToken, 100, value);
       receipt = await tx.wait();
 
       event = receipt.logs.find(
@@ -240,7 +199,6 @@ describe("Transfering MintBurn tokens", function () {
       expect(event?.args?.receivers[0].receiver).to.equal(receiver);
       expect(event?.args?.receivers[0].amount).to.equal(100);
       expect(event?.args?.feeAmount).to.equal(100);
-      expect(event?.args?.tokenId).to.equal(1);
     });
   });
 
@@ -248,17 +206,21 @@ describe("Transfering MintBurn tokens", function () {
   let owner: any;
   let validators: any;
   let gateway: any;
-  let data: any;
+  let dataNonZeroToken: any;
   let receiver: any;
-  let receiverWithdraw: any;
+  let receiverWithdrawMixToken: any;
+  let receiverWithdrawNonZeroToken: any;
+  let receiverWithdrawZeroToken: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
     owner = fixture.owner;
     validators = fixture.validators;
     gateway = fixture.gateway;
-    data = fixture.data;
+    dataNonZeroToken = fixture.dataNonZeroToken;
     receiver = fixture.receiver;
-    receiverWithdraw = fixture.receiverWithdraw;
+    receiverWithdrawMixToken = fixture.receiverWithdrawMixToken;
+    receiverWithdrawNonZeroToken = fixture.receiverWithdrawNonZeroToken;
+    receiverWithdrawZeroToken = fixture.receiverWithdrawZeroToken;
   });
 });

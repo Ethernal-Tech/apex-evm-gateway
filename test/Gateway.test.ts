@@ -52,15 +52,14 @@ describe("Gateway Contract", function () {
     const depositTx = await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      data,
-      0
+      dataZeroToken
     );
     const depositReceipt = await depositTx.wait();
     const depositEvent = depositReceipt.logs.find(
       (log: any) => log.fragment && log.fragment.name === "Deposit"
     );
 
-    expect(depositEvent?.args?.data).to.equal(data);
+    expect(depositEvent?.args?.data).to.equal(dataZeroToken);
   });
 
   it("Withdraw sucess", async () => {
@@ -69,8 +68,7 @@ describe("Gateway Contract", function () {
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      data,
-      0
+      dataZeroToken
     );
 
     const nativeTokenWalletBefore = await ethers.provider.getBalance(
@@ -80,7 +78,7 @@ describe("Gateway Contract", function () {
     const value = { value: ethers.parseUnits("200", "wei") };
     const withdrawTx = await gateway
       .connect(receiver)
-      .withdraw(1, receiverWithdraw, 100, 0, value);
+      .withdraw(1, receiverWithdrawZeroToken, 100, value);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find(
       (log: any) => log.fragment && log.fragment.name === "Withdraw"
@@ -102,21 +100,21 @@ describe("Gateway Contract", function () {
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.feeAmount).to.equal(100);
     expect(withdrawEvent?.args?.value).to.equal(200);
-    expect(withdrawEvent?.args?.tokenId).to.equal(0);
   });
 
   it("Withdraw should fail if not enough value is submitted", async () => {
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      data,
-      0
+      dataZeroToken
     );
 
     const value = { value: ethers.parseUnits("1", "wei") };
 
     await expect(
-      gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, 0, value)
+      gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdrawMixToken, 100, value)
     ).to.to.be.revertedWithCustomError(gateway, "WrongValue");
   });
 
@@ -137,21 +135,20 @@ describe("Gateway Contract", function () {
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      data,
-      0
+      dataZeroToken
     );
 
     const value = { value: ethers.parseUnits("1", "wei") };
 
-    const receiverWithdrawZero = [
-      {
-        receiver: "something",
-        amount: 0,
-      },
-    ];
+    const receiverWithdrawZeroTokenInvalidAmount = structuredClone(
+      receiverWithdrawZeroToken
+    );
+    receiverWithdrawZeroTokenInvalidAmount[0].amount = 1;
 
     await expect(
-      gateway.connect(receiver).withdraw(1, receiverWithdrawZero, 100, 0, value)
+      gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdrawZeroTokenInvalidAmount, 100, value)
     ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
   });
 
@@ -171,8 +168,8 @@ describe("Gateway Contract", function () {
 
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200]]]]
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 0]]]]
       );
       dataArray.push(data);
     }
@@ -182,8 +179,7 @@ describe("Gateway Contract", function () {
       const depositTX = await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataArray[i],
-        0
+        dataArray[i]
       );
       depositTXs.push(depositTX);
     }
@@ -206,7 +202,7 @@ describe("Gateway Contract", function () {
     for (let i = 0; i < 100; i++) {
       const withdrawTx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdraw, 100, 0, value);
+        .withdraw(1, receiverWithdrawZeroToken, 100, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find(
         (log: any) => log.fragment && log.fragment.name === "Withdraw"
@@ -228,7 +224,6 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
       expect(withdrawEvent?.args?.value).to.equal(200);
-      expect(withdrawEvent?.args?.tokenId).to.equal(0);
     }
   });
 
@@ -248,8 +243,8 @@ describe("Gateway Contract", function () {
 
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200]]]]
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 0]]]]
       );
       dataArray.push(data);
     }
@@ -259,8 +254,7 @@ describe("Gateway Contract", function () {
       const depositTX = await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataArray[i],
-        0
+        dataArray[i]
       );
       depositTXs.push(depositTX);
     }
@@ -281,7 +275,7 @@ describe("Gateway Contract", function () {
 
       const withdrawTx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdraw, 100, 0, value);
+        .withdraw(1, receiverWithdrawZeroToken, 100, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find(
         (log: any) => log.fragment && log.fragment.name === "Withdraw"
@@ -303,7 +297,6 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.feeAmount).to.equal(100);
       expect(withdrawEvent?.args?.value).to.equal(200);
-      expect(withdrawEvent?.args?.tokenId).to.equal(0);
     }
   });
   it("Direct Deposit should emit FundsDeposited event", async function () {
@@ -335,15 +328,16 @@ describe("Gateway Contract", function () {
     const abiCoder = new ethers.AbiCoder();
     const address = ethers.Wallet.createRandom().address;
     const dataTTLExpired = abiCoder.encode(
-      ["tuple(uint64, uint64, uint256, tuple(uint8, address, uint256)[])"],
-      [[1, blockNumber - 1, 1, [[1, address, 100]]]]
+      [
+        "tuple(uint64, uint64, uint256, tuple(uint8, address, uint256, uint256)[])",
+      ],
+      [[1, blockNumber - 1, 1, [[1, address, 100, 0]]]]
     );
 
     const depositTx = await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      dataTTLExpired,
-      0
+      dataTTLExpired
     );
     const depositReceipt = await depositTx.wait();
     const ttlEvent = depositReceipt.logs.find(
@@ -364,8 +358,9 @@ describe("Gateway Contract", function () {
   let nativeTokenWallet: any;
   let tokenFactory: any;
   let validatorsc: any;
-  let receiverWithdraw: any;
-  let data: any;
+  let receiverWithdrawMixToken: any;
+  let receiverWithdrawZeroToken: any;
+  let dataZeroToken: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
@@ -377,7 +372,8 @@ describe("Gateway Contract", function () {
     nativeTokenWallet = fixture.nativeTokenWallet;
     tokenFactory = fixture.tokenFactory;
     validatorsc = fixture.validatorsc;
-    receiverWithdraw = fixture.receiverWithdraw;
-    data = fixture.data;
+    receiverWithdrawMixToken = fixture.receiverWithdrawMixToken;
+    receiverWithdrawZeroToken = fixture.receiverWithdrawZeroToken;
+    dataZeroToken = fixture.dataZeroToken;
   });
 });

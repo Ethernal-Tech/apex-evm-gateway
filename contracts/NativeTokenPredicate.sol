@@ -82,8 +82,7 @@ contract NativeTokenPredicate is
      */
     function deposit(
         bytes calldata _data,
-        address _relayer,
-        uint256 _tokenId
+        address _relayer
     ) external onlyGateway nonReentrant returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
@@ -106,6 +105,8 @@ contract NativeTokenPredicate is
         // This is mandatory because all deposits (_receiversLength + fee)
         // must be executed as an atomic operation.
         for (uint256 i; i < _receiversLength; i++) {
+            uint256 _tokenId = _receivers[i].tokenId;
+            if (_tokenId != 0 && !isTokenRegistered(_tokenId)) continue;
             nativeTokenWallet.deposit(
                 _receivers[i].receiver,
                 _receivers[i].amount,
@@ -119,10 +120,9 @@ contract NativeTokenPredicate is
     }
 
     function withdraw(
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _tokenId
+        ReceiverWithdraw calldata _receiver
     ) external onlyGateway {
-        nativeTokenWallet.withdraw(_receivers, _tokenId);
+        nativeTokenWallet.withdraw(_receiver);
     }
 
     function setTokenAsLockUnlockToken(uint256 _tokenId) external onlyGateway {
@@ -140,7 +140,7 @@ contract NativeTokenPredicate is
         return nativeTokenWallet.tokenAddress(_tokenId);
     }
 
-    function isTokenRegistered(uint256 _tokenId) external view returns (bool) {
+    function isTokenRegistered(uint256 _tokenId) public view returns (bool) {
         return nativeTokenWallet.tokenAddress(_tokenId) != address(0);
     }
 

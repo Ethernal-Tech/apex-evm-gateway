@@ -90,31 +90,24 @@ contract NativeTokenWallet is
     /// - If the token is a registered Lock/Unlock token, tokens are transferred directly to each receiver.
     /// - If the token is a native bridged token (non-Lock/Unlock), the tokens are burned from the sender’s balance.
     /// - This function can only be called by the predicate contract authorized to manage withdrawals.
-    /// @param _receivers An array of `ReceiverWithdraw` structs containing each receiver's address (as a string)
-    ///        and the corresponding withdrawal amount.
-    /// @param _tokenId The unique ID of the token being withdrawn, used to look up its address and type.
+    /// @param _receiver ReceiverWithdraw struct containing receiver details.
     /// @custom:modifier onlyPredicate Restricts the call to the authorized predicate contract.
     /// @custom:reverts None Explicitly, but will revert if token transfer or burn fails.
     /// @custom:security Consider verifying receiver addresses before transfer to avoid accidental burns or misdirected transfers.
     function withdraw(
-        ReceiverWithdraw[] calldata _receivers,
-        uint256 _tokenId
+        ReceiverWithdraw calldata _receiver
     ) external override onlyPredicate {
+        uint256 _tokenId = _receiver.tokenId;
         if (isLockUnlockToken[_tokenId]) {
             IERC20 token = IERC20(tokenAddress[_tokenId]);
-            uint256 receiversLength = _receivers.length;
-            for (uint256 i; i < receiversLength; i++) {
-                token.safeTransfer(
-                    _stringToAddress(_receivers[i].receiver),
-                    _receivers[i].amount
-                );
-            }
+
+            token.safeTransfer(
+                _stringToAddress(_receiver.receiver),
+                _receiver.amount
+            );
         } else {
             MyToken token = MyToken(tokenAddress[_tokenId]);
-            token.burn(
-                _stringToAddress(_receivers[0].receiver),
-                _receivers[0].amount
-            );
+            token.burn(_stringToAddress(_receiver.receiver), _receiver.amount);
         }
     }
 

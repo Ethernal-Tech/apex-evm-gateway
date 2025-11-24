@@ -8,21 +8,6 @@ import {
 
 describe("Transfering LockUnlock tokens", function () {
   describe("Deposit/Locking of LockUnlock tokens", function () {
-    it("Should revert if tokenId is not valid", async () => {
-      await expect(
-        gateway
-          .connect(validators[1])
-          .deposit(
-            "0x7465737400000000000000000000000000000000000000000000000000000000",
-            "0x7465737400000000000000000000000000000000000000000000000000000000",
-            data,
-            1
-          )
-      )
-        .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
-        .withArgs(1);
-    });
-
     it("Should lock required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
@@ -45,8 +30,8 @@ describe("Transfering LockUnlock tokens", function () {
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
       const decoded = abiCoder.decode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        data
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        dataNonZeroToken
       );
 
       const [tupleValue] = decoded;
@@ -55,8 +40,7 @@ describe("Transfering LockUnlock tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        data,
-        1
+        dataNonZeroToken
       );
 
       await expect(myToken.balanceOf(decodedAddress)).to.eventually.equal(
@@ -88,8 +72,8 @@ describe("Transfering LockUnlock tokens", function () {
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
       const decoded = abiCoder.decode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        data
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        dataNonZeroToken
       );
 
       const [tupleValue] = decoded;
@@ -98,8 +82,7 @@ describe("Transfering LockUnlock tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        data,
-        1
+        dataNonZeroToken
       );
 
       const receiverbalance = await myToken.balanceOf(receiver.address);
@@ -107,22 +90,23 @@ describe("Transfering LockUnlock tokens", function () {
         nativeTokenWallet.target
       );
 
-      const value = { value: ethers.parseUnits("200", "wei") };
+      const value = { value: ethers.parseUnits("100", "wei") };
 
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdraw, 100, 1, value);
+        .withdraw(1, receiverWithdrawNonZeroToken, 100, value);
 
       await expect(
-        myToken.balanceOf(receiverWithdraw[0].receiver)
+        myToken.balanceOf(receiverWithdrawNonZeroToken[0].receiver)
       ).to.eventually.equal(
-        receiverbalance + BigInt(receiverWithdraw[0].amount)
+        receiverbalance + BigInt(receiverWithdrawNonZeroToken[0].amount)
       );
 
       await expect(
         myToken.balanceOf(nativeTokenWallet.target)
       ).to.eventually.equal(
-        nativeTokenWalletBalance - BigInt(receiverWithdraw[0].amount)
+        nativeTokenWalletBalance -
+          BigInt(receiverWithdrawNonZeroToken[0].amount)
       );
     });
 
@@ -144,22 +128,21 @@ describe("Transfering LockUnlock tokens", function () {
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
       const decoded = abiCoder.decode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        data
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        dataNonZeroToken
       );
 
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        data,
-        1
+        dataNonZeroToken
       );
 
-      const value = { value: ethers.parseUnits("200", "wei") };
+      const value = { value: ethers.parseUnits("100", "wei") };
 
       const tx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdraw, 100, 1, value);
+        .withdraw(1, receiverWithdrawNonZeroToken, 100, value);
       const receipt = await tx.wait();
 
       const event = receipt.logs.find(
@@ -171,29 +154,30 @@ describe("Transfering LockUnlock tokens", function () {
       expect(event?.args?.receivers[0].receiver).to.equal(receiver);
       expect(event?.args?.receivers[0].amount).to.equal(100);
       expect(event?.args?.feeAmount).to.equal(100);
-      expect(event?.args?.tokenId).to.equal(1);
     });
   });
 
   const tokenID = 1;
   let owner: any;
-  let validators: any;
   let gateway: any;
   let myToken: any;
-  let data: any;
+  let dataNonZeroToken: any;
   let nativeTokenWallet: any;
   let receiver: any;
-  let receiverWithdraw: any;
+  let receiverWithdrawMixToken: any;
+  let receiverWithdrawZeroToken: any;
+  let receiverWithdrawNonZeroToken: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
     owner = fixture.owner;
-    validators = fixture.validators;
     gateway = fixture.gateway;
     myToken = fixture.myToken;
-    data = fixture.data;
+    dataNonZeroToken = fixture.dataNonZeroToken;
     nativeTokenWallet = fixture.nativeTokenWallet;
     receiver = fixture.receiver;
-    receiverWithdraw = fixture.receiverWithdraw;
+    receiverWithdrawMixToken = fixture.receiverWithdrawMixToken;
+    receiverWithdrawZeroToken = fixture.receiverWithdrawZeroToken;
+    receiverWithdrawNonZeroToken = fixture.receiverWithdrawNonZeroToken;
   });
 });

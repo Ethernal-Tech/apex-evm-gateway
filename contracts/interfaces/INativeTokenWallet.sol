@@ -19,10 +19,7 @@ interface INativeTokenWallet is IGatewayStructs {
      */
     function deposit(address account, uint256 amount, uint256 tokenId) external;
 
-    function withdraw(
-        ReceiverWithdraw[] calldata receivers,
-        uint256 tokenId
-    ) external;
+    function withdraw(ReceiverWithdraw calldata _receiver) external;
 
     function setTokenAsLockUnlockToken(uint256 tokenId) external;
 
