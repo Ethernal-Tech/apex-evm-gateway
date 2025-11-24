@@ -190,10 +190,32 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  const receiverWithdraw = [
+  const receiverWithdrawZeroToken = [
     {
       receiver: receiver.address,
       amount: 100,
+      tokenId: 0,
+    },
+  ];
+
+  const receiverWithdrawNonZeroToken = [
+    {
+      receiver: receiver.address,
+      amount: 100,
+      tokenId: 1,
+    },
+  ];
+
+  const receiverWithdrawMixToken = [
+    {
+      receiver: receiver.address,
+      amount: 100,
+      tokenId: 0,
+    },
+    {
+      receiver: receiver.address,
+      amount: 100,
+      tokenId: 1,
     },
   ];
 
@@ -227,9 +249,14 @@ export async function deployGatewayFixtures() {
   //data encoding
   const blockNumber = await ethers.provider.getBlockNumber();
   const abiCoder = new ethers.AbiCoder();
-  const data = abiCoder.encode(
-    ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-    [[1, blockNumber + 100, 1, [[receiver.address, 1000]]]]
+  const dataZeroToken = abiCoder.encode(
+    ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+    [[1, blockNumber + 100, 1, [[receiver.address, 1000, 0]]]]
+  );
+
+  const dataNonZeroToken = abiCoder.encode(
+    ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+    [[1, blockNumber + 100, 1, [[receiver.address, 1000, 1]]]]
   );
 
   const validatorSetChange = {
@@ -251,8 +278,11 @@ export async function deployGatewayFixtures() {
     tokenFactory,
     validatorsc,
     validatorsCardanoData,
-    receiverWithdraw,
-    data,
+    receiverWithdrawZeroToken,
+    receiverWithdrawNonZeroToken,
+    receiverWithdrawMixToken,
+    dataZeroToken,
+    dataNonZeroToken,
     validatorsAddresses,
     validatorSetChange,
   };

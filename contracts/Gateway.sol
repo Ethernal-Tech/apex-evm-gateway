@@ -144,30 +144,21 @@ contract Gateway is
     /// @param _signature The BLS signature for validation.
     /// @param _bitmap The bitmap associated with the BLS signature.
     /// @param _data The deposit data in bytes format.
-    /// @param _tokenId The token ID being deposited. Must be registered unless zero.
     /// @dev Emits either a `Deposit` or `TTLExpired` event based on success.
     function deposit(
         bytes calldata _signature,
         uint256 _bitmap,
-        bytes calldata _data,
-        uint256 _tokenId
+        bytes calldata _data
     ) external {
-        if (_tokenId != 0 && !nativeTokenPredicate.isTokenRegistered(_tokenId))
-            revert TokenNotRegistered(_tokenId);
-
         bytes32 _hash = keccak256(_data);
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
 
         if (!valid) revert InvalidSignature();
 
-        bool success = nativeTokenPredicate.deposit(
-            _data,
-            msg.sender,
-            _tokenId
-        );
+        bool success = nativeTokenPredicate.deposit(_data, msg.sender);
 
         if (success) {
-            emit Deposit(_data, _tokenId);
+            emit Deposit(_data);
         } else {
             emit TTLExpired(_data);
         }
@@ -182,29 +173,34 @@ contract Gateway is
     /// @param _destinationChainId The ID of the destination chain.
     /// @param _receivers The array of receivers and their withdrawal amounts.
     /// @param _feeAmount The fee for the withdrawal process.
-    /// @param _tokenCoinId The token ID representing the asset type. Zero for native currency.
     /// @dev Ensures that the sum of withdrawal amounts matches the value sent.
     function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount,
-        uint256 _tokenCoinId
+        uint256 _feeAmount
     ) external payable {
         if (_feeAmount < minFeeAmount)
             revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
 
-        uint256 amountSum;
+        uint256 amountSum = _feeAmount;
 
-        if (_tokenCoinId == 0) {
-            uint256 _amountLength = _receivers.length;
-
-            amountSum = _feeAmount;
-
-            for (uint256 i; i < _amountLength; i++) {
+        for (uint256 i; i < _receivers.length; i++) {
+            uint256 _tokenCoinId = _receivers[i].tokenId;
+            if (_tokenCoinId == 0) {
                 uint256 _amount = _receivers[i].amount;
                 if (_amount < minBridgingAmount)
                     revert InvalidBridgingAmount(minBridgingAmount, _amount);
                 amountSum += _amount;
+            } else {
+                if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {
+                    revert TokenNotRegistered(_tokenCoinId);
+                }
+
+                if (msg.sender != _stringToAddress(_receivers[i].receiver)) {
+                    revert InvalidBurnOrLockAddress(_receivers[i].receiver);
+                }
+
+                nativeTokenPredicate.withdraw(_receivers[i]);
             }
 
             if (msg.value != amountSum) {
@@ -212,32 +208,15 @@ contract Gateway is
             }
 
             _transferAmountToWallet(amountSum);
-        } else {
-            if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {
-                revert TokenNotRegistered(_tokenCoinId);
-            }
 
-            if (_receivers.length != 1) {
-                revert InvalidNumberOfBurnOrLockAddresses(_receivers.length);
-            }
-
-            if (msg.sender != _stringToAddress(_receivers[0].receiver)) {
-                revert InvalidBurnOrLockAddress(_receivers[0].receiver);
-            }
-
-            nativeTokenPredicate.withdraw(_receivers, _tokenCoinId);
-
-            _transferAmountToWallet(_feeAmount);
+            emit Withdraw(
+                _destinationChainId,
+                msg.sender,
+                _receivers,
+                _feeAmount,
+                amountSum
+            );
         }
-
-        emit Withdraw(
-            _destinationChainId,
-            msg.sender,
-            _receivers,
-            _feeAmount,
-            (_tokenCoinId == 0 ? amountSum : _feeAmount),
-            _tokenCoinId
-        );
     }
 
     /// @notice Updates validator chain data.
