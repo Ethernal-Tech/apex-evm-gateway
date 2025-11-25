@@ -105,8 +105,9 @@ contract NativeTokenPredicate is
         // This is mandatory because all deposits (_receiversLength + fee)
         // must be executed as an atomic operation.
         for (uint256 i; i < _receiversLength; i++) {
-            uint256 _tokenId = _receivers[i].tokenId;
-            if (_tokenId != 0 && !isTokenRegistered(_tokenId)) continue;
+            uint16 _tokenId = _receivers[i].tokenId;
+            if (_tokenId != 0 && !isTokenRegistered(_tokenId))
+                revert TokenNotRegistered(_tokenId);
             nativeTokenWallet.deposit(
                 _receivers[i].receiver,
                 _receivers[i].amount,
@@ -120,27 +121,28 @@ contract NativeTokenPredicate is
     }
 
     function withdraw(
+        address _sender,
         ReceiverWithdraw calldata _receiver
     ) external onlyGateway {
-        nativeTokenWallet.withdraw(_receiver);
+        nativeTokenWallet.withdraw(_sender, _receiver);
     }
 
-    function setTokenAsLockUnlockToken(uint256 _tokenId) external onlyGateway {
+    function setTokenAsLockUnlockToken(uint16 _tokenId) external onlyGateway {
         nativeTokenWallet.setTokenAsLockUnlockToken(_tokenId);
     }
 
     function setTokenAddress(
-        uint256 _tokenId,
+        uint16 _tokenId,
         address _tokenAddress
     ) external onlyGateway {
         nativeTokenWallet.setTokenAddress(_tokenId, _tokenAddress);
     }
 
-    function getTokenAddress(uint256 _tokenId) external view returns (address) {
+    function getTokenAddress(uint16 _tokenId) external view returns (address) {
         return nativeTokenWallet.tokenAddress(_tokenId);
     }
 
-    function isTokenRegistered(uint256 _tokenId) public view returns (bool) {
+    function isTokenRegistered(uint16 _tokenId) public view returns (bool) {
         return nativeTokenWallet.tokenAddress(_tokenId) != address(0);
     }
 

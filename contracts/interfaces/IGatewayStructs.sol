@@ -25,13 +25,13 @@ interface IGatewayStructs {
     struct ReceiverDeposit {
         address receiver;
         uint256 amount;
-        uint256 tokenId;
+        uint16 tokenId;
     }
 
     struct ReceiverWithdraw {
         string receiver;
         uint256 amount;
-        uint256 tokenId;
+        uint16 tokenId;
     }
 
     event Deposit(bytes data);
@@ -41,7 +41,7 @@ interface IGatewayStructs {
     event TokenRegistered(
         string name,
         string symbol,
-        uint256 tokenId,
+        uint16 tokenId,
         address contractAddress,
         bool isLockUnlockToken
     );
@@ -67,14 +67,13 @@ interface IGatewayStructs {
         uint256 minBridgingAmount,
         uint256 bridgingAmount
     );
-    error InvalidBurnOrLockAddress(string addr);
     error InvalidSignature();
     error NotContractAddress(address addr);
     error NotGateway();
     error NotPredicate();
     error TokenAddressAlreadyRegistered(address addr);
-    error TokenIdAlreadyRegistered(uint256 tokenId);
-    error TokenNotRegistered(uint256 tokenId);
+    error TokenIdAlreadyRegistered(uint16 tokenId);
+    error TokenNotRegistered(uint16 tokenId);
     error TransferFailed();
     error WrongValidatorsSetValue();
     error WrongValue(uint256 expected, uint256 received);

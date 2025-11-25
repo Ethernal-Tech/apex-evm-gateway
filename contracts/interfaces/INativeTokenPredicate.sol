@@ -9,11 +9,14 @@ interface INativeTokenPredicate is IGatewayStructs {
         address relayer
     ) external returns (bool);
 
-    function withdraw(ReceiverWithdraw calldata _receiver) external;
+    function withdraw(
+        address sender,
+        ReceiverWithdraw calldata _receiver
+    ) external;
 
-    function setTokenAddress(uint256 tokenId, address tokenAddress) external;
+    function setTokenAddress(uint16 tokenId, address tokenAddress) external;
 
     function resetBatchId() external;
 
-    function isTokenRegistered(uint256 tokenId) external returns (bool);
+    function isTokenRegistered(uint16 tokenId) external returns (bool);
 }

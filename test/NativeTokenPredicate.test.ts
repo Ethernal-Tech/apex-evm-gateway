@@ -90,7 +90,6 @@ describe("NativeTokenPredicate Contract", function () {
   let nativeTokenPredicate: any;
   let nativeTokenWallet: any;
   let validatorsc: any;
-  let receiverWithdraw: any;
   let dataZeroToken: any;
 
   beforeEach(async function () {
@@ -102,7 +101,6 @@ describe("NativeTokenPredicate Contract", function () {
     nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
     validatorsc = fixture.validatorsc;
-    receiverWithdraw = fixture.receiverWithdraw;
     dataZeroToken = fixture.dataZeroToken;
   });
 });

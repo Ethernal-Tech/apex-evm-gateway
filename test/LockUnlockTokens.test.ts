@@ -7,8 +7,52 @@ import {
 } from "./fixtures";
 
 describe("Transfering LockUnlock tokens", function () {
-  describe("Deposit/Locking of LockUnlock tokens", function () {
+  describe("Deposit/Unlocking of LockUnlock tokens", function () {
     it("Should lock required amount of tokens for the receiver", async () => {
+      await gateway
+        .connect(owner)
+        .registerToken(myToken.target, tokenID, "", "");
+
+      const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
+        await nativeTokenWallet.getAddress()
+      );
+
+      //minting tokens for NativeTokenWallet to reporesent previously locked tokens
+      await myToken
+        .connect(nativeTokenWalletContract)
+        .mint(nativeTokenWalletContract, 10000);
+
+      const receiverBalance = await myToken.balanceOf(receiver.address);
+      const walletBalance = await myToken.balanceOf(nativeTokenWalletContract);
+
+      const abiCoder = ethers.AbiCoder.defaultAbiCoder();
+
+      const decoded = abiCoder.decode(
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        dataNonZeroToken
+      );
+
+      const [tupleValue] = decoded;
+      const [[decodedAddress, decodedAmount]] = tupleValue[3];
+
+      await gateway.deposit(
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        dataNonZeroToken
+      );
+
+      expect(await myToken.balanceOf(decodedAddress)).to.equal(
+        receiverBalance + decodedAmount
+      );
+
+      expect(await myToken.balanceOf(nativeTokenWalletContract)).to.equal(
+        walletBalance - decodedAmount
+      );
+    });
+  });
+
+  describe("Withdraw/locking of LockUnlock tokens", function () {
+    it("Should lock required amount of tokens for the sender", async () => {
       await gateway
         .connect(owner)
         .registerToken(myToken.target, tokenID, "", "");
@@ -22,9 +66,6 @@ describe("Transfering LockUnlock tokens", function () {
         .connect(nativeTokenWalletContract)
         .mint(receiver.address, 10000);
 
-      const receiverbalance = await myToken.balanceOf(receiver.address);
-      expect(receiverbalance).to.equal(10000);
-
       await myToken.connect(receiver).approve(nativeTokenWallet.target, 1000);
 
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -36,54 +77,6 @@ describe("Transfering LockUnlock tokens", function () {
 
       const [tupleValue] = decoded;
       const [[decodedAddress, decodedAmount]] = tupleValue[3];
-
-      await gateway.deposit(
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonZeroToken
-      );
-
-      await expect(myToken.balanceOf(decodedAddress)).to.eventually.equal(
-        receiverbalance - decodedAmount
-      );
-
-      await expect(
-        myToken.balanceOf(nativeTokenWallet.target)
-      ).to.eventually.equal(decodedAmount);
-    });
-  });
-
-  describe("Withdraw/Unlocking of LockUnlock tokens", function () {
-    it("Should unlock required amount of tokens for the sender (receiver)", async () => {
-      await gateway
-        .connect(owner)
-        .registerToken(myToken.target, tokenID, "", "");
-
-      const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
-        await nativeTokenWallet.getAddress()
-      );
-
-      await myToken
-        .connect(nativeTokenWalletContract)
-        .mint(receiver.address, 10000);
-
-      await myToken.connect(receiver).approve(nativeTokenWallet.target, 1000);
-
-      const abiCoder = ethers.AbiCoder.defaultAbiCoder();
-
-      const decoded = abiCoder.decode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonZeroToken
-      );
-
-      const [tupleValue] = decoded;
-      const [[decodedAddress, decodedAmount]] = tupleValue[3];
-
-      await gateway.deposit(
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonZeroToken
-      );
 
       const receiverbalance = await myToken.balanceOf(receiver.address);
       const nativeTokenWalletBalance = await myToken.balanceOf(
@@ -96,16 +89,14 @@ describe("Transfering LockUnlock tokens", function () {
         .connect(receiver)
         .withdraw(1, receiverWithdrawNonZeroToken, 100, value);
 
-      await expect(
-        myToken.balanceOf(receiverWithdrawNonZeroToken[0].receiver)
-      ).to.eventually.equal(
-        receiverbalance + BigInt(receiverWithdrawNonZeroToken[0].amount)
+      expect(
+        await myToken.balanceOf(receiverWithdrawNonZeroToken[0].receiver)
+      ).to.equal(
+        receiverbalance - BigInt(receiverWithdrawNonZeroToken[0].amount)
       );
 
-      await expect(
-        myToken.balanceOf(nativeTokenWallet.target)
-      ).to.eventually.equal(
-        nativeTokenWalletBalance -
+      expect(await myToken.balanceOf(nativeTokenWalletContract)).to.equal(
+        nativeTokenWalletBalance +
           BigInt(receiverWithdrawNonZeroToken[0].amount)
       );
     });
@@ -119,6 +110,7 @@ describe("Transfering LockUnlock tokens", function () {
         await nativeTokenWallet.getAddress()
       );
 
+      //minting tokens for receiver
       await myToken
         .connect(nativeTokenWalletContract)
         .mint(receiver.address, 10000);
@@ -132,10 +124,12 @@ describe("Transfering LockUnlock tokens", function () {
         dataNonZeroToken
       );
 
-      await gateway.deposit(
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonZeroToken
+      const [tupleValue] = decoded;
+      const [[decodedAddress, decodedAmount]] = tupleValue[3];
+
+      const receiverbalance = await myToken.balanceOf(receiver.address);
+      const nativeTokenWalletBalance = await myToken.balanceOf(
+        nativeTokenWallet.target
       );
 
       const value = { value: ethers.parseUnits("100", "wei") };
@@ -164,8 +158,6 @@ describe("Transfering LockUnlock tokens", function () {
   let dataNonZeroToken: any;
   let nativeTokenWallet: any;
   let receiver: any;
-  let receiverWithdrawMixToken: any;
-  let receiverWithdrawZeroToken: any;
   let receiverWithdrawNonZeroToken: any;
 
   beforeEach(async function () {
@@ -176,8 +168,6 @@ describe("Transfering LockUnlock tokens", function () {
     dataNonZeroToken = fixture.dataNonZeroToken;
     nativeTokenWallet = fixture.nativeTokenWallet;
     receiver = fixture.receiver;
-    receiverWithdrawMixToken = fixture.receiverWithdrawMixToken;
-    receiverWithdrawZeroToken = fixture.receiverWithdrawZeroToken;
     receiverWithdrawNonZeroToken = fixture.receiverWithdrawNonZeroToken;
   });
 });

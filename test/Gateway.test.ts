@@ -2,7 +2,6 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
-import { token } from "../typechain-types/@openzeppelin/contracts";
 
 describe("Gateway Contract", function () {
   it("SetDependencies should fail if Gateway or NetiveToken are Zero Address", async () => {
@@ -114,7 +113,7 @@ describe("Gateway Contract", function () {
     await expect(
       gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawMixToken, 100, value)
+        .withdraw(1, receiverWithdrawZeroToken, 100, value)
     ).to.to.be.revertedWithCustomError(gateway, "WrongValue");
   });
 
@@ -131,7 +130,7 @@ describe("Gateway Contract", function () {
     expect(await gateway.minBridgingAmount()).to.equal(100);
   });
 
-  it("Withdraw should fail if briding amount is zero", async () => {
+  it("Withdraw should fail if briding amount is less then minBridgingAmount", async () => {
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -149,6 +148,23 @@ describe("Gateway Contract", function () {
       gateway
         .connect(receiver)
         .withdraw(1, receiverWithdrawZeroTokenInvalidAmount, 100, value)
+    ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
+  });
+
+  it("Withdraw should fail if colored coin briding amount is less then minBridgingAmount", async () => {
+    await gateway.connect(owner).registerToken(myToken.target, tokenID, "", "");
+
+    const value = { value: ethers.parseUnits("1", "wei") };
+
+    const receiverWithdrawNonZeroTokenInvalidAmount = structuredClone(
+      receiverWithdrawNonZeroToken
+    );
+    receiverWithdrawNonZeroTokenInvalidAmount[0].amount = 1;
+
+    await expect(
+      gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdrawNonZeroTokenInvalidAmount, 100, value)
     ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
   });
 
@@ -351,6 +367,7 @@ describe("Gateway Contract", function () {
     expect(depositEvent?.args?.data).to.be.undefined;
   });
 
+  let tokenID = 1;
   let owner: any;
   let receiver: any;
   let gateway: any;
@@ -358,9 +375,11 @@ describe("Gateway Contract", function () {
   let nativeTokenWallet: any;
   let tokenFactory: any;
   let validatorsc: any;
-  let receiverWithdrawMixToken: any;
   let receiverWithdrawZeroToken: any;
+  let receiverWithdrawNonZeroToken: any;
   let dataZeroToken: any;
+  let dataNonZeroToken: any;
+  let myToken: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
@@ -372,8 +391,10 @@ describe("Gateway Contract", function () {
     nativeTokenWallet = fixture.nativeTokenWallet;
     tokenFactory = fixture.tokenFactory;
     validatorsc = fixture.validatorsc;
-    receiverWithdrawMixToken = fixture.receiverWithdrawMixToken;
     receiverWithdrawZeroToken = fixture.receiverWithdrawZeroToken;
+    receiverWithdrawNonZeroToken = fixture.receiverWithdrawNonZeroToken;
     dataZeroToken = fixture.dataZeroToken;
+    dataNonZeroToken = fixture.dataNonZeroToken;
+    myToken = fixture.myToken;
   });
 });

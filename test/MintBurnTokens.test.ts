@@ -39,9 +39,7 @@ describe("Transfering MintBurn tokens", function () {
       const [tupleValue] = decoded;
       const [[decodedAddress, decodedAmount]] = tupleValue[3];
 
-      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
-        0
-      );
+      expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(0);
 
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -49,7 +47,7 @@ describe("Transfering MintBurn tokens", function () {
         dataNonZeroToken
       );
 
-      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
+      expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
         decodedAmount
       );
     });
@@ -65,17 +63,6 @@ describe("Transfering MintBurn tokens", function () {
       )
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(1);
-    });
-
-    it("Should revert with InvalidBurnAddress if function caller is not 'receiver'", async () => {
-      const tx = await gateway
-        .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
-
-      const value = { value: ethers.parseUnits("200", "wei") };
-      await expect(gateway.withdraw(1, receiverWithdrawMixToken, 100, value))
-        .to.be.revertedWithCustomError(gateway, "InvalidBurnOrLockAddress")
-        .withArgs(receiver.address);
     });
 
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
@@ -112,9 +99,7 @@ describe("Transfering MintBurn tokens", function () {
       const [tupleValue] = decoded;
       const [[decodedAddress, decodedAmount]] = tupleValue[3];
 
-      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
-        0
-      );
+      expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(0);
 
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -122,7 +107,7 @@ describe("Transfering MintBurn tokens", function () {
         dataNonZeroToken
       );
 
-      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
+      expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
         decodedAmount
       );
 
@@ -131,7 +116,7 @@ describe("Transfering MintBurn tokens", function () {
         .connect(receiver)
         .withdraw(1, receiverWithdrawNonZeroToken, 100, value);
 
-      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
+      expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
         decodedAmount - BigInt(receiverWithdrawNonZeroToken[0].amount)
       );
     });
@@ -170,9 +155,7 @@ describe("Transfering MintBurn tokens", function () {
       const [tupleValue] = decoded;
       const [[decodedAddress, decodedAmount]] = tupleValue[3];
 
-      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
-        0
-      );
+      expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(0);
 
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -180,7 +163,7 @@ describe("Transfering MintBurn tokens", function () {
         dataNonZeroToken
       );
 
-      await expect(myTokenERC20.balanceOf(decodedAddress)).to.eventually.equal(
+      expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
         decodedAmount
       );
 
@@ -208,7 +191,6 @@ describe("Transfering MintBurn tokens", function () {
   let gateway: any;
   let dataNonZeroToken: any;
   let receiver: any;
-  let receiverWithdrawMixToken: any;
   let receiverWithdrawNonZeroToken: any;
   let receiverWithdrawZeroToken: any;
 
@@ -219,7 +201,6 @@ describe("Transfering MintBurn tokens", function () {
     gateway = fixture.gateway;
     dataNonZeroToken = fixture.dataNonZeroToken;
     receiver = fixture.receiver;
-    receiverWithdrawMixToken = fixture.receiverWithdrawMixToken;
     receiverWithdrawNonZeroToken = fixture.receiverWithdrawNonZeroToken;
     receiverWithdrawZeroToken = fixture.receiverWithdrawZeroToken;
   });
