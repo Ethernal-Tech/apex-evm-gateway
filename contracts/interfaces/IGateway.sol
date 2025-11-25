@@ -24,7 +24,7 @@ interface IGateway is IGatewayStructs {
 
     function registerToken(
         address lockUnlockSCAddress,
-        uint256 tokenId,
+        uint16 tokenId,
         string memory name,
         string memory symbol
     ) external;

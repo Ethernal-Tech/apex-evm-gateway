@@ -30,10 +30,10 @@ contract NativeTokenWallet is
     address public predicateAddress;
 
     /// mapping tokenId to bool indicating token is LockUnlock token
-    mapping(uint256 => bool) public isLockUnlockToken;
+    mapping(uint16 => bool) public isLockUnlockToken;
 
     /// mapping tokenId to token address
-    mapping(uint256 => address) public tokenAddress;
+    mapping(uint16 => address) public tokenAddress;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -69,16 +69,15 @@ contract NativeTokenWallet is
     function deposit(
         address _account,
         uint256 _amount,
-        uint256 _tokenId
+        uint16 _tokenId
     ) external onlyPredicate {
         if (_tokenId == 0) {
             (bool success, ) = _account.call{value: _amount}("");
-
             // Revert the transaction if the transfer fails
             if (!success) revert TransferFailed();
         } else if (isLockUnlockToken[_tokenId]) {
             IERC20 token = IERC20(tokenAddress[_tokenId]);
-            token.safeTransferFrom(_account, address(this), _amount);
+            token.safeTransfer(_account, _amount);
         } else {
             MyToken token = MyToken(tokenAddress[_tokenId]);
             token.mint(_account, _amount);
@@ -95,28 +94,26 @@ contract NativeTokenWallet is
     /// @custom:reverts None Explicitly, but will revert if token transfer or burn fails.
     /// @custom:security Consider verifying receiver addresses before transfer to avoid accidental burns or misdirected transfers.
     function withdraw(
+        address _sender,
         ReceiverWithdraw calldata _receiver
     ) external override onlyPredicate {
-        uint256 _tokenId = _receiver.tokenId;
+        uint16 _tokenId = _receiver.tokenId;
         if (isLockUnlockToken[_tokenId]) {
             IERC20 token = IERC20(tokenAddress[_tokenId]);
 
-            token.safeTransfer(
-                _stringToAddress(_receiver.receiver),
-                _receiver.amount
-            );
+            token.safeTransferFrom(_sender, address(this), _receiver.amount);
         } else {
             MyToken token = MyToken(tokenAddress[_tokenId]);
-            token.burn(_stringToAddress(_receiver.receiver), _receiver.amount);
+            token.burn(_sender, _receiver.amount);
         }
     }
 
-    function setTokenAsLockUnlockToken(uint256 tokenId) external onlyPredicate {
+    function setTokenAsLockUnlockToken(uint16 tokenId) external onlyPredicate {
         isLockUnlockToken[tokenId] = true;
     }
 
     function setTokenAddress(
-        uint256 _tokenId,
+        uint16 _tokenId,
         address _tokenAddress
     ) external onlyPredicate {
         tokenAddress[_tokenId] = _tokenAddress;

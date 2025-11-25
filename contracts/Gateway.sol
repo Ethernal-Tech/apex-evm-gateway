@@ -97,7 +97,7 @@ contract Gateway is
     /// @custom:emits TokenRegistered Emitted after successful registration of a token.
     function registerToken(
         address _lockUnlockSCAddress,
-        uint256 _tokenId,
+        uint16 _tokenId,
         string memory _name,
         string memory _symbol
     ) external onlyOwner {
@@ -185,7 +185,7 @@ contract Gateway is
         uint256 amountSum = _feeAmount;
 
         for (uint256 i; i < _receivers.length; i++) {
-            uint256 _tokenCoinId = _receivers[i].tokenId;
+            uint16 _tokenCoinId = _receivers[i].tokenId;
             if (_tokenCoinId == 0) {
                 uint256 _amount = _receivers[i].amount;
                 if (_amount < minBridgingAmount)
@@ -195,28 +195,26 @@ contract Gateway is
                 if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {
                     revert TokenNotRegistered(_tokenCoinId);
                 }
+                uint256 _amount = _receivers[i].amount;
+                if (_amount < minBridgingAmount)
+                    revert InvalidBridgingAmount(minBridgingAmount, _amount);
 
-                if (msg.sender != _stringToAddress(_receivers[i].receiver)) {
-                    revert InvalidBurnOrLockAddress(_receivers[i].receiver);
-                }
-
-                nativeTokenPredicate.withdraw(_receivers[i]);
+                nativeTokenPredicate.withdraw(msg.sender, _receivers[i]);
             }
 
             if (msg.value != amountSum) {
                 revert WrongValue(amountSum, msg.value);
             }
-
-            _transferAmountToWallet(amountSum);
-
-            emit Withdraw(
-                _destinationChainId,
-                msg.sender,
-                _receivers,
-                _feeAmount,
-                amountSum
-            );
         }
+        _transferAmountToWallet(amountSum);
+
+        emit Withdraw(
+            _destinationChainId,
+            msg.sender,
+            _receivers,
+            _feeAmount,
+            amountSum
+        );
     }
 
     /// @notice Updates validator chain data.
@@ -251,7 +249,7 @@ contract Gateway is
         emit MinAmountsUpdated(_minFeeAmount, _minBridgingAmount);
     }
 
-    function getTokenAddress(uint256 _tokenId) external view returns (address) {
+    function getTokenAddress(uint16 _tokenId) external view returns (address) {
         return nativeTokenPredicate.getTokenAddress(_tokenId);
     }
 

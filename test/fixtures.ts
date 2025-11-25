@@ -214,8 +214,13 @@ export async function deployGatewayFixtures() {
     },
     {
       receiver: receiver.address,
-      amount: 100,
+      amount: 101,
       tokenId: 1,
+    },
+    {
+      receiver: receiver.address,
+      amount: 102,
+      tokenId: 2,
     },
   ];
 
@@ -259,6 +264,22 @@ export async function deployGatewayFixtures() {
     [[1, blockNumber + 100, 1, [[receiver.address, 1000, 1]]]]
   );
 
+  const dataMixToken = abiCoder.encode(
+    ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+    [
+      [
+        1,
+        blockNumber + 100,
+        1,
+        [
+          [receiver.address, 100, 0],
+          [receiver.address, 101, 1],
+          [receiver.address, 102, 2],
+        ],
+      ],
+    ]
+  );
+
   const validatorSetChange = {
     batchId: 1n,
     _validatorsSetNumber: 1n,
@@ -283,6 +304,7 @@ export async function deployGatewayFixtures() {
     receiverWithdrawMixToken,
     dataZeroToken,
     dataNonZeroToken,
+    dataMixToken,
     validatorsAddresses,
     validatorSetChange,
   };
