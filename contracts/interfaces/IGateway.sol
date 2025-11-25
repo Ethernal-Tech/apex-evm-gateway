@@ -13,7 +13,8 @@ interface IGateway is IGatewayStructs {
     function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
+        uint256 _fee,
+        uint256 _operationFee
     ) external payable;
 
     function updateValidatorsChainData(

@@ -5,28 +5,41 @@ import { deployGatewayFixtures } from "./fixtures";
 
 describe("Gateway Contract", function () {
   it("SetDependencies should fail if Gateway or NetiveToken are Zero Address", async () => {
-    const { owner, gateway, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, validatorsc } = await loadFixture(
+      deployGatewayFixtures
+    );
 
     await expect(
-      gateway.connect(owner).setDependencies(ethers.ZeroAddress, validatorsc.target)
+      gateway
+        .connect(owner)
+        .setDependencies(ethers.ZeroAddress, validatorsc.target)
     ).to.to.be.revertedWithCustomError(gateway, "ZeroAddress");
   });
 
   it("SetDependencies should fail if not called by owner", async () => {
-    const { receiver, gateway, nativeTokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenPredicate, validatorsc } =
+      await loadFixture(deployGatewayFixtures);
 
     await expect(
-      gateway.connect(receiver).setDependencies(nativeTokenPredicate.target, validatorsc.target)
+      gateway
+        .connect(receiver)
+        .setDependencies(nativeTokenPredicate.target, validatorsc.target)
     ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
   it("SetDependencies and validate initialization", async () => {
-    const { owner, gateway, nativeTokenPredicate, validatorsc } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, nativeTokenPredicate, validatorsc } =
+      await loadFixture(deployGatewayFixtures);
 
-    await expect(gateway.connect(owner).setDependencies(nativeTokenPredicate.target, validatorsc.target)).to.not.be
-      .reverted;
+    await expect(
+      gateway
+        .connect(owner)
+        .setDependencies(nativeTokenPredicate.target, validatorsc.target)
+    ).to.not.be.reverted;
 
-    expect(await gateway.nativeTokenPredicate()).to.equal(nativeTokenPredicate.target);
+    expect(await gateway.nativeTokenPredicate()).to.equal(
+      nativeTokenPredicate.target
+    );
     expect(await gateway.validators()).to.equal(validatorsc.target);
   });
 
@@ -39,13 +52,16 @@ describe("Gateway Contract", function () {
       data
     );
     const depositReceipt = await depositTx.wait();
-    const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
+    const depositEvent = depositReceipt.logs.find(
+      (log) => log.fragment && log.fragment.name === "Deposit"
+    );
 
     expect(depositEvent?.args?.data).to.equal(data);
   });
 
   it("Withdraw sucess", async () => {
-    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } =
+      await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
@@ -55,27 +71,40 @@ describe("Gateway Contract", function () {
       data
     );
 
-    const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
+    const nativeTokenWalletBefore = await ethers.provider.getBalance(
+      nativeTokenWalletAddress
+    );
 
-    const value = { value: ethers.parseUnits("200", "wei") };
-    const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
+    const value = { value: ethers.parseUnits("250", "wei") };
+    const withdrawTx = await gateway
+      .connect(receiver)
+      .withdraw(1, receiverWithdraw, 100, 50, value);
     const withdrawReceipt = await withdrawTx.wait();
-    const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
+    const withdrawEvent = withdrawReceipt.logs.find(
+      (log) => log.fragment && log.fragment.name === "Withdraw"
+    );
 
-    const nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
+    const nativeTokenWalletAfter = await ethers.provider.getBalance(
+      nativeTokenWalletAddress
+    );
 
-    expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + BigInt(200));
+    expect(nativeTokenWalletAfter).to.equal(
+      nativeTokenWalletBefore + BigInt(250)
+    );
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
     expect(withdrawEvent?.args?.sender).to.equal(receiver);
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-    expect(withdrawEvent?.args?.feeAmount).to.equal(100);
-    expect(withdrawEvent?.args?.value).to.equal(200);
+    expect(withdrawEvent?.args?.fee).to.equal(100);
+    expect(withdrawEvent?.args?.operationFee).to.equal(50);
+    expect(withdrawEvent?.args?.value).to.equal(250);
   });
 
   it("Withdraw should fail if not enough value is submitted", async () => {
-    const { receiver, gateway, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, receiverWithdraw, data } = await loadFixture(
+      deployGatewayFixtures
+    );
 
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -85,32 +114,35 @@ describe("Gateway Contract", function () {
 
     const value = { value: ethers.parseUnits("1", "wei") };
 
-    await expect(gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value)).to.to.be.revertedWithCustomError(
-      gateway,
-      "WrongValue"
-    );
+    await expect(
+      gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, 50, value)
+    ).to.to.be.revertedWithCustomError(gateway, "WrongValue");
   });
 
   it("Set feeAmount should fail if not called by owner", async () => {
     const { receiver, gateway } = await loadFixture(deployGatewayFixtures);
 
-    await expect(gateway.connect(receiver).setMinAmounts(200, 100)).to.to.be.revertedWithCustomError(
-      gateway,
-      "OwnableUnauthorizedAccount"
-    );
+    await expect(
+      gateway.connect(receiver).setMinAmounts(200, 100, 50)
+    ).to.to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
   it("Set feeAmount should succeed if called by owner", async () => {
     const { owner, gateway } = await loadFixture(deployGatewayFixtures);
 
-    expect(await gateway.minFeeAmount()).to.equal(100);
-    await gateway.connect(owner).setMinAmounts(200, 100);
-    expect(await gateway.minFeeAmount()).to.equal(200);
-    expect(await gateway.minBridgingAmount()).to.equal(100);
+    expect(await gateway.minFee()).to.equal(100);
+    expect(await gateway.minBridgingAmount()).to.equal(50);
+    expect(await gateway.minOperationFee()).to.equal(50);
+    await gateway.connect(owner).setMinAmounts(200, 200, 20);
+    expect(await gateway.minFee()).to.equal(200);
+    expect(await gateway.minBridgingAmount()).to.equal(200);
+    expect(await gateway.minOperationFee()).to.equal(20);
   });
 
   it("Withdraw should fail if briding amount is zero", async () => {
-    const { receiver, gateway, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, receiverWithdraw, data } = await loadFixture(
+      deployGatewayFixtures
+    );
 
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -128,12 +160,15 @@ describe("Gateway Contract", function () {
     ];
 
     await expect(
-      gateway.connect(receiver).withdraw(1, receiverWithdrawZero, 100, value)
+      gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdrawZero, 100, 50, value)
     ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
   });
 
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
-    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } =
+      await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
@@ -168,35 +203,49 @@ describe("Gateway Contract", function () {
 
     for (let i = 0; i < 100; i++) {
       const depositReceipt = await depositTXs[i].wait();
-      const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
+      const depositEvent = depositReceipt.logs.find(
+        (log) => log.fragment && log.fragment.name === "Deposit"
+      );
 
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
     }
 
-    const value = { value: ethers.parseUnits("200", "wei") };
+    const value = { value: ethers.parseUnits("250", "wei") };
 
-    const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
+    const nativeTokenWalletBefore = await ethers.provider.getBalance(
+      nativeTokenWalletAddress
+    );
 
     for (let i = 0; i < 100; i++) {
-      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
+      const withdrawTx = await gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdraw, 100, 50, value);
       const withdrawReceipt = await withdrawTx.wait();
-      const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
+      const withdrawEvent = withdrawReceipt.logs.find(
+        (log) => log.fragment && log.fragment.name === "Withdraw"
+      );
 
-      let nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
+      let nativeTokenWalletAfter = await ethers.provider.getBalance(
+        nativeTokenWalletAddress
+      );
 
-      expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + BigInt(200 * (i + 1)));
+      expect(nativeTokenWalletAfter).to.equal(
+        nativeTokenWalletBefore + BigInt(250 * (i + 1))
+      );
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
       expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-      expect(withdrawEvent?.args?.feeAmount).to.equal(100);
-      expect(withdrawEvent?.args?.value).to.equal(200);
+      expect(withdrawEvent?.args?.fee).to.equal(100);
+      expect(withdrawEvent?.args?.operationFee).to.equal(50);
+      expect(withdrawEvent?.args?.value).to.equal(250);
     }
   });
 
   it("Bunch of consecutive deposits/withraws", async () => {
-    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } = await loadFixture(deployGatewayFixtures);
+    const { receiver, gateway, nativeTokenWallet, receiverWithdraw, data } =
+      await loadFixture(deployGatewayFixtures);
 
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
@@ -229,39 +278,56 @@ describe("Gateway Contract", function () {
       depositTXs.push(depositTX);
     }
 
-    const value = { value: ethers.parseUnits("200", "wei") };
+    const value = { value: ethers.parseUnits("250", "wei") };
 
-    let nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
+    let nativeTokenWalletBefore = await ethers.provider.getBalance(
+      nativeTokenWalletAddress
+    );
 
     for (let i = 0; i < 100; i++) {
       const depositReceipt = await depositTXs[i].wait();
-      const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
+      const depositEvent = depositReceipt.logs.find(
+        (log) => log.fragment && log.fragment.name === "Deposit"
+      );
 
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
 
-      const withdrawTx = await gateway.connect(receiver).withdraw(1, receiverWithdraw, 100, value);
+      const withdrawTx = await gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdraw, 100, 50, value);
       const withdrawReceipt = await withdrawTx.wait();
-      const withdrawEvent = withdrawReceipt.logs.find((log) => log.fragment && log.fragment.name === "Withdraw");
+      const withdrawEvent = withdrawReceipt.logs.find(
+        (log) => log.fragment && log.fragment.name === "Withdraw"
+      );
 
-      let nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
+      let nativeTokenWalletAfter = await ethers.provider.getBalance(
+        nativeTokenWalletAddress
+      );
 
-      expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + BigInt(200 * (i + 1)));
+      expect(nativeTokenWalletAfter).to.equal(
+        nativeTokenWalletBefore + BigInt(250 * (i + 1))
+      );
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
       expect(withdrawEvent?.args?.receivers[0].receiver).to.equal("something");
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-      expect(withdrawEvent?.args?.feeAmount).to.equal(100);
-      expect(withdrawEvent?.args?.value).to.equal(200);
+      expect(withdrawEvent?.args?.fee).to.equal(100);
+      expect(withdrawEvent?.args?.operationFee).to.equal(50);
+      expect(withdrawEvent?.args?.value).to.equal(250);
     }
   });
   it("Direct Deposit should emit FundsDeposited event", async function () {
-    const { owner, gateway, nativeTokenWallet } = await loadFixture(deployGatewayFixtures);
+    const { owner, gateway, nativeTokenWallet } = await loadFixture(
+      deployGatewayFixtures
+    );
 
     const gatewayAddress = await gateway.getAddress();
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
-    const nativeTokenWalletBefore = await ethers.provider.getBalance(nativeTokenWalletAddress);
+    const nativeTokenWalletBefore = await ethers.provider.getBalance(
+      nativeTokenWalletAddress
+    );
 
     await expect(
       owner.sendTransaction({
@@ -272,7 +338,9 @@ describe("Gateway Contract", function () {
       .to.emit(gateway, "FundsDeposited")
       .withArgs(owner.address, 100);
 
-    const nativeTokenWalletAfter = await ethers.provider.getBalance(nativeTokenWalletAddress);
+    const nativeTokenWalletAfter = await ethers.provider.getBalance(
+      nativeTokenWalletAddress
+    );
 
     expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + 100n);
   });
@@ -295,8 +363,12 @@ it("Deposit should emit TTLExpired if TTL expired", async () => {
     dataTTLExpired
   );
   const depositReceipt = await depositTx.wait();
-  const ttlEvent = depositReceipt.logs.find((log) => log.fragment.name === "TTLExpired");
-  const depositEvent = depositReceipt.logs.find((log) => log.fragment && log.fragment.name === "Deposit");
+  const ttlEvent = depositReceipt.logs.find(
+    (log) => log.fragment.name === "TTLExpired"
+  );
+  const depositEvent = depositReceipt.logs.find(
+    (log) => log.fragment && log.fragment.name === "Deposit"
+  );
 
   expect(ttlEvent?.args?.data).to.equal(dataTTLExpired);
   expect(depositEvent?.args?.data).to.be.undefined;
