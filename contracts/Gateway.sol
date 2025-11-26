@@ -4,10 +4,14 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
-import {IValidators} from "./interfaces/IValidators.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
+import {TokenFactory} from "./tokens/TokenFactory.sol";
+import {Utils} from "./Utils.sol";
+import {Validators} from "./Validators.sol";
 
 /// @title Gateway Contract
 /// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
@@ -16,10 +20,14 @@ contract Gateway is
     IGateway,
     Initializable,
     OwnableUpgradeable,
+    Utils,
     UUPSUpgradeable
 {
+    using SafeERC20 for IERC20;
+
     NativeTokenPredicate public nativeTokenPredicate;
-    IValidators public validators;
+    Validators public validators;
+    TokenFactory public tokenFactory;
     uint256 public minFeeAmount;
     uint256 public minBridgingAmount;
 
@@ -47,16 +55,92 @@ contract Gateway is
     ) internal override onlyOwner {}
 
     function setDependencies(
-        address _nativeTokenPredicate,
-        address _validators
+        address _nativeTokenPredicateAddress,
+        address _tokenFactoryAddress,
+        address _validatorsAddress
     ) external onlyOwner {
-        if (_nativeTokenPredicate == address(0) || _validators == address(0))
-            revert ZeroAddress();
-        nativeTokenPredicate = NativeTokenPredicate(_nativeTokenPredicate);
-        validators = IValidators(_validators);
+        if (!_isContract(_nativeTokenPredicateAddress))
+            revert NotContractAddress(_nativeTokenPredicateAddress);
+
+        if (!_isContract(_tokenFactoryAddress))
+            revert NotContractAddress(_tokenFactoryAddress);
+
+        if (!_isContract(_validatorsAddress))
+            revert NotContractAddress(_validatorsAddress);
+
+        nativeTokenPredicate = NativeTokenPredicate(
+            _nativeTokenPredicateAddress
+        );
+        tokenFactory = TokenFactory(_tokenFactoryAddress);
+        validators = Validators(_validatorsAddress);
     }
 
-    /// @notice Deposits tokens into the system.
+    /// @notice Registers a new token, either by deploying a new ERC20 token via the TokenFactory
+    ///         or by linking an existing Lock/Unlock smart contract.
+    /// @dev
+    /// - If `_lockUnlockSCAddress` is the zero address, a new token is created using `tokenFactory`.
+    /// - If `_lockUnlockSCAddress` is non-zero, the function validates that it is a contract
+    ///   and not already registered as a Lock/Unlock token.
+    /// - A new `tokenId` must be provided and must not be already registered.
+    /// - Sets the token address in `nativeTokenPredicate` and, if applicable, marks it as a Lock/Unlock token.
+    /// - Emits a `TokenRegistered` event with the token’s metadata.
+    /// @param _lockUnlockSCAddress Address of an existing Lock/Unlock token contract,
+    ///        or `address(0)` if a new token should be created.
+    /// @param _tokenId Unique identifier for the token to register.
+    /// @param _name Name of the token to be registered or created.
+    /// @param _symbol Symbol of the token to be registered or created.
+    /// @custom:modifier onlyOwner Only the contract owner can register tokens.
+    /// @custom:reverts ZeroTokenId If `_tokenId` is zero.
+    /// @custom:reverts TokenIdAlreadyRegistered If `_tokenId` has already been registered.
+    /// @custom:reverts NotContractAddress If `_lockUnlockSCAddress` is not a valid contract.
+    /// @custom:reverts TokenAddressAlreadyRegistered If `_lockUnlockSCAddress` was already registered.
+    /// @custom:emits TokenRegistered Emitted after successful registration of a token.
+    function registerToken(
+        address _lockUnlockSCAddress,
+        uint16 _tokenId,
+        string memory _name,
+        string memory _symbol
+    ) external onlyOwner {
+        if (_tokenId == 0) {
+            revert ZeroTokenId();
+        }
+
+        if (nativeTokenPredicate.isTokenRegistered(_tokenId)) {
+            revert TokenIdAlreadyRegistered(_tokenId);
+        }
+
+        bool isLockUnlock = _lockUnlockSCAddress != address(0);
+        address _contractAddress;
+        if (!isLockUnlock) {
+            _contractAddress = tokenFactory.createToken(_name, _symbol);
+        } else if (!_isContract(_lockUnlockSCAddress)) {
+            revert NotContractAddress(_lockUnlockSCAddress);
+        }
+
+        nativeTokenPredicate.setTokenAddress(
+            _tokenId,
+            (isLockUnlock ? _lockUnlockSCAddress : _contractAddress)
+        );
+
+        if (isLockUnlock) {
+            nativeTokenPredicate.setTokenAsLockUnlockToken(_tokenId);
+        }
+
+        emit TokenRegistered(
+            _name,
+            _symbol,
+            _tokenId,
+            (isLockUnlock ? _lockUnlockSCAddress : _contractAddress),
+            isLockUnlock
+        );
+    }
+
+    /// @notice Deposits tokens into the system
+    /// @notice Case 1: currency - native tokens will be transferd from nativeTokenWallet to receivers address
+    /// @notice Case 2: LockUnlock - token will be transfered from sender to nativeTokenWallet address
+    /// on LockUnlock ERC20 address, even will be emited
+    /// @notice Case 3: MintBurn - tokens will be minted and transfered to receivers account
+    /// on MintBurn ERC20
     /// @param _signature The BLS signature for validation.
     /// @param _bitmap The bitmap associated with the BLS signature.
     /// @param _data The deposit data in bytes format.
@@ -72,6 +156,7 @@ contract Gateway is
         if (!valid) revert InvalidSignature();
 
         bool success = nativeTokenPredicate.deposit(_data, msg.sender);
+
         if (success) {
             emit Deposit(_data);
         } else {
@@ -80,6 +165,11 @@ contract Gateway is
     }
 
     /// @notice Withdraws tokens from the system.
+    /// @notice Case 1: currency, native tokens will be transfered from senderto nativeTokenWallet
+    /// @notice Case 2: LockUnlock tokens will be transfered from nativeTokenWallet address
+    /// to receiver addres on LockUnlock ERC20, even will be emited
+    /// @notice Case 3: MintBurn tokens swill be removed from senders address and burnt
+    /// on MintBurn ERC20
     /// @param _destinationChainId The ID of the destination chain.
     /// @param _receivers The array of receivers and their withdrawal amounts.
     /// @param _feeAmount The fee for the withdrawal process.
@@ -91,22 +181,30 @@ contract Gateway is
     ) external payable {
         if (_feeAmount < minFeeAmount)
             revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
-        uint256 _amountLength = _receivers.length;
 
         uint256 amountSum = _feeAmount;
 
-        for (uint256 i; i < _amountLength; i++) {
+        for (uint256 i; i < _receivers.length; i++) {
+            uint16 _tokenCoinId = _receivers[i].tokenId;
             uint256 _amount = _receivers[i].amount;
             if (_amount < minBridgingAmount)
                 revert InvalidBridgingAmount(minBridgingAmount, _amount);
-            amountSum += _amount;
-        }
 
-        if (msg.value != amountSum) {
-            revert WrongValue(amountSum, msg.value);
-        }
+            if (_tokenCoinId == 0) {
+                amountSum += _amount;
+            } else {
+                if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {
+                    revert TokenNotRegistered(_tokenCoinId);
+                }
 
-        transferAmountToWallet(amountSum);
+                nativeTokenPredicate.withdraw(msg.sender, _receivers[i]);
+            }
+
+            if (msg.value != amountSum) {
+                revert WrongValue(amountSum, msg.value);
+            }
+        }
+        _transferAmountToWallet(amountSum);
 
         emit Withdraw(
             _destinationChainId,
@@ -127,27 +225,12 @@ contract Gateway is
         uint256 _bitmap,
         bytes calldata _data
     ) external {
-        bytes32 _hash = keccak256(_data);
-        bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
-
-        if (!valid) revert InvalidSignature();
+        _validateSignature(_signature, _bitmap, _data);
 
         bool success = validators.updateValidatorsChainData(_data);
         if (success) {
             emit ValidatorSetUpdatedGW(_data);
         }
-    }
-
-    /// @notice Transfers an amount to the native token wallet.
-    /// @param value The amount to be transferred.
-    /// @dev Reverts if the transfer fails.
-    function transferAmountToWallet(uint256 value) internal {
-        address nativeTokenWalletAddress = address(
-            nativeTokenPredicate.nativeTokenWallet()
-        );
-        (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
-        // Revert the transaction if the transfer fails
-        if (!success) revert TransferFailed();
     }
 
     /// @notice Sets the minimal amounts for fee and bridging.
@@ -164,10 +247,39 @@ contract Gateway is
         emit MinAmountsUpdated(_minFeeAmount, _minBridgingAmount);
     }
 
+    function getTokenAddress(uint16 _tokenId) external view returns (address) {
+        return nativeTokenPredicate.getTokenAddress(_tokenId);
+    }
+
+    /// @notice Validates the BLS signature.
+
+    function _validateSignature(
+        bytes calldata _signature,
+        uint256 _bitmap,
+        bytes calldata _data
+    ) internal view {
+        bytes32 _hash = keccak256(_data);
+        bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
+
+        if (!valid) revert InvalidSignature();
+    }
+
+    /// @notice Transfers an amount to the native token wallet.
+    /// @param value The amount to be transferred.
+    /// @dev Reverts if the transfer fails.
+    function _transferAmountToWallet(uint256 value) internal {
+        address nativeTokenWalletAddress = address(
+            nativeTokenPredicate.nativeTokenWallet()
+        );
+        (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
+        // Revert the transaction if the transfer fails
+        if (!success) revert TransferFailed();
+    }
+
     /// @notice Handles receiving Ether and transfers it to the native token wallet.
     /// @dev Emits a `FundsDeposited` event upon receiving Ether.
     receive() external payable {
-        transferAmountToWallet(msg.value);
+        _transferAmountToWallet(msg.value);
 
         emit FundsDeposited(msg.sender, msg.value);
     }

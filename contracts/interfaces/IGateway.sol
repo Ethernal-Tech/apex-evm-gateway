@@ -21,4 +21,11 @@ interface IGateway is IGatewayStructs {
         uint256 _bitmap,
         bytes calldata _data
     ) external;
+
+    function registerToken(
+        address lockUnlockSCAddress,
+        uint16 tokenId,
+        string memory name,
+        string memory symbol
+    ) external;
 }

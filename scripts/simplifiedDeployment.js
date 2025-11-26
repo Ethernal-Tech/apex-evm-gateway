@@ -9,7 +9,9 @@ const ERC1967ProxyJson = require("../artifacts/@openzeppelin/contracts/proxy/ERC
 
 const main = async () => {
   if (process.argv.slice(2).length < 4) {
-    console.log("Please provide 4 arguments: BLADE_RPC_URL, BRIDGE_ADDRESS, NEXUS_RPC_URL, NEXUS_PRIVATE_KEY");
+    console.log(
+      "Please provide 4 arguments: BLADE_RPC_URL, BRIDGE_ADDRESS, NEXUS_RPC_URL, NEXUS_PRIVATE_KEY"
+    );
     process.exit(1);
   }
 
@@ -21,7 +23,11 @@ const main = async () => {
   //Getting validatorsData from Blade
   let provider = new JsonRpcProvider(BLADE_RPC_URL);
 
-  const contract = new ethers.Contract(BRIDGE_ADDRESS, config.Bridge.getValidatorsChainData, provider);
+  const contract = new ethers.Contract(
+    BRIDGE_ADDRESS,
+    config.Bridge.getValidatorsChainData,
+    provider
+  );
 
   console.log("--- Getting validatorsChainData from Blade");
   const validatorsChainData = await contract.getValidatorsChainData(2);
@@ -44,7 +50,11 @@ const main = async () => {
 
   const wallet = new ethers.Wallet(NEXUS_PRIVATE_KEY, provider);
 
-  const gatewayFactory = new ethers.ContractFactory(gatewayJson.abi, gatewayJson.bytecode, wallet);
+  const gatewayFactory = new ethers.ContractFactory(
+    gatewayJson.abi,
+    gatewayJson.bytecode,
+    wallet
+  );
   const gatewayLogic = await gatewayFactory.deploy();
   await gatewayLogic.waitForDeployment();
   console.log("Gateway logic", gatewayLogic.target);
@@ -69,7 +79,11 @@ const main = async () => {
 
   console.log("NativeTokenWallet logic", nativeTokenWalletLogic.target);
 
-  const validatorscFactory = new ethers.ContractFactory(validatorsJson.abi, validatorsJson.bytecode, wallet);
+  const validatorscFactory = new ethers.ContractFactory(
+    validatorsJson.abi,
+    validatorsJson.bytecode,
+    wallet
+  );
   const validatorsLogic = await validatorscFactory.deploy();
   await validatorsLogic.waitForDeployment();
 
@@ -78,32 +92,63 @@ const main = async () => {
   console.log("--- Deploying the Proxy Contracts");
   const initData = gatewayLogic.interface.encodeFunctionData("initialize", []);
 
-  const ProxyFactory = new ethers.ContractFactory(ERC1967ProxyJson.abi, ERC1967ProxyJson.bytecode, wallet);
+  const ProxyFactory = new ethers.ContractFactory(
+    ERC1967ProxyJson.abi,
+    ERC1967ProxyJson.bytecode,
+    wallet
+  );
 
-  const gatewayProxyContract = await ProxyFactory.deploy(gatewayLogic.target, initData);
+  const gatewayProxyContract = await ProxyFactory.deploy(
+    gatewayLogic.target,
+    initData
+  );
   await gatewayProxyContract.waitForDeployment();
 
-  console.log(`Gateway Proxy contract deployed at: ${gatewayProxyContract.target}`);
+  console.log(
+    `Gateway Proxy contract deployed at: ${gatewayProxyContract.target}`
+  );
 
-  const nativeTokenPredicateProxyContract = await ProxyFactory.deploy(nativeTokenPredicateLogic.target, initData);
+  const nativeTokenPredicateProxyContract = await ProxyFactory.deploy(
+    nativeTokenPredicateLogic.target,
+    initData
+  );
   await nativeTokenPredicateProxyContract.waitForDeployment();
 
-  console.log(`NativeTokenPredicate Proxy contract deployed at: ${nativeTokenPredicateProxyContract.target}`);
+  console.log(
+    `NativeTokenPredicate Proxy contract deployed at: ${nativeTokenPredicateProxyContract.target}`
+  );
 
-  const nativeTokenWalletProxyContract = await ProxyFactory.deploy(nativeTokenWalletLogic.target, initData);
+  const nativeTokenWalletProxyContract = await ProxyFactory.deploy(
+    nativeTokenWalletLogic.target,
+    initData
+  );
   await nativeTokenWalletProxyContract.waitForDeployment();
 
-  console.log(`NativeTokenWallet Proxy contract deployed at: ${nativeTokenWalletProxyContract.target}`);
+  console.log(
+    `NativeTokenWallet Proxy contract deployed at: ${nativeTokenWalletProxyContract.target}`
+  );
 
-  const validatorsProxyContract = await ProxyFactory.deploy(validatorsLogic.target, initData);
+  const validatorsProxyContract = await ProxyFactory.deploy(
+    validatorsLogic.target,
+    initData
+  );
   await validatorsProxyContract.waitForDeployment();
 
-  console.log(`Validators Proxy contract deployed at: ${validatorsProxyContract.target}`);
+  console.log(
+    `Validators Proxy contract deployed at: ${validatorsProxyContract.target}`
+  );
 
   console.log("--- Setting dependencies");
-  const proxyGateway = new ethers.Contract(gatewayProxyContract.target, gatewayJson.abi, wallet);
+  const proxyGateway = new ethers.Contract(
+    gatewayProxyContract.target,
+    gatewayJson.abi,
+    wallet
+  );
 
-  await proxyGateway.setDependencies(nativeTokenPredicateProxyContract.target, validatorsProxyContract.target);
+  await proxyGateway.setDependencies(
+    nativeTokenPredicateProxyContract.target,
+    validatorsProxyContract.target
+  );
 
   const proxyNativeTokenPredicate = new ethers.Contract(
     nativeTokenPredicateProxyContract.target,
@@ -111,7 +156,10 @@ const main = async () => {
     wallet
   );
 
-  await proxyNativeTokenPredicate.setDependencies(gatewayProxyContract.target, nativeTokenWalletProxyContract.target);
+  await proxyNativeTokenPredicate.setDependencies(
+    gatewayProxyContract.target,
+    nativeTokenWalletProxyContract.target
+  );
 
   const proxyNativeTokenWallet = new ethers.Contract(
     nativeTokenWalletProxyContract.target,
@@ -119,10 +167,16 @@ const main = async () => {
     wallet
   );
 
-  await proxyNativeTokenWallet.setDependencies(nativeTokenPredicateProxyContract.target);
+  await proxyNativeTokenWallet.setDependencies(
+    nativeTokenPredicateProxyContract.target
+  );
 
   console.log("--- Setting validatorsChainData");
-  const proxyValidators = new ethers.Contract(validatorsProxyContract.target, validatorsJson.abi, wallet);
+  const proxyValidators = new ethers.Contract(
+    validatorsProxyContract.target,
+    validatorsJson.abi,
+    wallet
+  );
 
   await proxyValidators.setValidatorsChainData(validatorsChainDataJson);
 };
