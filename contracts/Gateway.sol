@@ -186,18 +186,16 @@ contract Gateway is
 
         for (uint256 i; i < _receivers.length; i++) {
             uint16 _tokenCoinId = _receivers[i].tokenId;
+            uint256 _amount = _receivers[i].amount;
+            if (_amount < minBridgingAmount)
+                revert InvalidBridgingAmount(minBridgingAmount, _amount);
+
             if (_tokenCoinId == 0) {
-                uint256 _amount = _receivers[i].amount;
-                if (_amount < minBridgingAmount)
-                    revert InvalidBridgingAmount(minBridgingAmount, _amount);
                 amountSum += _amount;
             } else {
                 if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {
                     revert TokenNotRegistered(_tokenCoinId);
                 }
-                uint256 _amount = _receivers[i].amount;
-                if (_amount < minBridgingAmount)
-                    revert InvalidBridgingAmount(minBridgingAmount, _amount);
 
                 nativeTokenPredicate.withdraw(msg.sender, _receivers[i]);
             }
