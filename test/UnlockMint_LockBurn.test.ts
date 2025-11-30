@@ -73,10 +73,10 @@ describe("LockMint/UnlockBurn", function () {
         nativeTokenWalletAddress
       );
 
-      const value = { value: ethers.parseUnits("200", "wei") };
+      const value = { value: ethers.parseUnits("250", "wei") };
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawMixToken, 100, value);
+        .withdraw(1, receiverWithdrawMixToken, 100, 50, value);
 
       expect(await myToken.balanceOf(receiver.address)).to.equal(
         receiverBalanceToken1 - BigInt(receiverWithdrawMixToken[1].amount)
@@ -147,10 +147,10 @@ describe("LockMint/UnlockBurn", function () {
 
       await myToken.connect(receiver).approve(nativeTokenWalletAddress, 1001);
 
-      const value = { value: ethers.parseUnits("200", "wei") };
+      const value = { value: ethers.parseUnits("250", "wei") };
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawMixToken, 100, value);
+        .withdraw(1, receiverWithdrawMixToken, 100, 50, value);
 
       await myToken.connect(receiver).approve(nativeTokenWalletAddress, 1001);
 

@@ -74,10 +74,10 @@ describe("Gateway Contract", function () {
       nativeTokenWalletAddress
     );
 
-    const value = { value: ethers.parseUnits("200", "wei") };
+    const value = { value: ethers.parseUnits("250", "wei") };
     const withdrawTx = await gateway
       .connect(receiver)
-      .withdraw(1, receiverWithdrawZeroToken, 100, value);
+      .withdraw(1, receiverWithdrawZeroToken, 100, 50, value);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find(
       (log: any) => log.fragment && log.fragment.name === "Withdraw"
@@ -88,7 +88,7 @@ describe("Gateway Contract", function () {
     );
 
     expect(nativeTokenWalletAfter).to.equal(
-      nativeTokenWalletBefore + BigInt(200)
+      nativeTokenWalletBefore + BigInt(250)
     );
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
@@ -97,8 +97,9 @@ describe("Gateway Contract", function () {
       receiver.address
     );
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-    expect(withdrawEvent?.args?.feeAmount).to.equal(100);
-    expect(withdrawEvent?.args?.value).to.equal(200);
+    expect(withdrawEvent?.args?.fee).to.equal(100);
+    expect(withdrawEvent?.args?.operationFee).to.equal(50);
+    expect(withdrawEvent?.args?.value).to.equal(250);
   });
 
   it("Withdraw should fail if not enough value is submitted", async () => {
@@ -113,21 +114,24 @@ describe("Gateway Contract", function () {
     await expect(
       gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawZeroToken, 100, value)
+        .withdraw(1, receiverWithdrawZeroToken, 100, 50, value)
     ).to.to.be.revertedWithCustomError(gateway, "WrongValue");
   });
 
   it("Set feeAmount should fail if not called by owner", async () => {
     await expect(
-      gateway.connect(receiver).setMinAmounts(200, 100)
+      gateway.connect(receiver).setMinAmounts(200, 100, 50)
     ).to.to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
   it("Set feeAmount should succeed if called by owner", async () => {
-    expect(await gateway.minFeeAmount()).to.equal(100);
-    await gateway.connect(owner).setMinAmounts(200, 100);
-    expect(await gateway.minFeeAmount()).to.equal(200);
-    expect(await gateway.minBridgingAmount()).to.equal(100);
+    expect(await gateway.minFee()).to.equal(100);
+    expect(await gateway.minBridgingAmount()).to.equal(50);
+    expect(await gateway.minOperationFee()).to.equal(50);
+    await gateway.connect(owner).setMinAmounts(200, 200, 20);
+    expect(await gateway.minFee()).to.equal(200);
+    expect(await gateway.minBridgingAmount()).to.equal(200);
+    expect(await gateway.minOperationFee()).to.equal(20);
   });
 
   it("Withdraw should fail if briding amount is less then minBridgingAmount", async () => {
@@ -147,7 +151,7 @@ describe("Gateway Contract", function () {
     await expect(
       gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawZeroTokenInvalidAmount, 100, value)
+        .withdraw(1, receiverWithdrawZeroTokenInvalidAmount, 100, 50, value)
     ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
   });
 
@@ -164,7 +168,7 @@ describe("Gateway Contract", function () {
     await expect(
       gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawNonZeroTokenInvalidAmount, 100, value)
+        .withdraw(1, receiverWithdrawNonZeroTokenInvalidAmount, 100, 50, value)
     ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
   });
 
@@ -209,7 +213,7 @@ describe("Gateway Contract", function () {
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
     }
 
-    const value = { value: ethers.parseUnits("200", "wei") };
+    const value = { value: ethers.parseUnits("250", "wei") };
 
     const nativeTokenWalletBefore = await ethers.provider.getBalance(
       nativeTokenWalletAddress
@@ -218,7 +222,7 @@ describe("Gateway Contract", function () {
     for (let i = 0; i < 100; i++) {
       const withdrawTx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawZeroToken, 100, value);
+        .withdraw(1, receiverWithdrawZeroToken, 100, 50, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find(
         (log: any) => log.fragment && log.fragment.name === "Withdraw"
@@ -229,7 +233,7 @@ describe("Gateway Contract", function () {
       );
 
       expect(nativeTokenWalletAfter).to.equal(
-        nativeTokenWalletBefore + BigInt(200 * (i + 1))
+        nativeTokenWalletBefore + BigInt(250 * (i + 1))
       );
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
@@ -238,8 +242,9 @@ describe("Gateway Contract", function () {
         receiver.address
       );
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-      expect(withdrawEvent?.args?.feeAmount).to.equal(100);
-      expect(withdrawEvent?.args?.value).to.equal(200);
+      expect(withdrawEvent?.args?.fee).to.equal(100);
+      expect(withdrawEvent?.args?.operationFee).to.equal(50);
+      expect(withdrawEvent?.args?.value).to.equal(250);
     }
   });
 
@@ -275,7 +280,7 @@ describe("Gateway Contract", function () {
       depositTXs.push(depositTX);
     }
 
-    const value = { value: ethers.parseUnits("200", "wei") };
+    const value = { value: ethers.parseUnits("250", "wei") };
 
     let nativeTokenWalletBefore = await ethers.provider.getBalance(
       nativeTokenWalletAddress
@@ -291,7 +296,7 @@ describe("Gateway Contract", function () {
 
       const withdrawTx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawZeroToken, 100, value);
+        .withdraw(1, receiverWithdrawZeroToken, 100, 50, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find(
         (log: any) => log.fragment && log.fragment.name === "Withdraw"
@@ -302,7 +307,7 @@ describe("Gateway Contract", function () {
       );
 
       expect(nativeTokenWalletAfter).to.equal(
-        nativeTokenWalletBefore + BigInt(200 * (i + 1))
+        nativeTokenWalletBefore + BigInt(250 * (i + 1))
       );
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
@@ -311,8 +316,9 @@ describe("Gateway Contract", function () {
         receiver.address
       );
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
-      expect(withdrawEvent?.args?.feeAmount).to.equal(100);
-      expect(withdrawEvent?.args?.value).to.equal(200);
+      expect(withdrawEvent?.args?.fee).to.equal(100);
+      expect(withdrawEvent?.args?.operationFee).to.equal(50);
+      expect(withdrawEvent?.args?.value).to.equal(250);
     }
   });
   it("Direct Deposit should emit FundsDeposited event", async function () {

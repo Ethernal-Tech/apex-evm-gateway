@@ -59,7 +59,7 @@ describe("Transfering MintBurn tokens", function () {
       await expect(
         gateway
           .connect(receiver)
-          .withdraw(1, receiverWithdrawNonZeroToken, 100, value)
+          .withdraw(1, receiverWithdrawNonZeroToken, 100, 50, value)
       )
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(1);
@@ -111,10 +111,10 @@ describe("Transfering MintBurn tokens", function () {
         decodedAmount
       );
 
-      const value = { value: ethers.parseUnits("100", "wei") };
+      const value = { value: ethers.parseUnits("150", "wei") };
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawNonZeroToken, 100, value);
+        .withdraw(1, receiverWithdrawNonZeroToken, 100, 50, value);
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
         decodedAmount - BigInt(receiverWithdrawNonZeroToken[0].amount)
@@ -167,10 +167,10 @@ describe("Transfering MintBurn tokens", function () {
         decodedAmount
       );
 
-      const value = { value: ethers.parseUnits("200", "wei") };
+      const value = { value: ethers.parseUnits("250", "wei") };
       tx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawZeroToken, 100, value);
+        .withdraw(1, receiverWithdrawZeroToken, 100, 50, value);
       receipt = await tx.wait();
 
       event = receipt.logs.find(
@@ -181,7 +181,9 @@ describe("Transfering MintBurn tokens", function () {
       expect(event?.args?.sender).to.equal(receiver);
       expect(event?.args?.receivers[0].receiver).to.equal(receiver);
       expect(event?.args?.receivers[0].amount).to.equal(100);
-      expect(event?.args?.feeAmount).to.equal(100);
+      expect(event?.args?.fee).to.equal(100);
+      expect(event?.args?.operationFee).to.equal(50);
+      expect(event?.args?.value).to.equal(250);
     });
   });
 

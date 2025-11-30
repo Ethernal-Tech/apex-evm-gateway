@@ -83,11 +83,11 @@ describe("Transfering LockUnlock tokens", function () {
         nativeTokenWallet.target
       );
 
-      const value = { value: ethers.parseUnits("100", "wei") };
+      const value = { value: ethers.parseUnits("150", "wei") };
 
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawNonZeroToken, 100, value);
+        .withdraw(1, receiverWithdrawNonZeroToken, 100, 50, value);
 
       expect(
         await myToken.balanceOf(receiverWithdrawNonZeroToken[0].receiver)
@@ -132,11 +132,11 @@ describe("Transfering LockUnlock tokens", function () {
         nativeTokenWallet.target
       );
 
-      const value = { value: ethers.parseUnits("100", "wei") };
+      const value = { value: ethers.parseUnits("150", "wei") };
 
       const tx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawNonZeroToken, 100, value);
+        .withdraw(1, receiverWithdrawNonZeroToken, 100, 50, value);
       const receipt = await tx.wait();
 
       const event = receipt.logs.find(
@@ -147,7 +147,9 @@ describe("Transfering LockUnlock tokens", function () {
       expect(event?.args?.sender).to.equal(receiver);
       expect(event?.args?.receivers[0].receiver).to.equal(receiver);
       expect(event?.args?.receivers[0].amount).to.equal(100);
-      expect(event?.args?.feeAmount).to.equal(100);
+      expect(event?.args?.fee).to.equal(100);
+      expect(event?.args?.operationFee).to.equal(50);
+      expect(event?.args?.value).to.equal(150);
     });
   });
 
