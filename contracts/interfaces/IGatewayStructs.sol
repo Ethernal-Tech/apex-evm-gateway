@@ -37,7 +37,11 @@ interface IGatewayStructs {
     event Deposit(bytes data);
     event DepositedToken(bytes data);
     event FundsDeposited(address indexed sender, uint256 value);
-    event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
+    event MinAmountsUpdated(
+        uint256 minFee,
+        uint256 minAmount,
+        uint256 minOperationFee
+    );
     event TokenRegistered(
         string name,
         string symbol,
@@ -52,7 +56,8 @@ interface IGatewayStructs {
         uint8 destinationChainId,
         address sender,
         ReceiverWithdraw[] receivers,
-        uint256 feeAmount,
+        uint256 fee,
+        uint256 operationFee,
         uint256 value
     );
     event WithdrawToken(
@@ -62,7 +67,7 @@ interface IGatewayStructs {
     );
 
     error BatchAlreadyExecuted();
-    error InsufficientFeeAmount(uint256 minFeeAmount, uint256 feeAmount);
+    error InsufficientFee(uint256 minFeeAmount, uint256 feeAmount);
     error InvalidBridgingAmount(
         uint256 minBridgingAmount,
         uint256 bridgingAmount

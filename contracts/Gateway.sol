@@ -28,8 +28,9 @@ contract Gateway is
     NativeTokenPredicate public nativeTokenPredicate;
     Validators public validators;
     TokenFactory public tokenFactory;
-    uint256 public minFeeAmount;
+    uint256 public minFee;
     uint256 public minBridgingAmount;
+    uint256 public minOperationFee;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -41,13 +42,15 @@ contract Gateway is
     }
 
     function initialize(
-        uint256 _minFeeAmount,
-        uint256 _minBridgingAmount
+        uint256 _minFee,
+        uint256 _minBridgingAmount,
+        uint256 _minOperationFee
     ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-        minFeeAmount = _minFeeAmount;
+        minFee = _minFee;
         minBridgingAmount = _minBridgingAmount;
+        minOperationFee = _minOperationFee;
     }
 
     function _authorizeUpgrade(
@@ -172,17 +175,23 @@ contract Gateway is
     /// on MintBurn ERC20
     /// @param _destinationChainId The ID of the destination chain.
     /// @param _receivers The array of receivers and their withdrawal amounts.
-    /// @param _feeAmount The fee for the withdrawal process.
+    /// @param _fee The fee for the withdrawal process.
+    /// @param _operationFee The operation fee for the withdrawal process.
     /// @dev Ensures that the sum of withdrawal amounts matches the value sent.
     function withdraw(
         uint8 _destinationChainId,
         ReceiverWithdraw[] calldata _receivers,
-        uint256 _feeAmount
+        uint256 _fee,
+        uint256 _operationFee
     ) external payable {
-        if (_feeAmount < minFeeAmount)
-            revert InsufficientFeeAmount(minFeeAmount, _feeAmount);
+        if (_fee < minFee || _operationFee < minOperationFee) {
+            revert InsufficientFee(
+                _fee < minFee ? minFee : minOperationFee,
+                _fee < minFee ? _fee : _operationFee
+            );
+        }
 
-        uint256 amountSum = _feeAmount;
+        uint256 amountSum = _fee + _operationFee;
 
         for (uint256 i; i < _receivers.length; i++) {
             uint16 _tokenCoinId = _receivers[i].tokenId;
@@ -210,7 +219,8 @@ contract Gateway is
             _destinationChainId,
             msg.sender,
             _receivers,
-            _feeAmount,
+            _fee,
+            _operationFee,
             amountSum
         );
     }
@@ -234,17 +244,20 @@ contract Gateway is
     }
 
     /// @notice Sets the minimal amounts for fee and bridging.
-    /// @param _minFeeAmount The minimal fee amount to set
+    /// @param _minFee The minimal fee amount to set
     /// @param _minBridgingAmount The minimal bridging amount to set
+    /// @param _minOperationFee The minimal operation fee to set
     /// @dev Restricted to the owner of the contract.
     function setMinAmounts(
-        uint256 _minFeeAmount,
-        uint256 _minBridgingAmount
+        uint256 _minFee,
+        uint256 _minBridgingAmount,
+        uint256 _minOperationFee
     ) external onlyOwner {
-        minFeeAmount = _minFeeAmount;
+        minFee = _minFee;
         minBridgingAmount = _minBridgingAmount;
+        minOperationFee = _minOperationFee;
 
-        emit MinAmountsUpdated(_minFeeAmount, _minBridgingAmount);
+        emit MinAmountsUpdated(_minFee, _minBridgingAmount, _minOperationFee);
     }
 
     function getTokenAddress(uint16 _tokenId) external view returns (address) {
