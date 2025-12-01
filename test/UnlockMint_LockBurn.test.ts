@@ -11,11 +11,11 @@ describe("LockMint/UnlockBurn", function () {
     it("Should unlock/burn required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenID, "", "");
+        .registerToken(myToken.target, tokenId, "", "");
 
       let tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID + 1, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenId + 1, "Test Token", "TTK");
 
       let receipt = await tx.wait();
 
@@ -76,29 +76,29 @@ describe("LockMint/UnlockBurn", function () {
       const value = { value: ethers.parseUnits("250", "wei") };
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawMixToken, 100, 50, value);
+        .withdraw(1, receiverWithdrawMixTokens, 100, 50, value);
 
       expect(await myToken.balanceOf(receiver.address)).to.equal(
-        receiverBalanceToken1 - BigInt(receiverWithdrawMixToken[1].amount)
+        receiverBalanceToken1 - BigInt(receiverWithdrawMixTokens[1].amount)
       );
 
       expect(await myToken.balanceOf(nativeTokenWalletAddress)).to.equal(
-        walletBalanceToken1 + BigInt(receiverWithdrawMixToken[1].amount)
+        walletBalanceToken1 + BigInt(receiverWithdrawMixTokens[1].amount)
       );
 
       expect(await myTokenERC20.balanceOf(receiver.address)).to.equal(
-        receiverBalanceToken2 - BigInt(receiverWithdrawMixToken[2].amount)
+        receiverBalanceToken2 - BigInt(receiverWithdrawMixTokens[2].amount)
       );
     });
 
     it("Should lock/mint required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenID, "", "");
+        .registerToken(myToken.target, tokenId, "", "");
 
       let tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID + 1, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenId + 1, "Test Token", "TTK");
 
       let receipt = await tx.wait();
 
@@ -150,7 +150,7 @@ describe("LockMint/UnlockBurn", function () {
       const value = { value: ethers.parseUnits("250", "wei") };
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawMixToken, 100, 50, value);
+        .withdraw(1, receiverWithdrawMixTokens, 100, 50, value);
 
       await myToken.connect(receiver).approve(nativeTokenWalletAddress, 1001);
 
@@ -158,7 +158,7 @@ describe("LockMint/UnlockBurn", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataMixToken
+        dataMixTokens
       );
 
       const [tupleValue] = decoded;
@@ -180,7 +180,7 @@ describe("LockMint/UnlockBurn", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataMixToken
+        dataMixTokens
       );
 
       expect(await myToken.balanceOf(receiver)).to.equal(
@@ -197,23 +197,24 @@ describe("LockMint/UnlockBurn", function () {
     });
   });
 
-  const tokenID = 1;
   let owner: any;
   let gateway: any;
   let myToken: any;
-  let dataMixToken: any;
+  let dataMixTokens: any;
   let nativeTokenWallet: any;
   let receiver: any;
-  let receiverWithdrawMixToken: any;
+  let receiverWithdrawMixTokens: any;
+  let tokenId: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
     owner = fixture.owner;
     gateway = fixture.gateway;
     myToken = fixture.myToken;
-    dataMixToken = fixture.dataMixToken;
+    dataMixTokens = fixture.dataMixTokens;
     nativeTokenWallet = fixture.nativeTokenWallet;
     receiver = fixture.receiver;
-    receiverWithdrawMixToken = fixture.receiverWithdrawMixToken;
+    receiverWithdrawMixTokens = fixture.receiverWithdrawMixTokens;
+    tokenId = fixture.tokenId;
   });
 });

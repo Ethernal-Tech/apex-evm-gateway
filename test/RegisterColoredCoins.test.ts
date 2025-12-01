@@ -20,10 +20,10 @@ describe("Register tokens tests", function () {
         .withArgs(owner);
     });
 
-    it("Should revert if register token with zero token id", async () => {
+    it("Should revert if register token with currency token id", async () => {
       await expect(
-        gateway.connect(owner).registerToken(myToken.target, 0, "", "")
-      ).to.be.revertedWithCustomError(gateway, "ZeroTokenId");
+        gateway.connect(owner).registerToken(myToken.target, 1, "", "")
+      ).to.be.revertedWithCustomError(gateway, "CurrencyTokenId");
     });
 
     it("Should revert when registering token with Id that was previously registered", async () => {
@@ -63,7 +63,7 @@ describe("Register tokens tests", function () {
         gateway.connect(owner).registerToken(myToken.target, tokenId, "", "")
       )
         .to.emit(gateway, "TokenRegistered")
-        .withArgs("", "", 1, myToken.target, true);
+        .withArgs("", "", 2, myToken.target, true);
     });
   });
   describe("Register MintBurn token", function () {
@@ -114,16 +114,16 @@ describe("Register tokens tests", function () {
           .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK")
       )
         .to.emit(gateway, "TokenRegistered")
-        .withArgs("Test Token", "TTK", 1, anyValue, false);
+        .withArgs("Test Token", "TTK", 2, anyValue, false);
     });
   });
 
-  const tokenId = 1;
   let owner: any;
   let validators: any;
   let gateway: any;
   let myToken: any;
   let tokenFactory: any;
+  let tokenId: any;
 
   let nativeTokenWallet: any;
 
@@ -135,5 +135,6 @@ describe("Register tokens tests", function () {
     myToken = fixture.myToken;
     tokenFactory = fixture.tokenFactory;
     nativeTokenWallet = fixture.nativeTokenWallet;
+    tokenId = fixture.tokenId;
   });
 });

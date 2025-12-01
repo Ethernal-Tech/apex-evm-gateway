@@ -31,6 +31,7 @@ contract Gateway is
     uint256 public minFee;
     uint256 public minBridgingAmount;
     uint256 public minOperationFee;
+    uint16 public currencyTokenId;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -44,13 +45,15 @@ contract Gateway is
     function initialize(
         uint256 _minFee,
         uint256 _minBridgingAmount,
-        uint256 _minOperationFee
+        uint256 _minOperationFee,
+        uint16 _currencyTokenId
     ) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         minFee = _minFee;
         minBridgingAmount = _minBridgingAmount;
         minOperationFee = _minOperationFee;
+        currencyTokenId = _currencyTokenId;
     }
 
     function _authorizeUpgrade(
@@ -93,7 +96,7 @@ contract Gateway is
     /// @param _name Name of the token to be registered or created.
     /// @param _symbol Symbol of the token to be registered or created.
     /// @custom:modifier onlyOwner Only the contract owner can register tokens.
-    /// @custom:reverts ZeroTokenId If `_tokenId` is zero.
+    /// @custom:reverts CurrencyTokenId If `_tokenId` is the currency token ID.
     /// @custom:reverts TokenIdAlreadyRegistered If `_tokenId` has already been registered.
     /// @custom:reverts NotContractAddress If `_lockUnlockSCAddress` is not a valid contract.
     /// @custom:reverts TokenAddressAlreadyRegistered If `_lockUnlockSCAddress` was already registered.
@@ -104,8 +107,8 @@ contract Gateway is
         string memory _name,
         string memory _symbol
     ) external onlyOwner {
-        if (_tokenId == 0) {
-            revert ZeroTokenId();
+        if (_tokenId == currencyTokenId) {
+            revert CurrencyTokenId();
         }
 
         if (nativeTokenPredicate.isTokenRegistered(_tokenId)) {
@@ -158,7 +161,11 @@ contract Gateway is
 
         if (!valid) revert InvalidSignature();
 
-        bool success = nativeTokenPredicate.deposit(_data, msg.sender);
+        bool success = nativeTokenPredicate.deposit(
+            _data,
+            msg.sender,
+            currencyTokenId
+        );
 
         if (success) {
             emit Deposit(_data);
@@ -199,7 +206,7 @@ contract Gateway is
             if (_amount < minBridgingAmount)
                 revert InvalidBridgingAmount(minBridgingAmount, _amount);
 
-            if (_tokenCoinId == 0) {
+            if (_tokenCoinId == currencyTokenId) {
                 amountSum += _amount;
             } else {
                 if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {

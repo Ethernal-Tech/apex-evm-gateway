@@ -11,7 +11,7 @@ describe("Transfering LockUnlock tokens", function () {
     it("Should lock required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenID, "", "");
+        .registerToken(myToken.target, tokenId, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -29,7 +29,7 @@ describe("Transfering LockUnlock tokens", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       const [tupleValue] = decoded;
@@ -38,7 +38,7 @@ describe("Transfering LockUnlock tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       expect(await myToken.balanceOf(decodedAddress)).to.equal(
@@ -55,7 +55,7 @@ describe("Transfering LockUnlock tokens", function () {
     it("Should lock required amount of tokens for the sender", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenID, "", "");
+        .registerToken(myToken.target, tokenId, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -72,7 +72,7 @@ describe("Transfering LockUnlock tokens", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       const [tupleValue] = decoded;
@@ -87,24 +87,24 @@ describe("Transfering LockUnlock tokens", function () {
 
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawNonZeroToken, 100, 50, value);
+        .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value);
 
       expect(
-        await myToken.balanceOf(receiverWithdrawNonZeroToken[0].receiver)
+        await myToken.balanceOf(receiverWithdrawNonCurrencyToken[0].receiver)
       ).to.equal(
-        receiverbalance - BigInt(receiverWithdrawNonZeroToken[0].amount)
+        receiverbalance - BigInt(receiverWithdrawNonCurrencyToken[0].amount)
       );
 
       expect(await myToken.balanceOf(nativeTokenWalletContract)).to.equal(
         nativeTokenWalletBalance +
-          BigInt(receiverWithdrawNonZeroToken[0].amount)
+          BigInt(receiverWithdrawNonCurrencyToken[0].amount)
       );
     });
 
     it("Should emit Withdraw event when LockUnlock tokens are unlocked", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenID, "", "");
+        .registerToken(myToken.target, tokenId, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -121,7 +121,7 @@ describe("Transfering LockUnlock tokens", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       const [tupleValue] = decoded;
@@ -136,7 +136,7 @@ describe("Transfering LockUnlock tokens", function () {
 
       const tx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawNonZeroToken, 100, 50, value);
+        .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value);
       const receipt = await tx.wait();
 
       const event = receipt.logs.find(
@@ -153,23 +153,24 @@ describe("Transfering LockUnlock tokens", function () {
     });
   });
 
-  const tokenID = 1;
   let owner: any;
   let gateway: any;
   let myToken: any;
-  let dataNonZeroToken: any;
+  let dataNonCurrencyToken: any;
   let nativeTokenWallet: any;
   let receiver: any;
-  let receiverWithdrawNonZeroToken: any;
+  let receiverWithdrawNonCurrencyToken: any;
+  let tokenId: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
     owner = fixture.owner;
     gateway = fixture.gateway;
     myToken = fixture.myToken;
-    dataNonZeroToken = fixture.dataNonZeroToken;
+    dataNonCurrencyToken = fixture.dataNonCurrencyToken;
     nativeTokenWallet = fixture.nativeTokenWallet;
     receiver = fixture.receiver;
-    receiverWithdrawNonZeroToken = fixture.receiverWithdrawNonZeroToken;
+    receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
+    tokenId = fixture.tokenId;
   });
 });

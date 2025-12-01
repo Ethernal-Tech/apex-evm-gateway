@@ -2,13 +2,14 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
+import { token } from "../typechain-types/@openzeppelin/contracts";
 
 describe("Transfering MintBurn tokens", function () {
   describe("Deposit/Minting of MintBurn tokens", function () {
     it("Should mint required amount of tokens for the receiver", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -33,7 +34,7 @@ describe("Transfering MintBurn tokens", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       const [tupleValue] = decoded;
@@ -44,7 +45,7 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
@@ -59,16 +60,16 @@ describe("Transfering MintBurn tokens", function () {
       await expect(
         gateway
           .connect(receiver)
-          .withdraw(1, receiverWithdrawNonZeroToken, 100, 50, value)
+          .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value)
       )
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
-        .withArgs(1);
+        .withArgs(2);
     });
 
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -93,7 +94,7 @@ describe("Transfering MintBurn tokens", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       const [tupleValue] = decoded;
@@ -104,7 +105,7 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
@@ -114,17 +115,17 @@ describe("Transfering MintBurn tokens", function () {
       const value = { value: ethers.parseUnits("150", "wei") };
       await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawNonZeroToken, 100, 50, value);
+        .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value);
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
-        decodedAmount - BigInt(receiverWithdrawNonZeroToken[0].amount)
+        decodedAmount - BigInt(receiverWithdrawNonCurrencyToken[0].amount)
       );
     });
 
     it("Should emit Withdraw event when ERC20 tokens are burnt", async () => {
       let tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenID, "Test Token", "TTK");
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       let receipt = await tx.wait();
 
@@ -149,7 +150,7 @@ describe("Transfering MintBurn tokens", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       const [tupleValue] = decoded;
@@ -160,17 +161,17 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonZeroToken
+        dataNonCurrencyToken
       );
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
         decodedAmount
       );
 
-      const value = { value: ethers.parseUnits("250", "wei") };
+      const value = { value: ethers.parseUnits("150", "wei") };
       tx = await gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawZeroToken, 100, 50, value);
+        .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value);
       receipt = await tx.wait();
 
       event = receipt.logs.find(
@@ -183,27 +184,28 @@ describe("Transfering MintBurn tokens", function () {
       expect(event?.args?.receivers[0].amount).to.equal(100);
       expect(event?.args?.fee).to.equal(100);
       expect(event?.args?.operationFee).to.equal(50);
-      expect(event?.args?.value).to.equal(250);
+      expect(event?.args?.value).to.equal(150);
     });
   });
 
-  const tokenID = 1;
   let owner: any;
   let validators: any;
   let gateway: any;
-  let dataNonZeroToken: any;
+  let dataNonCurrencyToken: any;
   let receiver: any;
-  let receiverWithdrawNonZeroToken: any;
-  let receiverWithdrawZeroToken: any;
+  let receiverWithdrawNonCurrencyToken: any;
+  let receiverWithdrawCurrencyToken: any;
+  let tokenId: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
     owner = fixture.owner;
     validators = fixture.validators;
     gateway = fixture.gateway;
-    dataNonZeroToken = fixture.dataNonZeroToken;
+    dataNonCurrencyToken = fixture.dataNonCurrencyToken;
     receiver = fixture.receiver;
-    receiverWithdrawNonZeroToken = fixture.receiverWithdrawNonZeroToken;
-    receiverWithdrawZeroToken = fixture.receiverWithdrawZeroToken;
+    receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
+    receiverWithdrawCurrencyToken = fixture.receiverWithdrawCurrencyToken;
+    tokenId = fixture.tokenId;
   });
 });

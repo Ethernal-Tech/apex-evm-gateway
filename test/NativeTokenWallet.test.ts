@@ -40,7 +40,7 @@ describe("NativeTokenWallet Contract", function () {
 
   it("Mint will fail if not called by Predicate or Owner", async function () {
     await expect(
-      nativeTokenWallet.deposit(receiver.address, 100, 0)
+      nativeTokenWallet.deposit(receiver.address, 100, 1, true)
     ).to.be.revertedWithCustomError(nativeTokenWallet, "NotPredicate");
   });
 
@@ -61,7 +61,7 @@ describe("NativeTokenWallet Contract", function () {
 
     await nativeTokenWallet
       .connect(nativeTokenPredicateContract)
-      .deposit(receiver.address, randomAmount, 0);
+      .deposit(receiver.address, randomAmount, 1, true);
 
     const receiverBalanceAfter = await ethers.provider.getBalance(receiver);
     const nativeTokenWalletAfter = await ethers.provider.getBalance(
