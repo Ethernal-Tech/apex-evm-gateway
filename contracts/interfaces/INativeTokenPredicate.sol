@@ -6,7 +6,8 @@ import {IGatewayStructs} from "./IGatewayStructs.sol";
 interface INativeTokenPredicate is IGatewayStructs {
     function deposit(
         bytes calldata data,
-        address relayer
+        address relayer,
+        uint16 currencyTokenId
     ) external returns (bool);
 
     function withdraw(

@@ -69,9 +69,10 @@ contract NativeTokenWallet is
     function deposit(
         address _account,
         uint256 _amount,
-        uint16 _tokenId
+        uint16 _tokenId,
+        bool isCurrencyToken
     ) external onlyPredicate {
-        if (_tokenId == 0) {
+        if (isCurrencyToken) {
             (bool success, ) = _account.call{value: _amount}("");
             // Revert the transaction if the transfer fails
             if (!success) revert TransferFailed();

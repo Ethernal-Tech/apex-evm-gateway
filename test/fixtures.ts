@@ -84,7 +84,7 @@ export async function deployGatewayFixtures() {
 
   const gatewayProxy = await GatewayProxy.deploy(
     gatewayLogic.target,
-    Gateway.interface.encodeFunctionData("initialize", [100, 50, 50])
+    Gateway.interface.encodeFunctionData("initialize", [100, 50, 50, 1])
   );
 
   const myTokenProxy = await MyTokenProxy.deploy(
@@ -190,15 +190,7 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  const receiverWithdrawZeroToken = [
-    {
-      receiver: receiver.address,
-      amount: 100,
-      tokenId: 0,
-    },
-  ];
-
-  const receiverWithdrawNonZeroToken = [
+  const receiverWithdrawCurrencyToken = [
     {
       receiver: receiver.address,
       amount: 100,
@@ -206,21 +198,29 @@ export async function deployGatewayFixtures() {
     },
   ];
 
-  const receiverWithdrawMixToken = [
+  const receiverWithdrawNonCurrencyToken = [
     {
       receiver: receiver.address,
       amount: 100,
-      tokenId: 0,
+      tokenId: 2,
+    },
+  ];
+
+  const receiverWithdrawMixTokens = [
+    {
+      receiver: receiver.address,
+      amount: 100,
+      tokenId: 1,
     },
     {
       receiver: receiver.address,
       amount: 101,
-      tokenId: 1,
+      tokenId: 2,
     },
     {
       receiver: receiver.address,
       amount: 102,
-      tokenId: 2,
+      tokenId: 3,
     },
   ];
 
@@ -254,17 +254,17 @@ export async function deployGatewayFixtures() {
   //data encoding
   const blockNumber = await ethers.provider.getBlockNumber();
   const abiCoder = new ethers.AbiCoder();
-  const dataZeroToken = abiCoder.encode(
-    ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-    [[1, blockNumber + 100, 1, [[receiver.address, 1000, 0]]]]
-  );
-
-  const dataNonZeroToken = abiCoder.encode(
+  const dataCurrencyToken = abiCoder.encode(
     ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
     [[1, blockNumber + 100, 1, [[receiver.address, 1000, 1]]]]
   );
 
-  const dataMixToken = abiCoder.encode(
+  const dataNonCurrencyToken = abiCoder.encode(
+    ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+    [[1, blockNumber + 100, 1, [[receiver.address, 1000, 2]]]]
+  );
+
+  const dataMixTokens = abiCoder.encode(
     ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
     [
       [
@@ -272,9 +272,9 @@ export async function deployGatewayFixtures() {
         blockNumber + 100,
         1,
         [
-          [receiver.address, 100, 0],
-          [receiver.address, 101, 1],
-          [receiver.address, 102, 2],
+          [receiver.address, 100, 1],
+          [receiver.address, 101, 2],
+          [receiver.address, 102, 3],
         ],
       ],
     ]
@@ -286,6 +286,8 @@ export async function deployGatewayFixtures() {
     _ttl: 9999999999n,
     _validatorsChainData: [{ key: [123n, 456n, 789n, 101112n] }],
   };
+
+  const tokenId = 2;
 
   return {
     hre,
@@ -299,14 +301,15 @@ export async function deployGatewayFixtures() {
     tokenFactory,
     validatorsc,
     validatorsCardanoData,
-    receiverWithdrawZeroToken,
-    receiverWithdrawNonZeroToken,
-    receiverWithdrawMixToken,
-    dataZeroToken,
-    dataNonZeroToken,
-    dataMixToken,
+    receiverWithdrawCurrencyToken,
+    receiverWithdrawNonCurrencyToken,
+    receiverWithdrawMixTokens,
+    dataCurrencyToken,
+    dataNonCurrencyToken,
+    dataMixTokens,
     validatorsAddresses,
     validatorSetChange,
+    tokenId,
   };
 }
 

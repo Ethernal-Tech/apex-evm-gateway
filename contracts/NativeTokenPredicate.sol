@@ -82,7 +82,8 @@ contract NativeTokenPredicate is
      */
     function deposit(
         bytes calldata _data,
-        address _relayer
+        address _relayer,
+        uint16 _currencyTokenId
     ) external onlyGateway nonReentrant returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
 
@@ -106,16 +107,20 @@ contract NativeTokenPredicate is
         // must be executed as an atomic operation.
         for (uint256 i; i < _receiversLength; i++) {
             uint16 _tokenId = _receivers[i].tokenId;
-            if (_tokenId != 0 && !isTokenRegistered(_tokenId))
-                revert TokenNotRegistered(_tokenId);
             nativeTokenWallet.deposit(
                 _receivers[i].receiver,
                 _receivers[i].amount,
-                _tokenId
+                _tokenId,
+                _tokenId == _currencyTokenId
             );
         }
 
-        nativeTokenWallet.deposit(_relayer, _deposits.feeAmount, 0);
+        nativeTokenWallet.deposit(
+            _relayer,
+            _deposits.feeAmount,
+            _currencyTokenId,
+            true
+        );
 
         return true;
     }

@@ -17,7 +17,12 @@ interface INativeTokenWallet is IGatewayStructs {
      * @param amount Amount of tokens to mint to the account
      * Reverts if the transfer fails.
      */
-    function deposit(address account, uint256 amount, uint16 tokenId) external;
+    function deposit(
+        address account,
+        uint256 amount,
+        uint16 tokenId,
+        bool isCurrencyToken
+    ) external;
 
     function withdraw(
         address sender,

@@ -82,5 +82,5 @@ interface IGatewayStructs {
     error TransferFailed();
     error WrongValidatorsSetValue();
     error WrongValue(uint256 expected, uint256 received);
-    error ZeroTokenId();
+    error CurrencyTokenId();
 }

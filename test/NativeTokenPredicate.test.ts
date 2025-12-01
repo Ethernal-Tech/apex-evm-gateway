@@ -59,7 +59,9 @@ describe("NativeTokenPredicate Contract", function () {
     const address = ethers.Wallet.createRandom().address;
 
     await expect(
-      nativeTokenPredicate.connect(receiver).deposit(dataZeroToken, address)
+      nativeTokenPredicate
+        .connect(receiver)
+        .deposit(dataCurrencyToken, address, 1)
     ).to.be.revertedWithCustomError(nativeTokenPredicate, "NotGateway");
   });
 
@@ -72,12 +74,12 @@ describe("NativeTokenPredicate Contract", function () {
 
     await nativeTokenPredicate
       .connect(gatewayContract)
-      .deposit(dataZeroToken, address);
+      .deposit(dataCurrencyToken, address, 1);
 
     await expect(
       nativeTokenPredicate
         .connect(gatewayContract)
-        .deposit(dataZeroToken, address)
+        .deposit(dataCurrencyToken, address, 1)
     ).to.be.revertedWithCustomError(
       nativeTokenPredicate,
       "BatchAlreadyExecuted"
@@ -90,7 +92,7 @@ describe("NativeTokenPredicate Contract", function () {
   let nativeTokenPredicate: any;
   let nativeTokenWallet: any;
   let validatorsc: any;
-  let dataZeroToken: any;
+  let dataCurrencyToken: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
@@ -101,6 +103,6 @@ describe("NativeTokenPredicate Contract", function () {
     nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
     validatorsc = fixture.validatorsc;
-    dataZeroToken = fixture.dataZeroToken;
+    dataCurrencyToken = fixture.dataCurrencyToken;
   });
 });
