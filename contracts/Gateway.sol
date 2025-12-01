@@ -30,6 +30,7 @@ contract Gateway is
     TokenFactory public tokenFactory;
     uint256 public minFee;
     uint256 public minBridgingAmount;
+    uint256 public minTokenBridgingAmount;
     uint256 public minOperationFee;
     uint16 public currencyTokenId;
 
@@ -45,6 +46,7 @@ contract Gateway is
     function initialize(
         uint256 _minFee,
         uint256 _minBridgingAmount,
+        uint256 _minTokenBridgingAmount,
         uint256 _minOperationFee,
         uint16 _currencyTokenId
     ) public initializer {
@@ -52,6 +54,7 @@ contract Gateway is
         __UUPSUpgradeable_init();
         minFee = _minFee;
         minBridgingAmount = _minBridgingAmount;
+        minTokenBridgingAmount = _minTokenBridgingAmount;
         minOperationFee = _minOperationFee;
         currencyTokenId = _currencyTokenId;
     }
@@ -203,15 +206,21 @@ contract Gateway is
         for (uint256 i; i < _receivers.length; i++) {
             uint16 _tokenCoinId = _receivers[i].tokenId;
             uint256 _amount = _receivers[i].amount;
-            if (_amount < minBridgingAmount)
-                revert InvalidBridgingAmount(minBridgingAmount, _amount);
 
             if (_tokenCoinId == currencyTokenId) {
+                if (_amount < minBridgingAmount)
+                    revert InvalidBridgingAmount(minBridgingAmount, _amount);
                 amountSum += _amount;
             } else {
                 if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {
                     revert TokenNotRegistered(_tokenCoinId);
                 }
+
+                if (_amount < minTokenBridgingAmount)
+                    revert InvalidBridgingAmount(
+                        minTokenBridgingAmount,
+                        _amount
+                    );
 
                 nativeTokenPredicate.withdraw(msg.sender, _receivers[i]);
             }
@@ -258,13 +267,20 @@ contract Gateway is
     function setMinAmounts(
         uint256 _minFee,
         uint256 _minBridgingAmount,
+        uint256 _minTokenBridgingAmount,
         uint256 _minOperationFee
     ) external onlyOwner {
         minFee = _minFee;
         minBridgingAmount = _minBridgingAmount;
+        minTokenBridgingAmount = _minTokenBridgingAmount;
         minOperationFee = _minOperationFee;
 
-        emit MinAmountsUpdated(_minFee, _minBridgingAmount, _minOperationFee);
+        emit MinAmountsUpdated(
+            _minFee,
+            _minBridgingAmount,
+            _minTokenBridgingAmount,
+            _minOperationFee
+        );
     }
 
     function getTokenAddress(uint16 _tokenId) external view returns (address) {

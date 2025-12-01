@@ -40,6 +40,7 @@ interface IGatewayStructs {
     event MinAmountsUpdated(
         uint256 minFee,
         uint256 minAmount,
+        uint256 minTokenAmount,
         uint256 minOperationFee
     );
     event TokenRegistered(
