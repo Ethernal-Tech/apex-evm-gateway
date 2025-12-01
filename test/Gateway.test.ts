@@ -156,7 +156,14 @@ describe("Gateway Contract", function () {
   });
 
   it("Withdraw should fail if colored coin briding amount is less then minBridgingAmount", async () => {
-    await gateway.connect(owner).registerToken(myToken.target, tokenId, "", "");
+    await gateway
+      .connect(owner)
+      .registerToken(
+        myToken.target,
+        (await gateway.currencyTokenId()) + 1n,
+        "",
+        ""
+      );
 
     const value = { value: ethers.parseUnits("1", "wei") };
 
@@ -389,9 +396,7 @@ describe("Gateway Contract", function () {
   let receiverWithdrawCurrencyToken: any;
   let receiverWithdrawNonCurrencyToken: any;
   let dataCurrencyToken: any;
-  let dataNonCurrencyToken: any;
   let myToken: any;
-  let tokenId: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
@@ -406,8 +411,6 @@ describe("Gateway Contract", function () {
     receiverWithdrawCurrencyToken = fixture.receiverWithdrawCurrencyToken;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
     dataCurrencyToken = fixture.dataCurrencyToken;
-    dataNonCurrencyToken = fixture.dataNonCurrencyToken;
     myToken = fixture.myToken;
-    tokenId = fixture.tokenId;
   });
 });

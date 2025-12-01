@@ -287,8 +287,6 @@ export async function deployGatewayFixtures() {
     _validatorsChainData: [{ key: [123n, 456n, 789n, 101112n] }],
   };
 
-  const tokenId = 2;
-
   return {
     hre,
     owner,
@@ -309,7 +307,6 @@ export async function deployGatewayFixtures() {
     dataMixTokens,
     validatorsAddresses,
     validatorSetChange,
-    tokenId,
   };
 }
 

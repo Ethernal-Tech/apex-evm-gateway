@@ -11,11 +11,21 @@ describe("LockMint/UnlockBurn", function () {
     it("Should unlock/burn required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenId, "", "");
+        .registerToken(
+          myToken.target,
+          (await gateway.currencyTokenId()) + 1n,
+          "",
+          ""
+        );
 
       let tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenId + 1, "Test Token", "TTK");
+        .registerToken(
+          ethers.ZeroAddress,
+          (await gateway.currencyTokenId()) + 2n,
+          "Test Token",
+          "TTK"
+        );
 
       let receipt = await tx.wait();
 
@@ -94,11 +104,21 @@ describe("LockMint/UnlockBurn", function () {
     it("Should lock/mint required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenId, "", "");
+        .registerToken(
+          myToken.target,
+          (await gateway.currencyTokenId()) + 1n,
+          "",
+          ""
+        );
 
       let tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenId + 1, "Test Token", "TTK");
+        .registerToken(
+          ethers.ZeroAddress,
+          (await gateway.currencyTokenId()) + 2n,
+          "Test Token",
+          "TTK"
+        );
 
       let receipt = await tx.wait();
 
@@ -204,7 +224,6 @@ describe("LockMint/UnlockBurn", function () {
   let nativeTokenWallet: any;
   let receiver: any;
   let receiverWithdrawMixTokens: any;
-  let tokenId: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
@@ -215,6 +234,5 @@ describe("LockMint/UnlockBurn", function () {
     nativeTokenWallet = fixture.nativeTokenWallet;
     receiver = fixture.receiver;
     receiverWithdrawMixTokens = fixture.receiverWithdrawMixTokens;
-    tokenId = fixture.tokenId;
   });
 });
