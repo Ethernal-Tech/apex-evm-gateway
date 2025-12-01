@@ -120,17 +120,19 @@ describe("Gateway Contract", function () {
 
   it("Set feeAmount should fail if not called by owner", async () => {
     await expect(
-      gateway.connect(receiver).setMinAmounts(200, 100, 50)
+      gateway.connect(receiver).setMinAmounts(200, 100, 50, 50)
     ).to.to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
   it("Set feeAmount should succeed if called by owner", async () => {
     expect(await gateway.minFee()).to.equal(100);
     expect(await gateway.minBridgingAmount()).to.equal(50);
+    expect(await gateway.minTokenBridgingAmount()).to.equal(50);
     expect(await gateway.minOperationFee()).to.equal(50);
-    await gateway.connect(owner).setMinAmounts(200, 200, 20);
+    await gateway.connect(owner).setMinAmounts(200, 200, 20, 20);
     expect(await gateway.minFee()).to.equal(200);
     expect(await gateway.minBridgingAmount()).to.equal(200);
+    expect(await gateway.minTokenBridgingAmount()).to.equal(20);
     expect(await gateway.minOperationFee()).to.equal(20);
   });
 
@@ -152,10 +154,12 @@ describe("Gateway Contract", function () {
       gateway
         .connect(receiver)
         .withdraw(1, receiverWithdrawCurrencyTokenInvalidAmount, 100, 50, value)
-    ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
+    )
+      .to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount")
+      .withArgs(50, 1);
   });
 
-  it("Withdraw should fail if colored coin briding amount is less then minBridgingAmount", async () => {
+  it("Withdraw should fail if colored coin briding amount is less then minTokenBridgingAmount", async () => {
     await gateway
       .connect(owner)
       .registerToken(
@@ -182,7 +186,9 @@ describe("Gateway Contract", function () {
           50,
           value
         )
-    ).to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount");
+    )
+      .to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount")
+      .withArgs(50, 1);
   });
 
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
@@ -396,6 +402,7 @@ describe("Gateway Contract", function () {
   let receiverWithdrawCurrencyToken: any;
   let receiverWithdrawNonCurrencyToken: any;
   let dataCurrencyToken: any;
+  let dataNonCurrencyToken: any;
   let myToken: any;
 
   beforeEach(async function () {
@@ -411,6 +418,7 @@ describe("Gateway Contract", function () {
     receiverWithdrawCurrencyToken = fixture.receiverWithdrawCurrencyToken;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
     dataCurrencyToken = fixture.dataCurrencyToken;
+    dataNonCurrencyToken = fixture.dataNonCurrencyToken;
     myToken = fixture.myToken;
   });
 });
