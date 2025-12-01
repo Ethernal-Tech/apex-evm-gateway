@@ -9,7 +9,12 @@ describe("Transfering MintBurn tokens", function () {
     it("Should mint required amount of tokens for the receiver", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
+        .registerToken(
+          ethers.ZeroAddress,
+          (await gateway.currencyTokenId()) + 1n,
+          "Test Token",
+          "TTK"
+        );
 
       const receipt = await tx.wait();
 
@@ -69,7 +74,12 @@ describe("Transfering MintBurn tokens", function () {
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
+        .registerToken(
+          ethers.ZeroAddress,
+          (await gateway.currencyTokenId()) + 1n,
+          "Test Token",
+          "TTK"
+        );
 
       const receipt = await tx.wait();
 
@@ -125,7 +135,12 @@ describe("Transfering MintBurn tokens", function () {
     it("Should emit Withdraw event when ERC20 tokens are burnt", async () => {
       let tx = await gateway
         .connect(owner)
-        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
+        .registerToken(
+          ethers.ZeroAddress,
+          (await gateway.currencyTokenId()) + 1n,
+          "Test Token",
+          "TTK"
+        );
 
       let receipt = await tx.wait();
 
@@ -194,8 +209,6 @@ describe("Transfering MintBurn tokens", function () {
   let dataNonCurrencyToken: any;
   let receiver: any;
   let receiverWithdrawNonCurrencyToken: any;
-  let receiverWithdrawCurrencyToken: any;
-  let tokenId: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
@@ -205,7 +218,5 @@ describe("Transfering MintBurn tokens", function () {
     dataNonCurrencyToken = fixture.dataNonCurrencyToken;
     receiver = fixture.receiver;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
-    receiverWithdrawCurrencyToken = fixture.receiverWithdrawCurrencyToken;
-    tokenId = fixture.tokenId;
   });
 });

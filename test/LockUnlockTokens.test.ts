@@ -11,7 +11,12 @@ describe("Transfering LockUnlock tokens", function () {
     it("Should lock required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenId, "", "");
+        .registerToken(
+          myToken.target,
+          (await gateway.currencyTokenId()) + 1n,
+          "",
+          ""
+        );
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -55,7 +60,12 @@ describe("Transfering LockUnlock tokens", function () {
     it("Should lock required amount of tokens for the sender", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenId, "", "");
+        .registerToken(
+          myToken.target,
+          (await gateway.currencyTokenId()) + 1n,
+          "",
+          ""
+        );
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -104,7 +114,12 @@ describe("Transfering LockUnlock tokens", function () {
     it("Should emit Withdraw event when LockUnlock tokens are unlocked", async () => {
       await gateway
         .connect(owner)
-        .registerToken(myToken.target, tokenId, "", "");
+        .registerToken(
+          myToken.target,
+          (await gateway.currencyTokenId()) + 1n,
+          "",
+          ""
+        );
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
         await nativeTokenWallet.getAddress()
@@ -160,7 +175,6 @@ describe("Transfering LockUnlock tokens", function () {
   let nativeTokenWallet: any;
   let receiver: any;
   let receiverWithdrawNonCurrencyToken: any;
-  let tokenId: any;
 
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
@@ -171,6 +185,5 @@ describe("Transfering LockUnlock tokens", function () {
     nativeTokenWallet = fixture.nativeTokenWallet;
     receiver = fixture.receiver;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
-    tokenId = fixture.tokenId;
   });
 });
