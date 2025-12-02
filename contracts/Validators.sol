@@ -89,12 +89,12 @@ contract Validators is
             revert WrongValidatorsSetValue();
         }
 
-        lastConfirmedValidatorsSet++;
-
         if (_validatorSetChange._ttl < block.number) {
             emit TTLExpired(_data);
             return false;
         }
+
+        lastConfirmedValidatorsSet++;
 
         delete validatorsChainData;
         for (uint i; i < _validatorSetChange._validatorsChainData.length; i++) {
