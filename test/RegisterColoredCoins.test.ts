@@ -92,7 +92,7 @@ describe("Register tokens tests", function () {
 
       expect(
         (
-          await nativeTokenWallet.tokenInfo(
+          await nativeTokenWallet.getTokenInfo(
             (await gateway.currencyTokenId()) + 1n
           )
         )[1]
@@ -133,7 +133,7 @@ describe("Register tokens tests", function () {
 
       expect(
         (
-          await nativeTokenWallet.tokenInfo(
+          await nativeTokenWallet.getTokenInfo(
             (await gateway.currencyTokenId()) + 1n
           )
         )[1]
@@ -166,7 +166,7 @@ describe("Register tokens tests", function () {
 
       expect(
         (
-          await nativeTokenWallet.tokenInfo(
+          await nativeTokenWallet.getTokenInfo(
             (await gateway.currencyTokenId()) + 1n
           )
         )[0]

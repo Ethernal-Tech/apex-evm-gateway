@@ -30,7 +30,7 @@ contract NativeTokenWallet is
     address public predicateAddress;
 
     /// mapping tokenId to TokenInfo struct
-    mapping(uint16 => TokenInfo) public tokenInfo;
+    mapping(uint16 => TokenInfo) private tokenInfo;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -98,7 +98,6 @@ contract NativeTokenWallet is
         uint16 _tokenId = _receiver.tokenId;
         if (tokenInfo[_tokenId].isLockUnlock) {
             IERC20 token = IERC20(tokenInfo[_tokenId].addr);
-
             token.safeTransferFrom(_sender, address(this), _receiver.amount);
         } else {
             MyToken token = MyToken(tokenInfo[_tokenId].addr);
