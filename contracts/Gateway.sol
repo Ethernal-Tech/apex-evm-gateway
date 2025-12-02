@@ -114,7 +114,7 @@ contract Gateway is
             revert CurrencyTokenId();
         }
 
-        if (nativeTokenPredicate.isTokenRegistered(_tokenId)) {
+        if (nativeTokenPredicate.getTokenInfo(_tokenId).addr != address(0)) {
             revert TokenIdAlreadyRegistered(_tokenId);
         }
 
@@ -126,14 +126,11 @@ contract Gateway is
             revert NotContractAddress(_lockUnlockSCAddress);
         }
 
-        nativeTokenPredicate.setTokenAddress(
+        nativeTokenPredicate.setTokenInfo(
             _tokenId,
-            (isLockUnlock ? _lockUnlockSCAddress : _contractAddress)
+            isLockUnlock ? _lockUnlockSCAddress : _contractAddress,
+            isLockUnlock
         );
-
-        if (isLockUnlock) {
-            nativeTokenPredicate.setTokenAsLockUnlockToken(_tokenId);
-        }
 
         emit TokenRegistered(
             _name,
@@ -212,7 +209,10 @@ contract Gateway is
                     revert InvalidBridgingAmount(minBridgingAmount, _amount);
                 amountSum += _amount;
             } else {
-                if (!nativeTokenPredicate.isTokenRegistered(_tokenCoinId)) {
+                if (
+                    nativeTokenPredicate.getTokenInfo(_tokenCoinId).addr ==
+                    address(0)
+                ) {
                     revert TokenNotRegistered(_tokenCoinId);
                 }
 
@@ -284,7 +284,7 @@ contract Gateway is
     }
 
     function getTokenAddress(uint16 _tokenId) external view returns (address) {
-        return nativeTokenPredicate.getTokenAddress(_tokenId);
+        return nativeTokenPredicate.getTokenInfo(_tokenId).addr;
     }
 
     /// @notice Validates the BLS signature.

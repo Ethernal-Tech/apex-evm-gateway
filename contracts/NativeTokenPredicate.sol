@@ -132,23 +132,18 @@ contract NativeTokenPredicate is
         nativeTokenWallet.withdraw(_sender, _receiver);
     }
 
-    function setTokenAsLockUnlockToken(uint16 _tokenId) external onlyGateway {
-        nativeTokenWallet.setTokenAsLockUnlockToken(_tokenId);
-    }
-
-    function setTokenAddress(
+    function setTokenInfo(
         uint16 _tokenId,
-        address _tokenAddress
+        address _tokenAddress,
+        bool _isLockUnlock
     ) external onlyGateway {
-        nativeTokenWallet.setTokenAddress(_tokenId, _tokenAddress);
+        nativeTokenWallet.setTokenInfo(_tokenId, _tokenAddress, _isLockUnlock);
     }
 
-    function getTokenAddress(uint16 _tokenId) external view returns (address) {
-        return nativeTokenWallet.tokenAddress(_tokenId);
-    }
-
-    function isTokenRegistered(uint16 _tokenId) public view returns (bool) {
-        return nativeTokenWallet.tokenAddress(_tokenId) != address(0);
+    function getTokenInfo(
+        uint16 _tokenId
+    ) external view returns (TokenInfo memory) {
+        return nativeTokenWallet.getTokenInfo(_tokenId);
     }
 
     function getNativeTokenWalletAddress() external view returns (address) {

@@ -72,9 +72,11 @@ describe("Register tokens tests", function () {
         );
 
       expect(
-        await nativeTokenWallet.tokenAddress(
-          (await gateway.currencyTokenId()) + 1n
-        )
+        (
+          await nativeTokenWallet.getTokenInfo(
+            (await gateway.currencyTokenId()) + 1n
+          )
+        )[0]
       ).to.equal(myToken.target);
     });
 
@@ -89,9 +91,11 @@ describe("Register tokens tests", function () {
         );
 
       expect(
-        await nativeTokenWallet.isLockUnlockToken(
-          (await gateway.currencyTokenId()) + 1n
-        )
+        (
+          await nativeTokenWallet.tokenInfo(
+            (await gateway.currencyTokenId()) + 1n
+          )
+        )[1]
       ).to.equal(true);
     });
 
@@ -128,9 +132,11 @@ describe("Register tokens tests", function () {
         );
 
       expect(
-        await nativeTokenWallet.isLockUnlockToken(
-          (await gateway.currencyTokenId()) + 1n
-        )
+        (
+          await nativeTokenWallet.tokenInfo(
+            (await gateway.currencyTokenId()) + 1n
+          )
+        )[1]
       ).to.equal(false);
     });
 
@@ -159,9 +165,11 @@ describe("Register tokens tests", function () {
       const contractAddress = event.args.contractAddress;
 
       expect(
-        await nativeTokenWallet.tokenAddress(
-          (await gateway.currencyTokenId()) + 1n
-        )
+        (
+          await nativeTokenWallet.tokenInfo(
+            (await gateway.currencyTokenId()) + 1n
+          )
+        )[0]
       ).to.equal(contractAddress);
     });
 

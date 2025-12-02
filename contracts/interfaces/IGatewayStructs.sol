@@ -34,6 +34,11 @@ interface IGatewayStructs {
         uint16 tokenId;
     }
 
+    struct TokenInfo {
+        address addr;
+        bool isLockUnlock;
+    }
+
     event Deposit(bytes data);
     event DepositedToken(bytes data);
     event FundsDeposited(address indexed sender, uint256 value);

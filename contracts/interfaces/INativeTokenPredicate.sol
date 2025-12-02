@@ -15,15 +15,17 @@ interface INativeTokenPredicate is IGatewayStructs {
         ReceiverWithdraw calldata _receiver
     ) external;
 
-    function setTokenAddress(uint16 tokenId, address tokenAddress) external;
-
     function resetBatchId() external;
 
-    function isTokenRegistered(uint16 tokenId) external returns (bool);
+    function setTokenInfo(
+        uint16 tokenId,
+        address tokenAddress,
+        bool isLockUnlock
+    ) external;
 
-    function setTokenAsLockUnlockToken(uint16 tokenId) external;
-
-    function getTokenAddress(uint16 tokenId) external view returns (address);
+    function getTokenInfo(
+        uint16 tokenId
+    ) external view returns (TokenInfo memory);
 
     function getNativeTokenWalletAddress() external view returns (address);
 }

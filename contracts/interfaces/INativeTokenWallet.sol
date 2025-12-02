@@ -29,9 +29,13 @@ interface INativeTokenWallet is IGatewayStructs {
         ReceiverWithdraw calldata _receiver
     ) external;
 
-    function setTokenAsLockUnlockToken(uint16 tokenId) external;
+    function setTokenInfo(
+        uint16 tokenId,
+        address addr,
+        bool isLockUnlock
+    ) external;
 
-    function setTokenAddress(uint16 tokenId, address tokenAddress) external;
-
-    function tokenAddress(uint16 tokenId) external view returns (address);
+    function getTokenInfo(
+        uint16 tokenId
+    ) external view returns (TokenInfo memory);
 }
