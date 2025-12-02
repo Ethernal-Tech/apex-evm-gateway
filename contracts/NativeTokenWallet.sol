@@ -73,11 +73,17 @@ contract NativeTokenWallet is
             (bool success, ) = _account.call{value: _amount}("");
             // Revert the transaction if the transfer fails
             if (!success) revert TransferFailed();
-        } else if (tokenInfo[_tokenId].isLockUnlock) {
-            IERC20 token = IERC20(tokenInfo[_tokenId].addr);
+            return;
+        }
+
+        TokenInfo storage _token = tokenInfo[_tokenId];
+        if (_token.addr == address(0)) {
+            revert TokenNotRegistered(_tokenId);
+        } else if (_token.isLockUnlock) {
+            IERC20 token = IERC20(_token.addr);
             token.safeTransfer(_account, _amount);
         } else {
-            MyToken token = MyToken(tokenInfo[_tokenId].addr);
+            MyToken token = MyToken(_token.addr);
             token.mint(_account, _amount);
         }
     }
@@ -96,11 +102,16 @@ contract NativeTokenWallet is
         ReceiverWithdraw calldata _receiver
     ) external override onlyPredicate {
         uint16 _tokenId = _receiver.tokenId;
-        if (tokenInfo[_tokenId].isLockUnlock) {
-            IERC20 token = IERC20(tokenInfo[_tokenId].addr);
+        TokenInfo storage _token = tokenInfo[_tokenId];
+        if (_token.addr == address(0)) {
+            revert TokenNotRegistered(_tokenId);
+        }
+                
+        if (_token.isLockUnlock) {
+            IERC20 token = IERC20(_token.addr);
             token.safeTransferFrom(_sender, address(this), _receiver.amount);
         } else {
-            MyToken token = MyToken(tokenInfo[_tokenId].addr);
+            MyToken token = MyToken(_token.addr);
             token.burn(_sender, _receiver.amount);
         }
     }

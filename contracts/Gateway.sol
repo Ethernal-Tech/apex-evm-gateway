@@ -209,13 +209,6 @@ contract Gateway is
                     revert InvalidBridgingAmount(minBridgingAmount, _amount);
                 amountSum += _amount;
             } else {
-                if (
-                    nativeTokenPredicate.getTokenInfo(_tokenCoinId).addr ==
-                    address(0)
-                ) {
-                    revert TokenNotRegistered(_tokenCoinId);
-                }
-
                 if (_amount < minTokenBridgingAmount)
                     revert InvalidBridgingAmount(
                         minTokenBridgingAmount,
