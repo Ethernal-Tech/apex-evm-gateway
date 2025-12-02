@@ -8,10 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
-import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
+import {INativeTokenPredicate} from "./interfaces/INativeTokenPredicate.sol";
 import {TokenFactory} from "./tokens/TokenFactory.sol";
 import {Utils} from "./Utils.sol";
-import {Validators} from "./Validators.sol";
+import {IValidators} from "./Validators.sol";
 
 /// @title Gateway Contract
 /// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
@@ -25,8 +25,8 @@ contract Gateway is
 {
     using SafeERC20 for IERC20;
 
-    NativeTokenPredicate public nativeTokenPredicate;
-    Validators public validators;
+    INativeTokenPredicate public nativeTokenPredicate;
+    IValidators public validators;
     TokenFactory public tokenFactory;
     uint256 public minFee;
     uint256 public minBridgingAmount;
@@ -77,11 +77,11 @@ contract Gateway is
         if (!_isContract(_validatorsAddress))
             revert NotContractAddress(_validatorsAddress);
 
-        nativeTokenPredicate = NativeTokenPredicate(
+        nativeTokenPredicate = INativeTokenPredicate(
             _nativeTokenPredicateAddress
         );
         tokenFactory = TokenFactory(_tokenFactoryAddress);
-        validators = Validators(_validatorsAddress);
+        validators = IValidators(_validatorsAddress);
     }
 
     /// @notice Registers a new token, either by deploying a new ERC20 token via the TokenFactory
@@ -304,9 +304,8 @@ contract Gateway is
     /// @param value The amount to be transferred.
     /// @dev Reverts if the transfer fails.
     function _transferAmountToWallet(uint256 value) internal {
-        address nativeTokenWalletAddress = address(
-            nativeTokenPredicate.nativeTokenWallet()
-        );
+        address nativeTokenWalletAddress = nativeTokenPredicate
+            .getNativeTokenWalletAddress();
         (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();

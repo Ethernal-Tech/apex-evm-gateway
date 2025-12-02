@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {INativeTokenPredicate} from "./interfaces/INativeTokenPredicate.sol";
-import {NativeTokenWallet} from "./NativeTokenWallet.sol";
+import {INativeTokenWallet} from "./interfaces/INativeTokenWallet.sol";
 import {Utils} from "./Utils.sol";
 
 /**
@@ -30,7 +30,7 @@ contract NativeTokenPredicate is
 {
     using SafeERC20 for IERC20;
 
-    NativeTokenWallet public nativeTokenWallet;
+    INativeTokenWallet public nativeTokenWallet;
     address public gateway;
 
     /// @notice Tracks the ID of the last processed batch.
@@ -64,7 +64,7 @@ contract NativeTokenPredicate is
             revert NotContractAddress(_nativeTokenWalletAddress);
 
         gateway = _gatewayAddress;
-        nativeTokenWallet = NativeTokenWallet(
+        nativeTokenWallet = INativeTokenWallet(
             payable(_nativeTokenWalletAddress)
         );
     }
@@ -149,6 +149,10 @@ contract NativeTokenPredicate is
 
     function isTokenRegistered(uint16 _tokenId) public view returns (bool) {
         return nativeTokenWallet.tokenAddress(_tokenId) != address(0);
+    }
+
+    function getNativeTokenWalletAddress() external view returns (address) {
+        return address(nativeTokenWallet);
     }
 
     function version() public pure returns (string memory) {

@@ -20,4 +20,10 @@ interface INativeTokenPredicate is IGatewayStructs {
     function resetBatchId() external;
 
     function isTokenRegistered(uint16 tokenId) external returns (bool);
+
+    function setTokenAsLockUnlockToken(uint16 tokenId) external;
+
+    function getTokenAddress(uint16 tokenId) external view returns (address);
+
+    function getNativeTokenWalletAddress() external view returns (address);
 }

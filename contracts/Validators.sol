@@ -106,7 +106,7 @@ contract Validators is
         emit ValidatorsSetUpdated(_data);
         return true;
     }
-    
+
     /**
      * @notice Retrieves the current validators chain data.
      * @return Array of validator chain data.
