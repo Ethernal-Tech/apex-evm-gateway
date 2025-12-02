@@ -2,7 +2,6 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
-import { token } from "../typechain-types/@openzeppelin/contracts";
 
 describe("Transfering MintBurn tokens", function () {
   describe("Deposit/Minting of MintBurn tokens", function () {
@@ -60,7 +59,7 @@ describe("Transfering MintBurn tokens", function () {
   });
 
   describe("Withdraw/Burn of MintBurn tokens", function () {
-    it("Should revert if tokenId is not valid", async () => {
+    it("Should revert if tokenId is not valid (withdraw)", async () => {
       const value = { value: ethers.parseUnits("200", "wei") };
       await expect(
         gateway
@@ -69,6 +68,20 @@ describe("Transfering MintBurn tokens", function () {
       )
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(2);
+    });
+
+    it("Should revert if tokenId is not valid (deposit)", async () => {
+      const data = new ethers.AbiCoder().encode(
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
+        [[1, 200, 1, [[receiver.address, 1000, 9183]]]]
+      );
+      await expect(
+        gateway
+          .connect(receiver)
+          .deposit("0xff003300", 1, data)
+      )
+        .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
+        .withArgs(9183);
     });
 
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
