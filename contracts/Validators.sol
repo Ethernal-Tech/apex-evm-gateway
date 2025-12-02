@@ -147,7 +147,7 @@ contract Validators is
     }
 
     function version() public pure returns (string memory) {
-        return "1.1.1";
+        return "1.0.0";
     }
 
     modifier onlyGateway() {
