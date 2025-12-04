@@ -11,21 +11,11 @@ describe("LockMint/UnlockBurn", function () {
     it("Should unlock/burn required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
-        .registerToken(
-          myToken.target,
-          (await gateway.currencyTokenId()) + 1n,
-          "",
-          ""
-        );
+        .registerToken(myToken.target, tokenId, "", "");
 
       let tx = await gateway
         .connect(owner)
-        .registerToken(
-          ethers.ZeroAddress,
-          (await gateway.currencyTokenId()) + 2n,
-          "Test Token",
-          "TTK"
-        );
+        .registerToken(ethers.ZeroAddress, tokenId + 1n, "Test Token", "TTK");
 
       let receipt = await tx.wait();
 
@@ -104,21 +94,11 @@ describe("LockMint/UnlockBurn", function () {
     it("Should lock/mint required amount of tokens for the receiver", async () => {
       await gateway
         .connect(owner)
-        .registerToken(
-          myToken.target,
-          (await gateway.currencyTokenId()) + 1n,
-          "",
-          ""
-        );
+        .registerToken(myToken.target, tokenId, "", "");
 
       let tx = await gateway
         .connect(owner)
-        .registerToken(
-          ethers.ZeroAddress,
-          (await gateway.currencyTokenId()) + 2n,
-          "Test Token",
-          "TTK"
-        );
+        .registerToken(ethers.ZeroAddress, tokenId + 1n, "Test Token", "TTK");
 
       let receipt = await tx.wait();
 
@@ -182,11 +162,7 @@ describe("LockMint/UnlockBurn", function () {
       );
 
       const [tupleValue] = decoded;
-      const [
-        [decodedAddress0, decodedAmount0, decodedTokenId0],
-        [decodedAddress1, decodedAmount1, decodedTokenId1],
-        [decodedAddress2, decodedAmount2, decodedTokenId2],
-      ] = tupleValue[3];
+      const [[, ,], [, decodedAmount1], [, decodedAmount2]] = tupleValue[3];
 
       const receiverBalanceToken1 = await myToken.balanceOf(receiver.address);
       const walletBalanceToken1 = await myToken.balanceOf(
@@ -217,6 +193,7 @@ describe("LockMint/UnlockBurn", function () {
     });
   });
 
+  let tokenId = 2n;
   let owner: any;
   let gateway: any;
   let myToken: any;

@@ -8,12 +8,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should mint required amount of tokens for the receiver", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(
-          ethers.ZeroAddress,
-          (await gateway.currencyTokenId()) + 1n,
-          "Test Token",
-          "TTK"
-        );
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -75,11 +70,7 @@ describe("Transfering MintBurn tokens", function () {
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
         [[1, 200, 1, [[receiver.address, 1000, 9183]]]]
       );
-      await expect(
-        gateway
-          .connect(receiver)
-          .deposit("0xff003300", 1, data)
-      )
+      await expect(gateway.connect(receiver).deposit("0xff003300", 1, data))
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(9183);
     });
@@ -87,12 +78,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should burn required amount of tokens for the sender (receiver)", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(
-          ethers.ZeroAddress,
-          (await gateway.currencyTokenId()) + 1n,
-          "Test Token",
-          "TTK"
-        );
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -148,12 +134,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should emit Withdraw event when ERC20 tokens are burnt", async () => {
       let tx = await gateway
         .connect(owner)
-        .registerToken(
-          ethers.ZeroAddress,
-          (await gateway.currencyTokenId()) + 1n,
-          "Test Token",
-          "TTK"
-        );
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       let receipt = await tx.wait();
 
@@ -216,8 +197,8 @@ describe("Transfering MintBurn tokens", function () {
     });
   });
 
+  let tokenId = 2n;
   let owner: any;
-  let validators: any;
   let gateway: any;
   let dataNonCurrencyToken: any;
   let receiver: any;
@@ -226,7 +207,6 @@ describe("Transfering MintBurn tokens", function () {
   beforeEach(async function () {
     const fixture = await loadFixture(deployGatewayFixtures);
     owner = fixture.owner;
-    validators = fixture.validators;
     gateway = fixture.gateway;
     dataNonCurrencyToken = fixture.dataNonCurrencyToken;
     receiver = fixture.receiver;

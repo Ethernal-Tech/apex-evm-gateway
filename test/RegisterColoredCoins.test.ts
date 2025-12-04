@@ -10,21 +10,12 @@ describe("Register tokens tests", function () {
       await expect(
         gateway
           .connect(validators[1])
-          .registerToken(
-            ethers.ZeroAddress,
-            (await gateway.currencyTokenId()) + 1n,
-            "",
-            ""
-          )
+          .registerToken(ethers.ZeroAddress, tokenId, "", "")
       ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
     });
 
     it("Should revert if _lockUnlockSCAddress is not zero and not contract address", async () => {
-      await expect(
-        gateway
-          .connect(owner)
-          .registerToken(owner, (await gateway.currencyTokenId()) + 1n, "", "")
-      )
+      await expect(gateway.connect(owner).registerToken(owner, tokenId, "", ""))
         .to.be.revertedWithCustomError(gateway, "NotContractAddress")
         .withArgs(owner);
     });
@@ -39,79 +30,50 @@ describe("Register tokens tests", function () {
       expect(
         await gateway
           .connect(owner)
-          .registerToken(
-            myToken.target,
-            (await gateway.currencyTokenId()) + 1n,
-            "",
-            ""
-          )
+          .registerToken(myToken.target, tokenId, "", "")
       ).not.to.be.reverted;
 
       await expect(
-        gateway
-          .connect(owner)
-          .registerToken(
-            myToken.target,
-            (await gateway.currencyTokenId()) + 1n,
-            "",
-            ""
-          )
+        gateway.connect(owner).registerToken(myToken.target, tokenId, "", "")
       )
         .to.be.revertedWithCustomError(gateway, "TokenIdAlreadyRegistered")
-        .withArgs((await gateway.currencyTokenId()) + 1n);
+        .withArgs(tokenId);
     });
 
     it("Should set tokenAddress on register LockUnlock token success", async () => {
       await gateway
         .connect(owner)
-        .registerToken(
-          myToken.target,
-          (await gateway.currencyTokenId()) + 1n,
-          "",
-          ""
-        );
+        .registerToken(myToken.target, tokenId, "", "");
 
-      expect(
-        (
-          await nativeTokenWallet.getTokenInfo(
-            (await gateway.currencyTokenId()) + 1n
-          )
-        )[0]
-      ).to.equal(myToken.target);
+      expect((await nativeTokenWallet.getTokenInfo(tokenId))[0]).to.equal(
+        myToken.target
+      );
     });
 
     it("Should set isLockUnlockToken to true when register LockUnlock token is success", async () => {
       await gateway
         .connect(owner)
-        .registerToken(
-          myToken.target,
-          (await gateway.currencyTokenId()) + 1n,
-          "",
-          ""
-        );
+        .registerToken(myToken.target, tokenId, "", "");
 
-      expect(
-        (
-          await nativeTokenWallet.getTokenInfo(
-            (await gateway.currencyTokenId()) + 1n
-          )
-        )[1]
-      ).to.equal(true);
+      expect((await nativeTokenWallet.getTokenInfo(tokenId))[1]).to.equal(true);
     });
 
     it("Should emit TokenRegistered event when new LockUnlock token is registered", async () => {
       await expect(
-        gateway
-          .connect(owner)
-          .registerToken(
-            myToken.target,
-            (await gateway.currencyTokenId()) + 1n,
-            "",
-            ""
-          )
+        gateway.connect(owner).registerToken(myToken.target, tokenId, "", "")
       )
         .to.emit(gateway, "TokenRegistered")
-        .withArgs("", "", 2, myToken.target, true);
+        .withArgs("", "", tokenId, myToken.target, true);
+    });
+
+    it("Should not update token name and symbol when new LockUnlock token is registered", async () => {
+      await gateway
+        .connect(owner)
+        .registerToken(myToken.target, tokenId, "", "");
+      expect(await gateway.getTokenAddress(tokenId)).to.equal(myToken.target);
+
+      expect(await myToken.name()).to.equal("Test Token");
+      expect(await myToken.symbol()).to.equal("TTK");
     });
   });
   describe("Register MintBurn token", function () {
@@ -124,31 +86,17 @@ describe("Register tokens tests", function () {
     it("Should set isLockUnlockToken to false when register MintBurn token is success", async () => {
       await gateway
         .connect(owner)
-        .registerToken(
-          ethers.ZeroAddress,
-          (await gateway.currencyTokenId()) + 1n,
-          "Test Token",
-          "TTK"
-        );
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
-      expect(
-        (
-          await nativeTokenWallet.getTokenInfo(
-            (await gateway.currencyTokenId()) + 1n
-          )
-        )[1]
-      ).to.equal(false);
+      expect((await nativeTokenWallet.getTokenInfo(tokenId))[1]).to.equal(
+        false
+      );
     });
 
     it("Should set tokenAddress on register MintBurn token", async () => {
       const tx = await gateway
         .connect(owner)
-        .registerToken(
-          ethers.ZeroAddress,
-          (await gateway.currencyTokenId()) + 1n,
-          "Test Token",
-          "TTK"
-        );
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       const receipt = await tx.wait();
 
@@ -164,31 +112,50 @@ describe("Register tokens tests", function () {
 
       const contractAddress = event.args.contractAddress;
 
-      expect(
-        (
-          await nativeTokenWallet.getTokenInfo(
-            (await gateway.currencyTokenId()) + 1n
-          )
-        )[0]
-      ).to.equal(contractAddress);
+      expect((await nativeTokenWallet.getTokenInfo(tokenId))[0]).to.equal(
+        contractAddress
+      );
     });
 
     it("Should emit tokenRegistered event when new MintBurn token is registered", async () => {
       await expect(
         gateway
           .connect(owner)
-          .registerToken(
-            ethers.ZeroAddress,
-            (await gateway.currencyTokenId()) + 1n,
-            "Test Token",
-            "TTK"
-          )
+          .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK")
       )
         .to.emit(gateway, "TokenRegistered")
         .withArgs("Test Token", "TTK", 2, anyValue, false);
     });
+
+    it("Should set token name and symbol when new MintBurn token is registered", async () => {
+      const tx = await gateway
+        .connect(owner)
+        .registerToken(ethers.ZeroAddress, tokenId, "New Test Token", "NTTK");
+
+      const receipt = await tx.wait();
+
+      const event = receipt.logs
+        .map((log: any) => {
+          try {
+            return gateway.interface.parseLog(log);
+          } catch {
+            return null;
+          }
+        })
+        .find((log: any) => log && log.name === "TokenRegistered");
+
+      const contractAddress = event.args.contractAddress;
+
+      expect(await gateway.getTokenAddress(tokenId)).to.equal(contractAddress);
+
+      const newToken = await ethers.getContractAt("MyToken", contractAddress);
+
+      expect(await newToken.name()).to.equal("New Test Token");
+      expect(await newToken.symbol()).to.equal("NTTK");
+    });
   });
 
+  let tokenId = 2n;
   let owner: any;
   let validators: any;
   let gateway: any;
