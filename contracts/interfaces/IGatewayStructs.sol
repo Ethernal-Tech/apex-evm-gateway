@@ -14,7 +14,7 @@ interface IGatewayStructs {
         uint256 feeAmount;
         ReceiverDeposit[] receivers;
     }
-    
+
     struct ValidatorSetChange {
         uint64 batchId;
         uint256 _validatorsSetNumber;
@@ -25,38 +25,68 @@ interface IGatewayStructs {
     struct ReceiverDeposit {
         address receiver;
         uint256 amount;
+        uint16 tokenId;
     }
 
     struct ReceiverWithdraw {
         string receiver;
         uint256 amount;
+        uint16 tokenId;
+    }
+
+    struct TokenInfo {
+        address addr;
+        bool isLockUnlock;
     }
 
     event Deposit(bytes data);
-
+    event DepositedToken(bytes data);
+    event FundsDeposited(address indexed sender, uint256 value);
+    event MinAmountsUpdated(
+        uint256 minFee,
+        uint256 minAmount,
+        uint256 minTokenAmount,
+        uint256 minOperationFee
+    );
+    event TokenRegistered(
+        string name,
+        string symbol,
+        uint16 tokenId,
+        address contractAddress,
+        bool isLockUnlockToken
+    );
+    event TTLExpired(bytes data);
+    event ValidatorSetUpdatedGW(bytes data);
+    event ValidatorsSetUpdated(bytes data);
     event Withdraw(
         uint8 destinationChainId,
         address sender,
         ReceiverWithdraw[] receivers,
-        uint256 feeAmount,
+        uint256 fee,
+        uint256 operationFee,
         uint256 value
     );
+    event WithdrawToken(
+        address sender,
+        string indexed receiver,
+        uint256 amount
+    );
 
-    event TTLExpired(bytes data);
-    event FundsDeposited(address indexed sender, uint256 value);
-    event ValidatorsSetUpdated(bytes data);
-    event MinAmountsUpdated(uint256 minFee, uint256 minAmount);
-    event ValidatorSetUpdatedGW(bytes data);
-
+    error BatchAlreadyExecuted();
+    error InsufficientFee(uint256 minFeeAmount, uint256 feeAmount);
+    error InvalidBridgingAmount(
+        uint256 minBridgingAmount,
+        uint256 bridgingAmount
+    );
+    error InvalidSignature();
+    error NotContractAddress(address addr);
     error NotGateway();
     error NotPredicate();
-    error NotPredicateOrOwner();
-    error InvalidSignature();
-    error ZeroAddress();
-    error WrongValue(uint256 expected, uint256 received);
-    error BatchAlreadyExecuted();
+    error TokenAddressAlreadyRegistered(address addr);
+    error TokenIdAlreadyRegistered(uint16 tokenId);
+    error TokenNotRegistered(uint16 tokenId);
     error TransferFailed();
     error WrongValidatorsSetValue();
-    error InsufficientFeeAmount(uint256 minFeeAmount, uint256 feeAmount);
-    error InvalidBridgingAmount(uint256 minBridgingAmount, uint256 bridgingAmount );
+    error WrongValue(uint256 expected, uint256 received);
+    error CurrencyTokenId();
 }

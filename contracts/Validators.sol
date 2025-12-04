@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
+import {Utils} from "./Utils.sol";
 
 /**
  * @title Validators
@@ -17,7 +18,8 @@ contract Validators is
     IValidators,
     Initializable,
     OwnableUpgradeable,
-    UUPSUpgradeable
+    UUPSUpgradeable,
+    Utils
 {
     address public constant VALIDATOR_BLS_PRECOMPILE =
         0x0000000000000000000000000000000000002060;
@@ -43,9 +45,10 @@ contract Validators is
         __UUPSUpgradeable_init();
     }
 
-    function setDependencies(address _gateway) external onlyOwner {
-        if (_gateway == address(0)) revert ZeroAddress();
-        gateway = _gateway;
+    function setDependencies(address _gatewayAddress) external onlyOwner {
+        if (!_isContract(_gatewayAddress))
+            revert NotContractAddress(_gatewayAddress);
+        gateway = _gatewayAddress;
     }
 
     function _authorizeUpgrade(
@@ -103,7 +106,7 @@ contract Validators is
         emit ValidatorsSetUpdated(_data);
         return true;
     }
-    
+
     /**
      * @notice Retrieves the current validators chain data.
      * @return Array of validator chain data.
@@ -144,7 +147,7 @@ contract Validators is
     }
 
     function version() public pure returns (string memory) {
-        return "1.1.1";
+        return "1.0.0";
     }
 
     modifier onlyGateway() {
