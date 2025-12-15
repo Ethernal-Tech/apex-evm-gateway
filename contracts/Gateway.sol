@@ -217,11 +217,12 @@ contract Gateway is
 
                 nativeTokenPredicate.withdraw(msg.sender, _receivers[i]);
             }
-
-            if (msg.value != amountSum) {
-                revert WrongValue(amountSum, msg.value);
-            }
         }
+
+        if (msg.value != amountSum) {
+            revert WrongValue(amountSum, msg.value);
+        }
+        
         _transferAmountToWallet(amountSum);
 
         emit Withdraw(
