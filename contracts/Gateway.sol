@@ -33,10 +33,11 @@ contract Gateway is
     uint256 public minTokenBridgingAmount;
     uint256 public minOperationFee;
     uint16 public currencyTokenId;
+    address public treasuryAddress;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -198,7 +199,7 @@ contract Gateway is
             );
         }
 
-        uint256 amountSum = _fee + _operationFee;
+        uint256 amountSum = _fee;
 
         for (uint256 i; i < _receivers.length; i++) {
             uint16 _tokenCoinId = _receivers[i].tokenId;
@@ -219,11 +220,14 @@ contract Gateway is
             }
         }
 
-        if (msg.value != amountSum) {
-            revert WrongValue(amountSum, msg.value);
+        uint256 expectedValue = amountSum + _operationFee;
+
+        if (msg.value != expectedValue) {
+            revert WrongValue(expectedValue, msg.value);
         }
 
         _transferAmountToWallet(amountSum);
+        _transferAmountToTreasury(_operationFee);
 
         emit Withdraw(
             _destinationChainId,
@@ -277,6 +281,14 @@ contract Gateway is
         );
     }
 
+    function setTreasuryAddress(
+        address _treasuryAddress
+    ) external onlyOwner {
+        require(_treasuryAddress != address(0), "Invalid address");
+
+        treasuryAddress = _treasuryAddress;
+    }
+
     function getTokenAddress(uint16 _tokenId) external view returns (address) {
         return nativeTokenPredicate.getTokenInfo(_tokenId).addr;
     }
@@ -305,6 +317,15 @@ contract Gateway is
         if (!success) revert TransferFailed();
     }
 
+    /// @notice Transfers an operation fee to the treasuryAddress.
+    /// @param value The amount to be transferred.
+    /// @dev Reverts if the transfer fails.
+    function _transferAmountToTreasury(uint256 value) internal {
+        (bool success, ) = treasuryAddress.call{value: value}("");
+        // Revert the transaction if the transfer fails
+        if (!success) revert TransferFailed();
+    }
+
     /// @notice Handles receiving Ether and transfers it to the native token wallet.
     /// @dev Emits a `FundsDeposited` event upon receiving Ether.
     receive() external payable {
@@ -314,7 +335,7 @@ contract Gateway is
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.1";
+        return "1.0.2"; //TODO: 1.0.2
     }
 
     modifier onlyPredicate() {
