@@ -48,6 +48,9 @@ interface IGatewayStructs {
         uint256 minTokenAmount,
         uint256 minOperationFee
     );
+    event TreasuryAddressUpdated(
+        address treasuryAddress
+    );
     event TokenRegistered(
         string name,
         string symbol,

@@ -287,6 +287,8 @@ contract Gateway is
         require(_treasuryAddress != address(0), "Invalid address");
 
         treasuryAddress = _treasuryAddress;
+
+        emit TreasuryAddressUpdated(_treasuryAddress);
     }
 
     function getTokenAddress(uint16 _tokenId) external view returns (address) {
