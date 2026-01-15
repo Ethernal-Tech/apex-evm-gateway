@@ -8,6 +8,7 @@ import {IGateway} from "./interfaces/IGateway.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {NativeTokenPredicate} from "./NativeTokenPredicate.sol";
+import "hardhat/console.sol";
 
 /// @title Gateway Contract
 /// @notice This contract serves as a gateway for managing token deposits, withdrawals, and validator updates.
