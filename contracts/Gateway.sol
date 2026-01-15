@@ -85,6 +85,16 @@ contract Gateway is
         validators = IValidators(_validatorsAddress);
     }
 
+    function setAdditionalDependenciesAndSync(
+        address _treasuryAddress
+    ) external onlyOwner {
+        if (_treasuryAddress == address(0)) revert InvalidAddress();
+
+        treasuryAddress = _treasuryAddress;
+
+        emit TreasuryAddressUpdated(_treasuryAddress);
+    }
+
     /// @notice Registers a new token, either by deploying a new ERC20 token via the TokenFactory
     ///         or by linking an existing Lock/Unlock smart contract.
     /// @dev
@@ -284,8 +294,8 @@ contract Gateway is
     function setTreasuryAddress(
         address _treasuryAddress
     ) external onlyOwner {
-        require(_treasuryAddress != address(0), "Invalid address");
-
+        if (_treasuryAddress == address(0)) revert InvalidAddress();
+        
         treasuryAddress = _treasuryAddress;
 
         emit TreasuryAddressUpdated(_treasuryAddress);

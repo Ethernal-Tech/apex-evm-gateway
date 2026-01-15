@@ -82,6 +82,7 @@ interface IGatewayStructs {
         uint256 bridgingAmount
     );
     error InvalidSignature();
+    error InvalidAddress();
     error NotContractAddress(address addr);
     error NotGateway();
     error NotPredicate();
