@@ -236,8 +236,11 @@ contract Gateway is
             revert WrongValue(expectedValue, msg.value);
         }
 
-        _transferAmountToWallet(amountSum);
-        _transferAmountToTreasury(_operationFee);
+        address nativeTokenWalletAddress = nativeTokenPredicate
+            .getNativeTokenWalletAddress();
+
+        _transferAmountTo(nativeTokenWalletAddress, amountSum);
+        _transferAmountTo(treasuryAddress, _operationFee);
 
         emit Withdraw(
             _destinationChainId,
@@ -318,22 +321,12 @@ contract Gateway is
         if (!valid) revert InvalidSignature();
     }
 
-    /// @notice Transfers an amount to the native token wallet.
-    /// @param value The amount to be transferred.
-    /// @dev Reverts if the transfer fails.
-    function _transferAmountToWallet(uint256 value) internal {
-        address nativeTokenWalletAddress = nativeTokenPredicate
-            .getNativeTokenWalletAddress();
-        (bool success, ) = nativeTokenWalletAddress.call{value: value}("");
-        // Revert the transaction if the transfer fails
-        if (!success) revert TransferFailed();
-    }
-
     /// @notice Transfers an operation fee to the treasuryAddress.
     /// @param value The amount to be transferred.
+    /// @param _address The address that receives the funds.
     /// @dev Reverts if the transfer fails.
-    function _transferAmountToTreasury(uint256 value) internal {
-        (bool success, ) = treasuryAddress.call{value: value}("");
+    function _transferAmountTo(address _address, uint256 value) internal {
+        (bool success, ) = _address.call{value: value}("");
         // Revert the transaction if the transfer fails
         if (!success) revert TransferFailed();
     }
@@ -341,7 +334,10 @@ contract Gateway is
     /// @notice Handles receiving Ether and transfers it to the native token wallet.
     /// @dev Emits a `FundsDeposited` event upon receiving Ether.
     receive() external payable {
-        _transferAmountToWallet(msg.value);
+        address nativeTokenWalletAddress = nativeTokenPredicate
+            .getNativeTokenWalletAddress();
+
+        _transferAmountTo(nativeTokenWalletAddress, msg.value);
 
         emit FundsDeposited(msg.sender, msg.value);
     }
