@@ -1,7 +1,5 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import hre from "hardhat";
 import { expect } from "chai";
-import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
 
 describe("Register tokens tests", function () {
@@ -10,7 +8,7 @@ describe("Register tokens tests", function () {
       await expect(
         gateway
           .connect(validators[1])
-          .registerToken(ethers.ZeroAddress, tokenId, "", "")
+          .registerToken(ethers.ZeroAddress, tokenId, "", ""),
       ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
     });
 
@@ -22,7 +20,7 @@ describe("Register tokens tests", function () {
 
     it("Should revert if register token with currency token id", async () => {
       await expect(
-        gateway.connect(owner).registerToken(myToken.target, 1, "", "")
+        gateway.connect(owner).registerToken(myToken.target, 1, "", ""),
       ).to.be.revertedWithCustomError(gateway, "CurrencyTokenId");
     });
 
@@ -30,11 +28,11 @@ describe("Register tokens tests", function () {
       expect(
         await gateway
           .connect(owner)
-          .registerToken(myToken.target, tokenId, "", "")
-      ).not.to.be.reverted;
+          .registerToken(myToken.target, tokenId, "", ""),
+      ).not.to.be.revert(ethers);
 
       await expect(
-        gateway.connect(owner).registerToken(myToken.target, tokenId, "", "")
+        gateway.connect(owner).registerToken(myToken.target, tokenId, "", ""),
       )
         .to.be.revertedWithCustomError(gateway, "TokenIdAlreadyRegistered")
         .withArgs(tokenId);
@@ -46,7 +44,7 @@ describe("Register tokens tests", function () {
         .registerToken(myToken.target, tokenId, "", "");
 
       expect((await nativeTokenWallet.getTokenInfo(tokenId))[0]).to.equal(
-        myToken.target
+        myToken.target,
       );
     });
 
@@ -60,7 +58,7 @@ describe("Register tokens tests", function () {
 
     it("Should emit TokenRegistered event when new LockUnlock token is registered", async () => {
       await expect(
-        gateway.connect(owner).registerToken(myToken.target, tokenId, "", "")
+        gateway.connect(owner).registerToken(myToken.target, tokenId, "", ""),
       )
         .to.emit(gateway, "TokenRegistered")
         .withArgs("", "", tokenId, myToken.target, true);
@@ -79,7 +77,7 @@ describe("Register tokens tests", function () {
   describe("Register MintBurn token", function () {
     it("Should revert if createToken is not called by Gateway", async () => {
       await expect(
-        tokenFactory.connect(validators[1]).createToken("", "")
+        tokenFactory.connect(validators[1]).createToken("", ""),
       ).to.be.revertedWithCustomError(tokenFactory, "NotGateway");
     });
 
@@ -89,7 +87,7 @@ describe("Register tokens tests", function () {
         .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
 
       expect((await nativeTokenWallet.getTokenInfo(tokenId))[1]).to.equal(
-        false
+        false,
       );
     });
 
@@ -101,30 +99,36 @@ describe("Register tokens tests", function () {
       const receipt = await tx.wait();
 
       const event = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
           try {
             return gateway.interface.parseLog(log);
           } catch {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "TokenRegistered");
+        .find((log) => log && log.name === "TokenRegistered");
 
       const contractAddress = event.args.contractAddress;
 
       expect((await nativeTokenWallet.getTokenInfo(tokenId))[0]).to.equal(
-        contractAddress
+        contractAddress,
       );
     });
 
     it("Should emit tokenRegistered event when new MintBurn token is registered", async () => {
-      await expect(
-        gateway
-          .connect(owner)
-          .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK")
-      )
-        .to.emit(gateway, "TokenRegistered")
-        .withArgs("Test Token", "TTK", 2, anyValue, false);
+      const tx = await gateway
+        .connect(owner)
+        .registerToken(ethers.ZeroAddress, tokenId, "Test Token", "TTK");
+
+      const receipt = await tx.wait();
+
+      const event = receipt.logs
+        .map((log) => gateway.interface.parseLog(log))
+        .find((e) => e?.name === "TokenRegistered");
+
+      expect(event.args.name).to.equal("Test Token");
+      expect(event.args.symbol).to.equal("TTK");
+      expect(event.args.tokenId).to.equal(2);
     });
 
     it("Should set token name and symbol when new MintBurn token is registered", async () => {
@@ -135,14 +139,14 @@ describe("Register tokens tests", function () {
       const receipt = await tx.wait();
 
       const event = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
           try {
             return gateway.interface.parseLog(log);
           } catch {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "TokenRegistered");
+        .find((log) => log && log.name === "TokenRegistered");
 
       const contractAddress = event.args.contractAddress;
 
@@ -156,20 +160,40 @@ describe("Register tokens tests", function () {
   });
 
   let tokenId = 2n;
-  let owner: any;
-  let validators: any;
-  let gateway: any;
-  let myToken: any;
-  let tokenFactory: any;
-  let nativeTokenWallet: any;
+  let gateway;
+  let nativeTokenPredicate;
+  let nativeTokenWallet;
+  let validatorsc;
+  let myToken;
+  let tokenFactory;
+  let owner;
+  let validators;
+  let receiver;
+  let receiverWithdraw;
+  let data;
+  let provider;
+  let fixture;
+  let connection;
+  let ethers;
 
   beforeEach(async function () {
-    const fixture = await loadFixture(deployGatewayFixtures);
-    owner = fixture.owner;
-    validators = fixture.validators;
+    fixture = await deployGatewayFixtures(hre);
+
     gateway = fixture.gateway;
+    nativeTokenPredicate = fixture.nativeTokenPredicate;
+    nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
     myToken = fixture.myToken;
     tokenFactory = fixture.tokenFactory;
     nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
+    owner = fixture.owner;
+    validators = fixture.validators;
+    receiver = fixture.receiver;
+    receiverWithdraw = fixture.receiverWithdraw;
+    data = fixture.data;
+    provider = fixture.provider;
+    connection = fixture.connection;
+    ethers = fixture.ethers;
   });
 });

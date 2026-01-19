@@ -1,8 +1,10 @@
-import { ethers } from "hardhat";
+import { ethers } from "ethers";
 import { BigNumberish } from "ethers";
 import { alwaysTrueBytecode } from "./constants";
 
-export async function deployGatewayFixtures() {
+export async function deployGatewayFixtures(hre: any) {
+  const connection = await hre.network.connect();
+  const provider = connection.ethers.provider;
   // Contracts are deployed using the first signer/account by default
   const [
     owner,
@@ -12,7 +14,7 @@ export async function deployGatewayFixtures() {
     validator3,
     validator4,
     validator5,
-  ] = await ethers.getSigners();
+  ] = await connection.ethers.getSigners();
   const validators = [
     validator1,
     validator2,
@@ -21,52 +23,66 @@ export async function deployGatewayFixtures() {
     validator5,
   ];
 
-  const hre = require("hardhat");
-
-  const NativeTokenWallet = await ethers.getContractFactory(
-    "NativeTokenWallet"
+  const NativeTokenWallet = await connection.ethers.getContractFactory(
+    "NativeTokenWallet",
   );
   const nativeTokenWalletLogic = await NativeTokenWallet.deploy();
 
-  const NativeTokenPredicate = await ethers.getContractFactory(
-    "NativeTokenPredicate"
+  const NativeTokenPredicate = await connection.ethers.getContractFactory(
+    "NativeTokenPredicate",
   );
   const nativeTokenPredicateLogic = await NativeTokenPredicate.deploy();
 
-  const Validators = await ethers.getContractFactory("Validators");
+  const Validators = await connection.ethers.getContractFactory("Validators");
   const validatorscLogic = await Validators.deploy();
 
-  const Gateway = await ethers.getContractFactory("Gateway");
+  const Gateway = await connection.ethers.getContractFactory("Gateway");
   const gatewayLogic = await Gateway.deploy();
 
-  const MyToken = await ethers.getContractFactory("MyToken");
+  const MyToken = await connection.ethers.getContractFactory("MyToken");
   const myTokenLogic = await MyToken.deploy();
   await myTokenLogic.waitForDeployment();
 
-  const TokenFactory = await ethers.getContractFactory("TokenFactory");
+  const TokenFactory = await connection.ethers.getContractFactory(
+    "TokenFactory",
+  );
   const tokenFactoryLogic = await TokenFactory.deploy();
   await tokenFactoryLogic.waitForDeployment();
 
+  const MockPrecompileTrue = await connection.ethers.getContractFactory(
+    "MockPrecompileTrue",
+  );
+  const mockPrecompileTrue = await MockPrecompileTrue.deploy();
+
+  const MockPrecompileFalse = await connection.ethers.getContractFactory(
+    "MockPrecompileFalse",
+  );
+  const mockPrecompileFalse = await MockPrecompileFalse.deploy();
+
   // // deployment of contract proxy
-  const NativeTokenPredicateProxy = await ethers.getContractFactory(
-    "ERC1967Proxy"
+  const NativeTokenPredicateProxy = await connection.ethers.getContractFactory(
+    "UUPSProxy",
   );
-  const NativeTokenWalletProxy = await ethers.getContractFactory(
-    "ERC1967Proxy"
+  const NativeTokenWalletProxy = await connection.ethers.getContractFactory(
+    "UUPSProxy",
   );
-  const ValidatorscProxy = await ethers.getContractFactory("ERC1967Proxy");
-  const GatewayProxy = await ethers.getContractFactory("ERC1967Proxy");
-  const MyTokenProxy = await ethers.getContractFactory("ERC1967Proxy");
-  const TokenFactoryProxy = await ethers.getContractFactory("ERC1967Proxy");
+  const ValidatorscProxy = await connection.ethers.getContractFactory(
+    "UUPSProxy",
+  );
+  const GatewayProxy = await connection.ethers.getContractFactory("UUPSProxy");
+  const MyTokenProxy = await connection.ethers.getContractFactory("UUPSProxy");
+  const TokenFactoryProxy = await connection.ethers.getContractFactory(
+    "UUPSProxy",
+  );
 
   const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
     nativeTokenPredicateLogic.target,
-    NativeTokenPredicate.interface.encodeFunctionData("initialize", [])
+    NativeTokenPredicate.interface.encodeFunctionData("initialize", []),
   );
 
   const nativeTokenWalletProxy = await NativeTokenWalletProxy.deploy(
     nativeTokenWalletLogic.target,
-    NativeTokenWallet.interface.encodeFunctionData("initialize", [])
+    NativeTokenWallet.interface.encodeFunctionData("initialize", []),
   );
 
   const validatorsAddresses = [
@@ -79,12 +95,12 @@ export async function deployGatewayFixtures() {
 
   const validatorsProxy = await ValidatorscProxy.deploy(
     validatorscLogic.target,
-    Validators.interface.encodeFunctionData("initialize", [])
+    Validators.interface.encodeFunctionData("initialize", []),
   );
 
   const gatewayProxy = await GatewayProxy.deploy(
     gatewayLogic.target,
-    Gateway.interface.encodeFunctionData("initialize", [100, 50, 50, 50, 1])
+    Gateway.interface.encodeFunctionData("initialize", [100, 50, 50, 50, 1]),
   );
 
   const myTokenProxy = await MyTokenProxy.deploy(
@@ -93,7 +109,7 @@ export async function deployGatewayFixtures() {
       "Test Token",
       "TTK",
       nativeTokenWalletProxy.target,
-    ])
+    ]),
   );
 
   const tokenFactoryProxy = await TokenFactoryProxy.deploy(
@@ -102,50 +118,58 @@ export async function deployGatewayFixtures() {
       gatewayProxy.target,
       myTokenLogic.target,
       nativeTokenWalletProxy.target,
-    ])
+    ]),
   );
 
   // //casting proxy contracts to contract logic
-  const NativeTokenPredicateDeployed = await ethers.getContractFactory(
-    "NativeTokenPredicate"
-  );
+  const NativeTokenPredicateDeployed =
+    await connection.ethers.getContractFactory("NativeTokenPredicate");
   const nativeTokenPredicate = NativeTokenPredicateDeployed.attach(
-    nativeTokenPredicateProxy.target
+    nativeTokenPredicateProxy.target,
   );
 
-  const NativeTokenWalletDeployed = await ethers.getContractFactory(
-    "NativeTokenWallet"
+  const NativeTokenWalletDeployed = await connection.ethers.getContractFactory(
+    "NativeTokenWallet",
   );
   const nativeTokenWallet = NativeTokenWalletDeployed.attach(
-    nativeTokenWalletProxy.target
+    nativeTokenWalletProxy.target,
   );
 
-  const ValidatorsDeployed = await ethers.getContractFactory("Validators");
+  const ValidatorsDeployed = await connection.ethers.getContractFactory(
+    "Validators",
+  );
   const validatorsc = ValidatorsDeployed.attach(validatorsProxy.target);
 
-  const GatewayDeployed = await ethers.getContractFactory("Gateway");
+  const GatewayDeployed = await connection.ethers.getContractFactory("Gateway");
   const gateway = GatewayDeployed.attach(gatewayProxy.target);
 
-  const MyTokenDeployed = await ethers.getContractFactory("MyToken");
+  const MyTokenDeployed = await connection.ethers.getContractFactory("MyToken");
   const myToken = MyTokenDeployed.attach(myTokenProxy.target);
 
-  const TokenFactoryDeployed = await ethers.getContractFactory("TokenFactory");
+  const TokenFactoryDeployed = await connection.ethers.getContractFactory(
+    "TokenFactory",
+  );
   const tokenFactory = TokenFactoryDeployed.attach(tokenFactoryProxy.target);
 
   await gateway.setDependencies(
     nativeTokenPredicate.target,
     tokenFactory.target,
-    validatorsc.target
+    validatorsc.target,
   );
 
   await nativeTokenPredicate.setDependencies(
     gateway.target,
-    nativeTokenWallet.target
+    nativeTokenWallet.target,
   );
 
   await nativeTokenWallet.setDependencies(nativeTokenPredicate.target);
 
   await validatorsc.setDependencies(gateway.target);
+
+  await validatorsc.setAdditionalDependenciesAndSync(
+    mockPrecompileTrue.target,
+    true,
+  );
 
   const validatorsCardanoData = [
     {
@@ -153,7 +177,7 @@ export async function deployGatewayFixtures() {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
     {
@@ -161,7 +185,7 @@ export async function deployGatewayFixtures() {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
     {
@@ -169,7 +193,7 @@ export async function deployGatewayFixtures() {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
     {
@@ -177,7 +201,7 @@ export async function deployGatewayFixtures() {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
     {
@@ -185,7 +209,7 @@ export async function deployGatewayFixtures() {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
   ];
@@ -226,11 +250,6 @@ export async function deployGatewayFixtures() {
 
   await validatorsc.setValidatorsChainData(validatorsCardanoData);
 
-  await hre.network.provider.send("hardhat_setCode", [
-    "0x0000000000000000000000000000000000002060",
-    alwaysTrueBytecode,
-  ]);
-
   //funding
   const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
@@ -252,16 +271,16 @@ export async function deployGatewayFixtures() {
   });
 
   //data encoding
-  const blockNumber = await ethers.provider.getBlockNumber();
+  const blockNumber = await connection.ethers.provider.getBlockNumber();
   const abiCoder = new ethers.AbiCoder();
   const dataCurrencyToken = abiCoder.encode(
     ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-    [[1, blockNumber + 100, 1, [[receiver.address, 1000, 1]]]]
+    [[1, blockNumber + 100, 1, [[receiver.address, 1000, 1]]]],
   );
 
   const dataNonCurrencyToken = abiCoder.encode(
     ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-    [[1, blockNumber + 100, 1, [[receiver.address, 1000, 2]]]]
+    [[1, blockNumber + 100, 1, [[receiver.address, 1000, 2]]]],
   );
 
   const dataMixTokens = abiCoder.encode(
@@ -277,7 +296,7 @@ export async function deployGatewayFixtures() {
           [receiver.address, 102, 3],
         ],
       ],
-    ]
+    ],
   );
 
   const validatorSetChange = {
@@ -307,26 +326,8 @@ export async function deployGatewayFixtures() {
     dataMixTokens,
     validatorsAddresses,
     validatorSetChange,
+    provider,
+    connection,
+    ethers: connection.ethers,
   };
-}
-
-export async function impersonateAsContractAndMintFunds(
-  contractAddress: string
-) {
-  const hre = require("hardhat");
-  const address = contractAddress.toLowerCase();
-  // impersonate as an contract on specified address
-  await hre.network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [address],
-  });
-
-  const signer = await ethers.getSigner(address);
-  // setting 100000000000000000000 tokens to signer
-  await ethers.provider.send("hardhat_setBalance", [
-    signer.address,
-    "0x56BC75E2D63100000",
-  ]);
-
-  return signer;
 }

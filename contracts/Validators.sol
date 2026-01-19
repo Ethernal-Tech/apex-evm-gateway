@@ -21,19 +21,21 @@ contract Validators is
     UUPSUpgradeable,
     Utils
 {
-    address public constant VALIDATOR_BLS_PRECOMPILE =
-        0x0000000000000000000000000000000000002060;
-    uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
-
     address private gateway;
 
     ValidatorChainData[] private validatorsChainData;
 
     uint256 public lastConfirmedValidatorsSet;
 
+    /// @dev Precompile for BLS signature verification
+    address precompileBls;
+
+    /// @dev Gas limit for the BLS precompile
+    uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
+
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -49,6 +51,20 @@ contract Validators is
         if (!_isContract(_gatewayAddress))
             revert NotContractAddress(_gatewayAddress);
         gateway = _gatewayAddress;
+    }
+
+    // @notice Sets the external contract dependencies.
+    /// @dev This function can only be called by the upgrade admin. It verifies that the provided address is a contract.
+    /// @param _precompileBls The address of the deployed BLS precompile contract.
+    /// @param isInitialDeployment Indicates whether this call occurs during the initial deployment of the contract. Set to false for upgrades.
+    function setAdditionalDependenciesAndSync(
+        address _precompileBls,
+        bool isInitialDeployment
+    ) external onlyOwner {
+        if (isInitialDeployment) {
+            if (_precompileBls == address(0)) revert ZeroAddress();
+            precompileBls = _precompileBls;
+        }
     }
 
     function _authorizeUpgrade(
@@ -135,8 +151,9 @@ contract Validators is
         // verify signatures` for provided sig data and sigs bytes
         // solhint-disable-next-line avoid-low-level-calls
         // slither-disable-next-line low-level-calls,calls-loop
-        (bool callSuccess, bytes memory returnData) = VALIDATOR_BLS_PRECOMPILE
-            .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
+        (bool callSuccess, bytes memory returnData) = precompileBls.staticcall{
+            gas: VALIDATOR_BLS_PRECOMPILE_GAS
+        }(
             abi.encodePacked(
                 uint8(1),
                 abi.encode(_hash, _signature, validatorsChainData, _bitmap)

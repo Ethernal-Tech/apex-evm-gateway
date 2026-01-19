@@ -89,4 +89,5 @@ interface IGatewayStructs {
     error WrongValidatorsSetValue();
     error WrongValue(uint256 expected, uint256 received);
     error CurrencyTokenId();
+    error ZeroAddress();
 }

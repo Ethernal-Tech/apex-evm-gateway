@@ -1,6 +1,5 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
 import { expect } from "chai";
-import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
 
 describe("Gateway Contract", function () {
@@ -11,8 +10,8 @@ describe("Gateway Contract", function () {
         .setDependencies(
           ethers.ZeroAddress,
           tokenFactory.target,
-          validatorsc.target
-        )
+          validatorsc.target,
+        ),
     )
       .to.to.be.revertedWithCustomError(gateway, "NotContractAddress")
       .withArgs(ethers.ZeroAddress);
@@ -25,8 +24,8 @@ describe("Gateway Contract", function () {
         .setDependencies(
           nativeTokenPredicate.target,
           tokenFactory.target,
-          validatorsc.target
-        )
+          validatorsc.target,
+        ),
     ).to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
@@ -37,12 +36,12 @@ describe("Gateway Contract", function () {
         .setDependencies(
           nativeTokenPredicate.target,
           tokenFactory.target,
-          validatorsc.target
-        )
-    ).to.not.be.reverted;
+          validatorsc.target,
+        ),
+    ).to.not.be.revert(ethers);
 
     expect(await gateway.nativeTokenPredicate()).to.equal(
-      nativeTokenPredicate.target
+      nativeTokenPredicate.target,
     );
     expect(await gateway.validators()).to.equal(validatorsc.target);
   });
@@ -51,11 +50,11 @@ describe("Gateway Contract", function () {
     const depositTx = await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      dataCurrencyToken
+      dataCurrencyToken,
     );
     const depositReceipt = await depositTx.wait();
     const depositEvent = depositReceipt.logs.find(
-      (log: any) => log.fragment && log.fragment.name === "Deposit"
+      (log) => log.fragment && log.fragment.name === "Deposit",
     );
 
     expect(depositEvent?.args?.data).to.equal(dataCurrencyToken);
@@ -67,11 +66,11 @@ describe("Gateway Contract", function () {
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      dataCurrencyToken
+      dataCurrencyToken,
     );
 
     const nativeTokenWalletBefore = await ethers.provider.getBalance(
-      nativeTokenWalletAddress
+      nativeTokenWalletAddress,
     );
 
     const value = { value: ethers.parseUnits("250", "wei") };
@@ -80,21 +79,21 @@ describe("Gateway Contract", function () {
       .withdraw(1, receiverWithdrawCurrencyToken, 100, 50, value);
     const withdrawReceipt = await withdrawTx.wait();
     const withdrawEvent = withdrawReceipt.logs.find(
-      (log: any) => log.fragment && log.fragment.name === "Withdraw"
+      (log) => log.fragment && log.fragment.name === "Withdraw",
     );
 
     const nativeTokenWalletAfter = await ethers.provider.getBalance(
-      nativeTokenWalletAddress
+      nativeTokenWalletAddress,
     );
 
     expect(nativeTokenWalletAfter).to.equal(
-      nativeTokenWalletBefore + BigInt(250)
+      nativeTokenWalletBefore + BigInt(250),
     );
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
     expect(withdrawEvent?.args?.sender).to.equal(receiver);
     expect(withdrawEvent?.args?.receivers[0].receiver).to.equal(
-      receiver.address
+      receiver.address,
     );
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.fee).to.equal(100);
@@ -106,7 +105,7 @@ describe("Gateway Contract", function () {
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      dataCurrencyToken
+      dataCurrencyToken,
     );
 
     const value = { value: ethers.parseUnits("1", "wei") };
@@ -114,13 +113,13 @@ describe("Gateway Contract", function () {
     await expect(
       gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawCurrencyToken, 100, 50, value)
+        .withdraw(1, receiverWithdrawCurrencyToken, 100, 50, value),
     ).to.to.be.revertedWithCustomError(gateway, "WrongValue");
   });
 
   it("Set feeAmount should fail if not called by owner", async () => {
     await expect(
-      gateway.connect(receiver).setMinAmounts(200, 100, 50, 50)
+      gateway.connect(receiver).setMinAmounts(200, 100, 50, 50),
     ).to.to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
   });
 
@@ -140,20 +139,26 @@ describe("Gateway Contract", function () {
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      dataCurrencyToken
+      dataCurrencyToken,
     );
 
     const value = { value: ethers.parseUnits("1", "wei") };
 
     const receiverWithdrawCurrencyTokenInvalidAmount = structuredClone(
-      receiverWithdrawCurrencyToken
+      receiverWithdrawCurrencyToken,
     );
     receiverWithdrawCurrencyTokenInvalidAmount[0].amount = 1;
 
     await expect(
       gateway
         .connect(receiver)
-        .withdraw(1, receiverWithdrawCurrencyTokenInvalidAmount, 100, 50, value)
+        .withdraw(
+          1,
+          receiverWithdrawCurrencyTokenInvalidAmount,
+          100,
+          50,
+          value,
+        ),
     )
       .to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount")
       .withArgs(50, 1);
@@ -165,7 +170,7 @@ describe("Gateway Contract", function () {
     const value = { value: ethers.parseUnits("1", "wei") };
 
     const receiverWithdrawNonCurrencyTokenInvalidAmount = structuredClone(
-      receiverWithdrawNonCurrencyToken
+      receiverWithdrawNonCurrencyToken,
     );
     receiverWithdrawNonCurrencyTokenInvalidAmount[0].amount = 1;
 
@@ -177,8 +182,8 @@ describe("Gateway Contract", function () {
           receiverWithdrawNonCurrencyTokenInvalidAmount,
           100,
           50,
-          value
-        )
+          value,
+        ),
     )
       .to.to.be.revertedWithCustomError(gateway, "InvalidBridgingAmount")
       .withArgs(50, 1);
@@ -201,7 +206,7 @@ describe("Gateway Contract", function () {
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 1]]]]
+        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 1]]]],
       );
       dataArray.push(data);
     }
@@ -211,7 +216,7 @@ describe("Gateway Contract", function () {
       const depositTX = await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataArray[i]
+        dataArray[i],
       );
       depositTXs.push(depositTX);
     }
@@ -219,7 +224,7 @@ describe("Gateway Contract", function () {
     for (let i = 0; i < 100; i++) {
       const depositReceipt = await depositTXs[i].wait();
       const depositEvent = depositReceipt.logs.find(
-        (log: any) => log.fragment && log.fragment.name === "Deposit"
+        (log) => log.fragment && log.fragment.name === "Deposit",
       );
 
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
@@ -228,7 +233,7 @@ describe("Gateway Contract", function () {
     const value = { value: ethers.parseUnits("250", "wei") };
 
     const nativeTokenWalletBefore = await ethers.provider.getBalance(
-      nativeTokenWalletAddress
+      nativeTokenWalletAddress,
     );
 
     for (let i = 0; i < 100; i++) {
@@ -237,21 +242,21 @@ describe("Gateway Contract", function () {
         .withdraw(1, receiverWithdrawCurrencyToken, 100, 50, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find(
-        (log: any) => log.fragment && log.fragment.name === "Withdraw"
+        (log) => log.fragment && log.fragment.name === "Withdraw",
       );
 
       let nativeTokenWalletAfter = await ethers.provider.getBalance(
-        nativeTokenWalletAddress
+        nativeTokenWalletAddress,
       );
 
       expect(nativeTokenWalletAfter).to.equal(
-        nativeTokenWalletBefore + BigInt(250 * (i + 1))
+        nativeTokenWalletBefore + BigInt(250 * (i + 1)),
       );
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
       expect(withdrawEvent?.args?.receivers[0].receiver).to.equal(
-        receiver.address
+        receiver.address,
       );
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.fee).to.equal(100);
@@ -277,7 +282,7 @@ describe("Gateway Contract", function () {
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 1]]]]
+        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 1]]]],
       );
       dataArray.push(data);
     }
@@ -287,7 +292,7 @@ describe("Gateway Contract", function () {
       const depositTX = await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataArray[i]
+        dataArray[i],
       );
       depositTXs.push(depositTX);
     }
@@ -295,13 +300,13 @@ describe("Gateway Contract", function () {
     const value = { value: ethers.parseUnits("250", "wei") };
 
     let nativeTokenWalletBefore = await ethers.provider.getBalance(
-      nativeTokenWalletAddress
+      nativeTokenWalletAddress,
     );
 
     for (let i = 0; i < 100; i++) {
       const depositReceipt = await depositTXs[i].wait();
       const depositEvent = depositReceipt.logs.find(
-        (log: any) => log.fragment && log.fragment.name === "Deposit"
+        (log) => log.fragment && log.fragment.name === "Deposit",
       );
 
       expect(depositEvent?.args?.data).to.equal(dataArray[i]);
@@ -311,21 +316,21 @@ describe("Gateway Contract", function () {
         .withdraw(1, receiverWithdrawCurrencyToken, 100, 50, value);
       const withdrawReceipt = await withdrawTx.wait();
       const withdrawEvent = withdrawReceipt.logs.find(
-        (log: any) => log.fragment && log.fragment.name === "Withdraw"
+        (log) => log.fragment && log.fragment.name === "Withdraw",
       );
 
       let nativeTokenWalletAfter = await ethers.provider.getBalance(
-        nativeTokenWalletAddress
+        nativeTokenWalletAddress,
       );
 
       expect(nativeTokenWalletAfter).to.equal(
-        nativeTokenWalletBefore + BigInt(250 * (i + 1))
+        nativeTokenWalletBefore + BigInt(250 * (i + 1)),
       );
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
       expect(withdrawEvent?.args?.sender).to.equal(receiver);
       expect(withdrawEvent?.args?.receivers[0].receiver).to.equal(
-        receiver.address
+        receiver.address,
       );
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.fee).to.equal(100);
@@ -338,20 +343,20 @@ describe("Gateway Contract", function () {
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
 
     const nativeTokenWalletBefore = await ethers.provider.getBalance(
-      nativeTokenWalletAddress
+      nativeTokenWalletAddress,
     );
 
     await expect(
       owner.sendTransaction({
         to: gatewayAddress,
         value: ethers.parseUnits("100", "wei"),
-      })
+      }),
     )
       .to.emit(gateway, "FundsDeposited")
       .withArgs(owner.address, 100);
 
     const nativeTokenWalletAfter = await ethers.provider.getBalance(
-      nativeTokenWalletAddress
+      nativeTokenWalletAddress,
     );
 
     expect(nativeTokenWalletAfter).to.equal(nativeTokenWalletBefore + 100n);
@@ -365,20 +370,20 @@ describe("Gateway Contract", function () {
       [
         "tuple(uint64, uint64, uint256, tuple(uint8, address, uint256, uint256)[])",
       ],
-      [[1, blockNumber - 1, 1, [[1, address, 100, 0]]]]
+      [[1, blockNumber - 1, 1, [[1, address, 100, 0]]]],
     );
 
     const depositTx = await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
       "0x7465737400000000000000000000000000000000000000000000000000000000",
-      dataTTLExpired
+      dataTTLExpired,
     );
     const depositReceipt = await depositTx.wait();
     const ttlEvent = depositReceipt.logs.find(
-      (log: any) => log.fragment.name === "TTLExpired"
+      (log) => log.fragment.name === "TTLExpired",
     );
     const depositEvent = depositReceipt.logs.find(
-      (log: any) => log.fragment && log.fragment.name === "Deposit"
+      (log) => log.fragment && log.fragment.name === "Deposit",
     );
 
     expect(ttlEvent?.args?.data).to.equal(dataTTLExpired);
@@ -386,31 +391,44 @@ describe("Gateway Contract", function () {
   });
 
   let tokenId = 2n;
-  let owner: any;
-  let receiver: any;
-  let gateway: any;
-  let nativeTokenPredicate: any;
-  let nativeTokenWallet: any;
-  let tokenFactory: any;
-  let validatorsc: any;
-  let receiverWithdrawCurrencyToken: any;
-  let receiverWithdrawNonCurrencyToken: any;
-  let dataCurrencyToken: any;
-  let myToken: any;
+  let gateway;
+  let nativeTokenPredicate;
+  let nativeTokenWallet;
+  let validatorsc;
+  let myToken;
+  let tokenFactory;
+  let owner;
+  let receiver;
+  let receiverWithdraw;
+  let receiverWithdrawCurrencyToken;
+  let receiverWithdrawNonCurrencyToken;
+  let data;
+  let dataCurrencyToken;
+  let provider;
+  let fixture;
+  let connection;
+  let ethers;
 
   beforeEach(async function () {
-    const fixture = await loadFixture(deployGatewayFixtures);
+    fixture = await deployGatewayFixtures(hre);
 
-    owner = fixture.owner;
-    receiver = fixture.receiver;
     gateway = fixture.gateway;
     nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
-    tokenFactory = fixture.tokenFactory;
     validatorsc = fixture.validatorsc;
+    nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
+    myToken = fixture.myToken;
+    tokenFactory = fixture.tokenFactory;
+    owner = fixture.owner;
+    receiver = fixture.receiver;
+    receiverWithdraw = fixture.receiverWithdraw;
     receiverWithdrawCurrencyToken = fixture.receiverWithdrawCurrencyToken;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
+    data = fixture.data;
     dataCurrencyToken = fixture.dataCurrencyToken;
-    myToken = fixture.myToken;
+    provider = fixture.provider;
+    connection = fixture.connection;
+    ethers = fixture.ethers;
   });
 });

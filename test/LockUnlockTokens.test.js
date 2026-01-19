@@ -1,10 +1,6 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import {
-  deployGatewayFixtures,
-  impersonateAsContractAndMintFunds,
-} from "./fixtures";
+import { deployGatewayFixtures } from "./fixtures";
 
 describe("Transfering LockUnlock tokens", function () {
   describe("Deposit/Unlocking of LockUnlock tokens", function () {
@@ -14,7 +10,7 @@ describe("Transfering LockUnlock tokens", function () {
         .registerToken(myToken.target, tokenId, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
-        await nativeTokenWallet.getAddress()
+        await nativeTokenWallet.getAddress(),
       );
 
       //minting tokens for NativeTokenWallet to reporesent previously locked tokens
@@ -29,7 +25,7 @@ describe("Transfering LockUnlock tokens", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonCurrencyToken
+        dataNonCurrencyToken,
       );
 
       const [tupleValue] = decoded;
@@ -38,15 +34,15 @@ describe("Transfering LockUnlock tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonCurrencyToken
+        dataNonCurrencyToken,
       );
 
       expect(await myToken.balanceOf(decodedAddress)).to.equal(
-        receiverBalance + decodedAmount
+        receiverBalance + decodedAmount,
       );
 
       expect(await myToken.balanceOf(nativeTokenWalletContract)).to.equal(
-        walletBalance - decodedAmount
+        walletBalance - decodedAmount,
       );
     });
   });
@@ -58,7 +54,7 @@ describe("Transfering LockUnlock tokens", function () {
         .registerToken(myToken.target, tokenId, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
-        await nativeTokenWallet.getAddress()
+        await nativeTokenWallet.getAddress(),
       );
 
       //minting tokens for receiver
@@ -70,7 +66,7 @@ describe("Transfering LockUnlock tokens", function () {
 
       const receiverbalance = await myToken.balanceOf(receiver.address);
       const nativeTokenWalletBalance = await myToken.balanceOf(
-        nativeTokenWallet.target
+        nativeTokenWallet.target,
       );
 
       const value = { value: ethers.parseUnits("150", "wei") };
@@ -80,14 +76,14 @@ describe("Transfering LockUnlock tokens", function () {
         .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value);
 
       expect(
-        await myToken.balanceOf(receiverWithdrawNonCurrencyToken[0].receiver)
+        await myToken.balanceOf(receiverWithdrawNonCurrencyToken[0].receiver),
       ).to.equal(
-        receiverbalance - BigInt(receiverWithdrawNonCurrencyToken[0].amount)
+        receiverbalance - BigInt(receiverWithdrawNonCurrencyToken[0].amount),
       );
 
       expect(await myToken.balanceOf(nativeTokenWalletContract)).to.equal(
         nativeTokenWalletBalance +
-          BigInt(receiverWithdrawNonCurrencyToken[0].amount)
+          BigInt(receiverWithdrawNonCurrencyToken[0].amount),
       );
     });
 
@@ -97,7 +93,7 @@ describe("Transfering LockUnlock tokens", function () {
         .registerToken(myToken.target, tokenId, "", "");
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
-        await nativeTokenWallet.getAddress()
+        await nativeTokenWallet.getAddress(),
       );
 
       //minting tokens for receiver
@@ -115,7 +111,7 @@ describe("Transfering LockUnlock tokens", function () {
       const receipt = await tx.wait();
 
       const event = receipt.logs.find(
-        (log: any) => log.fragment && log.fragment.name === "Withdraw"
+        (log) => log.fragment && log.fragment.name === "Withdraw",
       );
 
       expect(event?.args?.destinationChainId).to.equal(1);
@@ -128,23 +124,58 @@ describe("Transfering LockUnlock tokens", function () {
     });
   });
 
+  async function impersonateAsContractAndMintFunds(contractAddress) {
+    const address = contractAddress.toLowerCase();
+
+    // impersonate as a contract on specified address
+    await provider.send("hardhat_impersonateAccount", [address]);
+
+    const signer = await ethers.getSigner(address);
+
+    // minting 100000000000000000000 tokens to signer
+    await provider.send("hardhat_setBalance", [
+      signer.address,
+      "0x56BC75E2D63100000",
+    ]);
+
+    return signer;
+  }
+
   let tokenId = 2n;
-  let owner: any;
-  let gateway: any;
-  let myToken: any;
-  let dataNonCurrencyToken: any;
-  let nativeTokenWallet: any;
-  let receiver: any;
-  let receiverWithdrawNonCurrencyToken: any;
+  let gateway;
+  let nativeTokenPredicate;
+  let nativeTokenWallet;
+  let validatorsc;
+  let myToken;
+  let owner;
+  let receiver;
+  let receiverWithdraw;
+  let receiverWithdrawNonCurrencyToken;
+  let data;
+  let dataNonCurrencyToken;
+  let provider;
+  let fixture;
+  let connection;
+  let ethers;
 
   beforeEach(async function () {
-    const fixture = await loadFixture(deployGatewayFixtures);
-    owner = fixture.owner;
+    fixture = await deployGatewayFixtures(hre);
+
     gateway = fixture.gateway;
-    myToken = fixture.myToken;
-    dataNonCurrencyToken = fixture.dataNonCurrencyToken;
+    nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
+    nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
+    myToken = fixture.myToken;
+    owner = fixture.owner;
     receiver = fixture.receiver;
+    receiverWithdraw = fixture.receiverWithdraw;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
+    data = fixture.data;
+    dataNonCurrencyToken = fixture.dataNonCurrencyToken;
+    provider = fixture.provider;
+    connection = fixture.connection;
+    ethers = fixture.ethers;
   });
 });

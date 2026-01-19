@@ -1,10 +1,6 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import {
-  deployGatewayFixtures,
-  impersonateAsContractAndMintFunds,
-} from "./fixtures";
+import { deployGatewayFixtures } from "./fixtures";
 
 describe("LockMint/UnlockBurn", function () {
   describe("Working with mixed tokens", function () {
@@ -20,24 +16,24 @@ describe("LockMint/UnlockBurn", function () {
       let receipt = await tx.wait();
 
       let event = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
           try {
             return gateway.interface.parseLog(log);
           } catch {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "TokenRegistered");
+        .find((log) => log && log.name === "TokenRegistered");
 
       const contractAddress = event.args.contractAddress;
 
       const myTokenERC20 = await ethers.getContractAt(
         "MyToken",
-        contractAddress
+        contractAddress,
       );
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
-        await nativeTokenWallet.getAddress()
+        await nativeTokenWallet.getAddress(),
       );
 
       //minting tokens for receiver
@@ -66,11 +62,11 @@ describe("LockMint/UnlockBurn", function () {
 
       const receiverBalanceToken1 = await myToken.balanceOf(receiver.address);
       const receiverBalanceToken2 = await myTokenERC20.balanceOf(
-        receiver.address
+        receiver.address,
       );
 
       const walletBalanceToken1 = await myToken.balanceOf(
-        nativeTokenWalletAddress
+        nativeTokenWalletAddress,
       );
 
       const value = { value: ethers.parseUnits("250", "wei") };
@@ -79,15 +75,15 @@ describe("LockMint/UnlockBurn", function () {
         .withdraw(1, receiverWithdrawMixTokens, 100, 50, value);
 
       expect(await myToken.balanceOf(receiver.address)).to.equal(
-        receiverBalanceToken1 - BigInt(receiverWithdrawMixTokens[1].amount)
+        receiverBalanceToken1 - BigInt(receiverWithdrawMixTokens[1].amount),
       );
 
       expect(await myToken.balanceOf(nativeTokenWalletAddress)).to.equal(
-        walletBalanceToken1 + BigInt(receiverWithdrawMixTokens[1].amount)
+        walletBalanceToken1 + BigInt(receiverWithdrawMixTokens[1].amount),
       );
 
       expect(await myTokenERC20.balanceOf(receiver.address)).to.equal(
-        receiverBalanceToken2 - BigInt(receiverWithdrawMixTokens[2].amount)
+        receiverBalanceToken2 - BigInt(receiverWithdrawMixTokens[2].amount),
       );
     });
 
@@ -103,24 +99,24 @@ describe("LockMint/UnlockBurn", function () {
       let receipt = await tx.wait();
 
       let event = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
           try {
             return gateway.interface.parseLog(log);
           } catch {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "TokenRegistered");
+        .find((log) => log && log.name === "TokenRegistered");
 
       const contractAddress = event.args.contractAddress;
 
       const myTokenERC20 = await ethers.getContractAt(
         "MyToken",
-        contractAddress
+        contractAddress,
       );
 
       const nativeTokenWalletContract = await impersonateAsContractAndMintFunds(
-        await nativeTokenWallet.getAddress()
+        await nativeTokenWallet.getAddress(),
       );
 
       //minting tokens for receiver
@@ -158,7 +154,7 @@ describe("LockMint/UnlockBurn", function () {
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataMixTokens
+        dataMixTokens,
       );
 
       const [tupleValue] = decoded;
@@ -166,50 +162,85 @@ describe("LockMint/UnlockBurn", function () {
 
       const receiverBalanceToken1 = await myToken.balanceOf(receiver.address);
       const walletBalanceToken1 = await myToken.balanceOf(
-        nativeTokenWalletAddress
+        nativeTokenWalletAddress,
       );
 
       const receiverBalanceToken2 = await myTokenERC20.balanceOf(
-        receiver.address
+        receiver.address,
       );
 
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataMixTokens
+        dataMixTokens,
       );
 
       expect(await myToken.balanceOf(receiver)).to.equal(
-        receiverBalanceToken1 + decodedAmount1
+        receiverBalanceToken1 + decodedAmount1,
       );
 
       expect(await myToken.balanceOf(nativeTokenWalletAddress)).to.equal(
-        walletBalanceToken1 - decodedAmount1
+        walletBalanceToken1 - decodedAmount1,
       );
 
       expect(await myTokenERC20.balanceOf(receiver)).to.equal(
-        receiverBalanceToken2 + decodedAmount2
+        receiverBalanceToken2 + decodedAmount2,
       );
     });
   });
 
+  async function impersonateAsContractAndMintFunds(contractAddress) {
+    const address = contractAddress.toLowerCase();
+
+    // impersonate as a contract on specified address
+    await provider.send("hardhat_impersonateAccount", [address]);
+
+    const signer = await ethers.getSigner(address);
+
+    // minting 100000000000000000000 tokens to signer
+    await provider.send("hardhat_setBalance", [
+      signer.address,
+      "0x56BC75E2D63100000",
+    ]);
+
+    return signer;
+  }
+
   let tokenId = 2n;
-  let owner: any;
-  let gateway: any;
-  let myToken: any;
-  let dataMixTokens: any;
-  let nativeTokenWallet: any;
-  let receiver: any;
-  let receiverWithdrawMixTokens: any;
+  let gateway;
+  let nativeTokenPredicate;
+  let nativeTokenWallet;
+  let validatorsc;
+  let myToken;
+  let owner;
+  let receiver;
+  let receiverWithdraw;
+  let receiverWithdrawMixTokens;
+  let data;
+  let dataMixTokens;
+  let provider;
+  let fixture;
+  let connection;
+  let ethers;
 
   beforeEach(async function () {
-    const fixture = await loadFixture(deployGatewayFixtures);
-    owner = fixture.owner;
+    fixture = await deployGatewayFixtures(hre);
+
     gateway = fixture.gateway;
-    myToken = fixture.myToken;
-    dataMixTokens = fixture.dataMixTokens;
+    nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
+    nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
+    myToken = fixture.myToken;
+    owner = fixture.owner;
     receiver = fixture.receiver;
+    receiverWithdraw = fixture.receiverWithdraw;
     receiverWithdrawMixTokens = fixture.receiverWithdrawMixTokens;
+    data = fixture.data;
+    dataMixTokens = fixture.dataMixTokens;
+    provider = fixture.provider;
+    connection = fixture.connection;
+    ethers = fixture.ethers;
   });
 });

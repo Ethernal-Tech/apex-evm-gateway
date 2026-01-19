@@ -1,7 +1,7 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
 import { expect } from "chai";
-import { ethers } from "hardhat";
 import { deployGatewayFixtures } from "./fixtures";
+import IERC20Abi from "@openzeppelin/contracts/build/contracts/IERC20.json";
 
 describe("Transfering MintBurn tokens", function () {
   describe("Deposit/Minting of MintBurn tokens", function () {
@@ -13,27 +13,28 @@ describe("Transfering MintBurn tokens", function () {
       const receipt = await tx.wait();
 
       const event = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
           try {
             return gateway.interface.parseLog(log);
           } catch {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "TokenRegistered");
+        .find((log) => log && log.name === "TokenRegistered");
 
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
       const contractAddress = event.args.contractAddress;
 
-      const myTokenERC20 = await ethers.getContractAt(
-        "IERC20",
-        contractAddress
+      const myTokenERC20 = new ethers.Contract(
+        contractAddress,
+        IERC20Abi.abi,
+        owner,
       );
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonCurrencyToken
+        dataNonCurrencyToken,
       );
 
       const [tupleValue] = decoded;
@@ -44,11 +45,11 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonCurrencyToken
+        dataNonCurrencyToken,
       );
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
-        decodedAmount
+        decodedAmount,
       );
     });
   });
@@ -59,7 +60,7 @@ describe("Transfering MintBurn tokens", function () {
       await expect(
         gateway
           .connect(receiver)
-          .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value)
+          .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value),
       )
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(2);
@@ -68,7 +69,7 @@ describe("Transfering MintBurn tokens", function () {
     it("Should revert if tokenId is not valid (deposit)", async () => {
       const data = new ethers.AbiCoder().encode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        [[1, 200, 1, [[receiver.address, 1000, 9183]]]]
+        [[1, 200, 1, [[receiver.address, 1000, 9183]]]],
       );
       await expect(gateway.connect(receiver).deposit("0xff003300", 1, data))
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
@@ -83,27 +84,28 @@ describe("Transfering MintBurn tokens", function () {
       const receipt = await tx.wait();
 
       const event = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
           try {
             return gateway.interface.parseLog(log);
           } catch {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "TokenRegistered");
+        .find((log) => log && log.name === "TokenRegistered");
 
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
       const contractAddress = event.args.contractAddress;
 
-      const myTokenERC20 = await ethers.getContractAt(
-        "IERC20",
-        contractAddress
+      const myTokenERC20 = new ethers.Contract(
+        contractAddress,
+        IERC20Abi.abi,
+        owner,
       );
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-        dataNonCurrencyToken
+        dataNonCurrencyToken,
       );
 
       const [tupleValue] = decoded;
@@ -114,11 +116,11 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonCurrencyToken
+        dataNonCurrencyToken,
       );
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
-        decodedAmount
+        decodedAmount,
       );
 
       const value = { value: ethers.parseUnits("150", "wei") };
@@ -127,7 +129,7 @@ describe("Transfering MintBurn tokens", function () {
         .withdraw(1, receiverWithdrawNonCurrencyToken, 100, 50, value);
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
-        decodedAmount - BigInt(receiverWithdrawNonCurrencyToken[0].amount)
+        decodedAmount - BigInt(receiverWithdrawNonCurrencyToken[0].amount),
       );
     });
 
@@ -139,27 +141,28 @@ describe("Transfering MintBurn tokens", function () {
       let receipt = await tx.wait();
 
       let event = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
           try {
             return gateway.interface.parseLog(log);
           } catch {
             return null;
           }
         })
-        .find((log: any) => log && log.name === "TokenRegistered");
+        .find((log) => log && log.name === "TokenRegistered");
 
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
       const contractAddress = event.args.contractAddress;
 
-      const myTokenERC20 = await ethers.getContractAt(
-        "IERC20",
-        contractAddress
+      const myTokenERC20 = new ethers.Contract(
+        contractAddress,
+        IERC20Abi.abi,
+        owner,
       );
 
       const decoded = abiCoder.decode(
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        dataNonCurrencyToken
+        dataNonCurrencyToken,
       );
 
       const [tupleValue] = decoded;
@@ -170,11 +173,11 @@ describe("Transfering MintBurn tokens", function () {
       await gateway.deposit(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        dataNonCurrencyToken
+        dataNonCurrencyToken,
       );
 
       expect(await myTokenERC20.balanceOf(decodedAddress)).to.equal(
-        decodedAmount
+        decodedAmount,
       );
 
       const value = { value: ethers.parseUnits("150", "wei") };
@@ -184,7 +187,7 @@ describe("Transfering MintBurn tokens", function () {
       receipt = await tx.wait();
 
       event = receipt.logs.find(
-        (log: any) => log.fragment && log.fragment.name === "Withdraw"
+        (log) => log.fragment && log.fragment.name === "Withdraw",
       );
 
       expect(event?.args?.destinationChainId).to.equal(1);
@@ -198,18 +201,38 @@ describe("Transfering MintBurn tokens", function () {
   });
 
   let tokenId = 2n;
-  let owner: any;
-  let gateway: any;
-  let dataNonCurrencyToken: any;
-  let receiver: any;
-  let receiverWithdrawNonCurrencyToken: any;
+  let gateway;
+  let nativeTokenPredicate;
+  let nativeTokenWallet;
+  let validatorsc;
+  let owner;
+  let receiver;
+  let receiverWithdraw;
+  let receiverWithdrawNonCurrencyToken;
+  let data;
+  let dataNonCurrencyToken;
+  let provider;
+  let fixture;
+  let connection;
+  let ethers;
 
   beforeEach(async function () {
-    const fixture = await loadFixture(deployGatewayFixtures);
-    owner = fixture.owner;
+    fixture = await deployGatewayFixtures(hre);
+
     gateway = fixture.gateway;
-    dataNonCurrencyToken = fixture.dataNonCurrencyToken;
+    nativeTokenPredicate = fixture.nativeTokenPredicate;
+    nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
+    nativeTokenWallet = fixture.nativeTokenWallet;
+    validatorsc = fixture.validatorsc;
+    owner = fixture.owner;
     receiver = fixture.receiver;
+    receiverWithdraw = fixture.receiverWithdraw;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
+    data = fixture.data;
+    dataNonCurrencyToken = fixture.dataNonCurrencyToken;
+    provider = fixture.provider;
+    connection = fixture.connection;
+    ethers = fixture.ethers;
   });
 });
