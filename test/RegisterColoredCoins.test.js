@@ -161,39 +161,24 @@ describe("Register tokens tests", function () {
 
   let tokenId = 2n;
   let gateway;
-  let nativeTokenPredicate;
   let nativeTokenWallet;
-  let validatorsc;
   let myToken;
   let tokenFactory;
   let owner;
   let validators;
-  let receiver;
-  let receiverWithdraw;
-  let data;
-  let provider;
   let fixture;
-  let connection;
   let ethers;
 
   beforeEach(async function () {
     fixture = await deployGatewayFixtures(hre);
 
     gateway = fixture.gateway;
-    nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
-    validatorsc = fixture.validatorsc;
     myToken = fixture.myToken;
     tokenFactory = fixture.tokenFactory;
     nativeTokenWallet = fixture.nativeTokenWallet;
-    validatorsc = fixture.validatorsc;
     owner = fixture.owner;
     validators = fixture.validators;
-    receiver = fixture.receiver;
-    receiverWithdraw = fixture.receiverWithdraw;
-    data = fixture.data;
-    provider = fixture.provider;
-    connection = fixture.connection;
     ethers = fixture.ethers;
   });
 });

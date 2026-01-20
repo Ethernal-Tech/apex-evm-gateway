@@ -202,37 +202,21 @@ describe("Transfering MintBurn tokens", function () {
 
   let tokenId = 2n;
   let gateway;
-  let nativeTokenPredicate;
-  let nativeTokenWallet;
-  let validatorsc;
   let owner;
   let receiver;
-  let receiverWithdraw;
   let receiverWithdrawNonCurrencyToken;
-  let data;
   let dataNonCurrencyToken;
-  let provider;
   let fixture;
-  let connection;
   let ethers;
 
   beforeEach(async function () {
     fixture = await deployGatewayFixtures(hre);
 
     gateway = fixture.gateway;
-    nativeTokenPredicate = fixture.nativeTokenPredicate;
-    nativeTokenWallet = fixture.nativeTokenWallet;
-    validatorsc = fixture.validatorsc;
-    nativeTokenWallet = fixture.nativeTokenWallet;
-    validatorsc = fixture.validatorsc;
     owner = fixture.owner;
     receiver = fixture.receiver;
-    receiverWithdraw = fixture.receiverWithdraw;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
-    data = fixture.data;
     dataNonCurrencyToken = fixture.dataNonCurrencyToken;
-    provider = fixture.provider;
-    connection = fixture.connection;
     ethers = fixture.ethers;
   });
 });

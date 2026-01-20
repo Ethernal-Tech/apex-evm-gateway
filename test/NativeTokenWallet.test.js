@@ -96,8 +96,6 @@ describe("NativeTokenWallet Contract", function () {
   let owner;
   let receiver;
   let validators;
-  let validatorSetChange;
-  let validatorsCardanoData;
   let provider;
   let ethers;
   let fixture;
@@ -112,8 +110,6 @@ describe("NativeTokenWallet Contract", function () {
     owner = fixture.owner;
     receiver = fixture.receiver;
     validators = fixture.validators;
-    validatorSetChange = fixture.validatorSetChange;
-    validatorsCardanoData = fixture.validatorsCardanoData;
     provider = fixture.provider;
     ethers = fixture.ethers;
   });
