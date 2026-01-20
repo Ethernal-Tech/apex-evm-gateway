@@ -317,6 +317,8 @@ export async function deployGatewayFixtures(hre: any) {
     nativeTokenWallet,
     tokenFactory,
     validatorsc,
+    mockPrecompileFalse,
+    mockPrecompileTrue,
     validatorsCardanoData,
     receiverWithdrawCurrencyToken,
     receiverWithdrawNonCurrencyToken,

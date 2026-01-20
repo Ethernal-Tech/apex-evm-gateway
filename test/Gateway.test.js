@@ -46,6 +46,26 @@ describe("Gateway Contract", function () {
     expect(await gateway.validators()).to.equal(validatorsc.target);
   });
 
+  it("Deposit should fail if signature is invalid", async () => {
+    validatorsc.setAdditionalDependenciesAndSync(
+      mockPrecompileFalse.target,
+      true,
+    );
+
+    await expect(
+      gateway.deposit(
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        "0x7465737400000000000000000000000000000000000000000000000000000000",
+        dataCurrencyToken,
+      ),
+    ).to.be.revertedWithCustomError(gateway, "InvalidSignature");
+
+    validatorsc.setAdditionalDependenciesAndSync(
+      mockPrecompileTrue.target,
+      true,
+    );
+  });
+
   it("Deposit success", async () => {
     const depositTx = await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -395,18 +415,16 @@ describe("Gateway Contract", function () {
   let nativeTokenPredicate;
   let nativeTokenWallet;
   let validatorsc;
+  let mockPrecompileFalse;
+  let mockPrecompileTrue;
   let myToken;
   let tokenFactory;
   let owner;
   let receiver;
-  let receiverWithdraw;
   let receiverWithdrawCurrencyToken;
   let receiverWithdrawNonCurrencyToken;
-  let data;
   let dataCurrencyToken;
-  let provider;
   let fixture;
-  let connection;
   let ethers;
 
   beforeEach(async function () {
@@ -418,17 +436,15 @@ describe("Gateway Contract", function () {
     validatorsc = fixture.validatorsc;
     nativeTokenWallet = fixture.nativeTokenWallet;
     validatorsc = fixture.validatorsc;
+    mockPrecompileFalse = fixture.mockPrecompileFalse;
+    mockPrecompileTrue = fixture.mockPrecompileTrue;
     myToken = fixture.myToken;
     tokenFactory = fixture.tokenFactory;
     owner = fixture.owner;
     receiver = fixture.receiver;
-    receiverWithdraw = fixture.receiverWithdraw;
     receiverWithdrawCurrencyToken = fixture.receiverWithdrawCurrencyToken;
     receiverWithdrawNonCurrencyToken = fixture.receiverWithdrawNonCurrencyToken;
-    data = fixture.data;
     dataCurrencyToken = fixture.dataCurrencyToken;
-    provider = fixture.provider;
-    connection = fixture.connection;
     ethers = fixture.ethers;
   });
 });
