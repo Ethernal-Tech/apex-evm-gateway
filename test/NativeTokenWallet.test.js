@@ -7,7 +7,7 @@ describe("NativeTokenWallet Contract", function () {
     await expect(
       nativeTokenWallet
         .connect(owner)
-        .setDependencies(connection.ethers.ZeroAddress)
+        .setDependencies(connection.ethers.ZeroAddress),
     ).to.be.revertedWithCustomError(nativeTokenWallet, "ZeroAddress");
   });
 
@@ -15,10 +15,10 @@ describe("NativeTokenWallet Contract", function () {
     await expect(
       nativeTokenWallet
         .connect(receiver)
-        .setDependencies(nativeTokenPredicate.target)
+        .setDependencies(nativeTokenPredicate.target),
     ).to.be.revertedWithCustomError(
       nativeTokenPredicate,
-      "OwnableUnauthorizedAccount"
+      "OwnableUnauthorizedAccount",
     );
   });
 
@@ -26,17 +26,17 @@ describe("NativeTokenWallet Contract", function () {
     await expect(
       nativeTokenWallet
         .connect(owner)
-        .setDependencies(nativeTokenPredicate.target)
+        .setDependencies(nativeTokenPredicate.target),
     ).to.not.be.revert(ethers);
     expect(await nativeTokenWallet.predicate()).to.equal(
-      nativeTokenPredicate.target
+      nativeTokenPredicate.target,
     );
     expect(await nativeTokenWallet.owner()).to.equal(owner.address);
   });
 
   it("Mint will fail if not called by Predicate or Owner", async function () {
     await expect(
-      nativeTokenWallet.connect(receiver).deposit(receiver.address, 100)
+      nativeTokenWallet.connect(receiver).deposit(receiver.address, 100),
     ).to.be.revertedWithCustomError(nativeTokenWallet, "NotPredicateOrOwner");
   });
 
@@ -47,21 +47,21 @@ describe("NativeTokenWallet Contract", function () {
 
     const receiverBalanceBefore = await provider.getBalance(receiver);
     const nativeTokenWalletBefore = await provider.getBalance(
-      nativeTokenWalletAddress
+      nativeTokenWalletAddress,
     );
 
     await nativeTokenWallet.deposit(receiver.address, randomAmount);
 
     const receiverBalanceAfter = await provider.getBalance(receiver);
     const nativeTokenWalletAfter = await provider.getBalance(
-      nativeTokenWalletAddress
+      nativeTokenWalletAddress,
     );
 
     expect(receiverBalanceAfter).to.equal(
-      receiverBalanceBefore + BigInt(randomAmount)
+      receiverBalanceBefore + BigInt(randomAmount),
     );
     expect(nativeTokenWalletAfter).to.equal(
-      nativeTokenWalletBefore - BigInt(randomAmount)
+      nativeTokenWalletBefore - BigInt(randomAmount),
     );
   });
 

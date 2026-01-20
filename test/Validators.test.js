@@ -5,7 +5,7 @@ import { deployGatewayFixtures } from "./fixtures";
 describe("Validators Contract", function () {
   it("setValidatorsChainData and validate initialization", async () => {
     await expect(
-      validatorsc.connect(owner).setValidatorsChainData(validatorsCardanoData)
+      validatorsc.connect(owner).setValidatorsChainData(validatorsCardanoData),
     ).not.to.be.revert(ethers);
 
     const chainData = await validatorsc.getValidatorsChainData();
@@ -21,11 +21,11 @@ describe("Validators Contract", function () {
       [
         "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData)",
       ],
-      [validatorSetChange]
+      [validatorSetChange],
     );
 
     await expect(
-      validatorsc.connect(owner).updateValidatorsChainData(data)
+      validatorsc.connect(owner).updateValidatorsChainData(data),
     ).to.be.revertedWithCustomError(validatorsc, "NotGateway()");
   });
   it("UpdateValidators should revert if validatorsSetNumber is not correct", async () => {
@@ -35,15 +35,15 @@ describe("Validators Contract", function () {
       [
         "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData)",
       ],
-      [validatorSetChange]
+      [validatorSetChange],
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(
-      await gateway.getAddress()
+      await gateway.getAddress(),
     );
 
     await expect(
-      validatorsc.connect(gatewayContract).updateValidatorsChainData(data)
+      validatorsc.connect(gatewayContract).updateValidatorsChainData(data),
     ).to.be.revertedWithCustomError(validatorsc, "WrongValidatorsSetValue()");
 
     validatorSetChange._validatorsSetNumber = 1n;
@@ -58,21 +58,21 @@ describe("Validators Contract", function () {
       [
         "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData)",
       ],
-      [validatorSetChange]
+      [validatorSetChange],
     );
 
     const gatewayContract = await impersonateAsContractAndMintFunds(
-      await gateway.getAddress()
+      await gateway.getAddress(),
     );
 
     await expect(
-      validatorsc.connect(gatewayContract).updateValidatorsChainData(data)
+      validatorsc.connect(gatewayContract).updateValidatorsChainData(data),
     )
       .to.emit(validatorsc, "TTLExpired")
       .withArgs(data);
 
     expect((await validatorsc.getValidatorsChainData()).length).to.equal(
-      validatorsCardanoData.length
+      validatorsCardanoData.length,
     );
 
     validatorSetChange._ttl = 9999999999n;
@@ -83,7 +83,7 @@ describe("Validators Contract", function () {
       [
         "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData)",
       ],
-      [validatorSetChange]
+      [validatorSetChange],
     );
 
     await gateway
@@ -91,23 +91,23 @@ describe("Validators Contract", function () {
       .updateValidatorsChainData(
         "0x7465737400000000000000000000000000000000000000000000000000000000",
         "0x7465737400000000000000000000000000000000000000000000000000000000",
-        data
+        data,
       );
 
     expect(await validatorsc.lastConfirmedValidatorsSet()).to.equal(1);
 
     expect((await validatorsc.getValidatorsChainData()).length).to.equal(1);
     expect((await validatorsc.getValidatorsChainData())[0][0][0]).to.equal(
-      validatorSetChange._validatorsChainData[0].key[0]
+      validatorSetChange._validatorsChainData[0].key[0],
     );
     expect((await validatorsc.getValidatorsChainData())[0][0][1]).to.equal(
-      validatorSetChange._validatorsChainData[0].key[1]
+      validatorSetChange._validatorsChainData[0].key[1],
     );
     expect((await validatorsc.getValidatorsChainData())[0][0][2]).to.equal(
-      validatorSetChange._validatorsChainData[0].key[2]
+      validatorSetChange._validatorsChainData[0].key[2],
     );
     expect((await validatorsc.getValidatorsChainData())[0][0][3]).to.equal(
-      validatorSetChange._validatorsChainData[0].key[3]
+      validatorSetChange._validatorsChainData[0].key[3],
     );
   });
 

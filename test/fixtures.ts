@@ -24,12 +24,12 @@ export async function deployGatewayFixtures(hre: any) {
   ];
 
   const NativeTokenWallet = await connection.ethers.getContractFactory(
-    "NativeTokenWallet"
+    "NativeTokenWallet",
   );
   const nativeTokenWalletLogic = await NativeTokenWallet.deploy();
 
   const NativeTokenPredicate = await connection.ethers.getContractFactory(
-    "NativeTokenPredicate"
+    "NativeTokenPredicate",
   );
   const nativeTokenPredicateLogic = await NativeTokenPredicate.deploy();
 
@@ -40,35 +40,35 @@ export async function deployGatewayFixtures(hre: any) {
   const gatewayLogic = await Gateway.deploy();
 
   const MockPrecompileTrue = await connection.ethers.getContractFactory(
-    "MockPrecompileTrue"
+    "MockPrecompileTrue",
   );
   const mockPrecompileTrue = await MockPrecompileTrue.deploy();
 
   const MockPrecompileFalse = await connection.ethers.getContractFactory(
-    "MockPrecompileFalse"
+    "MockPrecompileFalse",
   );
   const mockPrecompileFalse = await MockPrecompileFalse.deploy();
 
   // // deployment of contract proxy
   const NativeTokenPredicateProxy = await connection.ethers.getContractFactory(
-    "UUPSProxy"
+    "UUPSProxy",
   );
   const NativeTokenWalletProxy = await connection.ethers.getContractFactory(
-    "UUPSProxy"
+    "UUPSProxy",
   );
   const ValidatorscProxy = await connection.ethers.getContractFactory(
-    "UUPSProxy"
+    "UUPSProxy",
   );
   const GatewayProxy = await connection.ethers.getContractFactory("UUPSProxy");
 
   const nativeTokenPredicateProxy = await NativeTokenPredicateProxy.deploy(
     nativeTokenPredicateLogic.target,
-    NativeTokenPredicate.interface.encodeFunctionData("initialize", [])
+    NativeTokenPredicate.interface.encodeFunctionData("initialize", []),
   );
 
   const nativeTokenWalletProxy = await NativeTokenWalletProxy.deploy(
     nativeTokenWalletLogic.target,
-    NativeTokenWallet.interface.encodeFunctionData("initialize", [])
+    NativeTokenWallet.interface.encodeFunctionData("initialize", []),
   );
 
   const validatorsAddresses = [
@@ -81,30 +81,30 @@ export async function deployGatewayFixtures(hre: any) {
 
   const validatorsProxy = await ValidatorscProxy.deploy(
     validatorscLogic.target,
-    Validators.interface.encodeFunctionData("initialize", [])
+    Validators.interface.encodeFunctionData("initialize", []),
   );
 
   const gatewayProxy = await GatewayProxy.deploy(
     gatewayLogic.target,
-    Gateway.interface.encodeFunctionData("initialize", [100, 50])
+    Gateway.interface.encodeFunctionData("initialize", [100, 50]),
   );
 
   // //casting proxy contracts to contract logic
   const NativeTokenPredicateDeployed =
     await connection.ethers.getContractFactory("NativeTokenPredicate");
   const nativeTokenPredicate = NativeTokenPredicateDeployed.attach(
-    nativeTokenPredicateProxy.target
+    nativeTokenPredicateProxy.target,
   );
 
   const NativeTokenWalletDeployed = await connection.ethers.getContractFactory(
-    "NativeTokenWallet"
+    "NativeTokenWallet",
   );
   const nativeTokenWallet = NativeTokenWalletDeployed.attach(
-    nativeTokenWalletProxy.target
+    nativeTokenWalletProxy.target,
   );
 
   const ValidatorsDeployed = await connection.ethers.getContractFactory(
-    "Validators"
+    "Validators",
   );
   const validatorsc = ValidatorsDeployed.attach(validatorsProxy.target);
 
@@ -113,12 +113,12 @@ export async function deployGatewayFixtures(hre: any) {
 
   await gateway.setDependencies(
     nativeTokenPredicate.target,
-    validatorsc.target
+    validatorsc.target,
   );
 
   await nativeTokenPredicate.setDependencies(
     gateway.target,
-    nativeTokenWallet.target
+    nativeTokenWallet.target,
   );
 
   await nativeTokenWallet.setDependencies(nativeTokenPredicate.target);
@@ -127,7 +127,7 @@ export async function deployGatewayFixtures(hre: any) {
 
   await validatorsc.setAdditionalDependenciesAndSync(
     mockPrecompileTrue.target,
-    true
+    true,
   );
 
   const validatorsCardanoData = [
@@ -136,7 +136,7 @@ export async function deployGatewayFixtures(hre: any) {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
     {
@@ -144,7 +144,7 @@ export async function deployGatewayFixtures(hre: any) {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
     {
@@ -152,7 +152,7 @@ export async function deployGatewayFixtures(hre: any) {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
     {
@@ -160,7 +160,7 @@ export async function deployGatewayFixtures(hre: any) {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
     {
@@ -168,7 +168,7 @@ export async function deployGatewayFixtures(hre: any) {
         BigNumberish,
         BigNumberish,
         BigNumberish,
-        BigNumberish
+        BigNumberish,
       ],
     },
   ];
@@ -208,7 +208,7 @@ export async function deployGatewayFixtures(hre: any) {
   const address = ethers.Wallet.createRandom().address;
   const data = abiCoder.encode(
     ["tuple(uint64, uint64, uint256, tuple(address, uint256)[])"],
-    [[1, blockNumber + 100, 1, [[address, 1000]]]]
+    [[1, blockNumber + 100, 1, [[address, 1000]]]],
   );
 
   const validatorSetChange = {
@@ -227,6 +227,9 @@ export async function deployGatewayFixtures(hre: any) {
     nativeTokenPredicate,
     nativeTokenWallet,
     validatorsc,
+    mockPrecompileFalse,
+    mockPrecompileTrue,
+    abiCoder,
     validatorsCardanoData,
     receiverWithdraw,
     data,

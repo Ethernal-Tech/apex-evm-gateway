@@ -9,14 +9,14 @@ describe("NativeTokenPredicate Contract", function () {
         .connect(owner)
         .setDependencies(
           connection.ethers.ZeroAddress,
-          nativeTokenWallet.target
-        )
+          nativeTokenWallet.target,
+        ),
     ).to.to.be.revertedWithCustomError(nativeTokenPredicate, "ZeroAddress");
 
     await expect(
       nativeTokenPredicate
         .connect(owner)
-        .setDependencies(gateway.target, connection.ethers.ZeroAddress)
+        .setDependencies(gateway.target, connection.ethers.ZeroAddress),
     ).to.to.be.revertedWithCustomError(nativeTokenPredicate, "ZeroAddress");
   });
 
@@ -24,10 +24,10 @@ describe("NativeTokenPredicate Contract", function () {
     await expect(
       nativeTokenPredicate
         .connect(receiver)
-        .setDependencies(gateway.target, nativeTokenWallet.target)
+        .setDependencies(gateway.target, nativeTokenWallet.target),
     ).to.be.revertedWithCustomError(
       nativeTokenPredicate,
-      "OwnableUnauthorizedAccount"
+      "OwnableUnauthorizedAccount",
     );
   });
 
@@ -35,12 +35,12 @@ describe("NativeTokenPredicate Contract", function () {
     await expect(
       nativeTokenPredicate
         .connect(owner)
-        .setDependencies(gateway.target, nativeTokenWallet.target)
+        .setDependencies(gateway.target, nativeTokenWallet.target),
     ).to.not.be.revert(ethers);
 
     expect(await nativeTokenPredicate.gateway()).to.equal(gateway.target);
     expect(await nativeTokenPredicate.nativeTokenWallet()).to.equal(
-      nativeTokenWallet.target
+      nativeTokenWallet.target,
     );
   });
 
@@ -48,7 +48,7 @@ describe("NativeTokenPredicate Contract", function () {
     const address = ethers.Wallet.createRandom().address;
 
     await expect(
-      nativeTokenPredicate.connect(receiver).deposit(data, address)
+      nativeTokenPredicate.connect(receiver).deposit(data, address),
     ).to.be.revertedWithCustomError(nativeTokenPredicate, "NotGateway");
   });
 
@@ -56,16 +56,16 @@ describe("NativeTokenPredicate Contract", function () {
     const address = ethers.Wallet.createRandom().address;
 
     const gatewayContract = await impersonateAsContractAndMintFunds(
-      await gateway.target
+      await gateway.target,
     );
 
     await nativeTokenPredicate.connect(gatewayContract).deposit(data, address);
 
     await expect(
-      nativeTokenPredicate.connect(gatewayContract).deposit(data, address)
+      nativeTokenPredicate.connect(gatewayContract).deposit(data, address),
     ).to.be.revertedWithCustomError(
       nativeTokenPredicate,
-      "BatchAlreadyExecuted"
+      "BatchAlreadyExecuted",
     );
   });
 
@@ -89,7 +89,6 @@ describe("NativeTokenPredicate Contract", function () {
   let gateway;
   let nativeTokenPredicate;
   let nativeTokenWallet;
-  let validatorsc;
   let owner;
   let receiver;
   let data;
@@ -104,7 +103,6 @@ describe("NativeTokenPredicate Contract", function () {
     gateway = fixture.gateway;
     nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
-    validatorsc = fixture.validatorsc;
     owner = fixture.owner;
     receiver = fixture.receiver;
     data = fixture.data;
