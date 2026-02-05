@@ -1,32 +1,28 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import hre from "hardhat";
 import { expect } from "chai";
-import { ethers } from "hardhat";
-import {
-  deployGatewayFixtures,
-  impersonateAsContractAndMintFunds,
-} from "./fixtures";
+import { deployGatewayFixtures } from "./fixtures";
 
 describe("NativeTokenPredicate Contract", function () {
   it("SetDependencies should fail if Gateway or NetiveToken is Zero Address", async () => {
     await expect(
       nativeTokenPredicate
         .connect(owner)
-        .setDependencies(ethers.ZeroAddress, nativeTokenWallet.target)
+        .setDependencies(ethers.ZeroAddress, nativeTokenWallet.target),
     )
       .to.to.be.revertedWithCustomError(
         nativeTokenPredicate,
-        "NotContractAddress"
+        "NotContractAddress",
       )
       .withArgs(ethers.ZeroAddress);
 
     await expect(
       nativeTokenPredicate
         .connect(owner)
-        .setDependencies(gateway.target, ethers.ZeroAddress)
+        .setDependencies(gateway.target, ethers.ZeroAddress),
     )
       .to.to.be.revertedWithCustomError(
         nativeTokenPredicate,
-        "NotContractAddress"
+        "NotContractAddress",
       )
       .withArgs(ethers.ZeroAddress);
   });
@@ -35,10 +31,10 @@ describe("NativeTokenPredicate Contract", function () {
     await expect(
       nativeTokenPredicate
         .connect(receiver)
-        .setDependencies(gateway.target, nativeTokenWallet.target)
+        .setDependencies(gateway.target, nativeTokenWallet.target),
     ).to.be.revertedWithCustomError(
       nativeTokenPredicate,
-      "OwnableUnauthorizedAccount"
+      "OwnableUnauthorizedAccount",
     );
   });
 
@@ -46,12 +42,12 @@ describe("NativeTokenPredicate Contract", function () {
     await expect(
       nativeTokenPredicate
         .connect(owner)
-        .setDependencies(gateway.target, nativeTokenWallet.target)
-    ).to.not.be.reverted;
+        .setDependencies(gateway.target, nativeTokenWallet.target),
+    ).to.not.be.revert(ethers);
 
     expect(await nativeTokenPredicate.gateway()).to.equal(gateway.target);
     expect(await nativeTokenPredicate.nativeTokenWallet()).to.equal(
-      nativeTokenWallet.target
+      nativeTokenWallet.target,
     );
   });
 
@@ -61,7 +57,7 @@ describe("NativeTokenPredicate Contract", function () {
     await expect(
       nativeTokenPredicate
         .connect(receiver)
-        .deposit(dataCurrencyToken, address, 1)
+        .deposit(dataCurrencyToken, address, 1),
     ).to.be.revertedWithCustomError(nativeTokenPredicate, "NotGateway");
   });
 
@@ -69,7 +65,7 @@ describe("NativeTokenPredicate Contract", function () {
     const address = ethers.Wallet.createRandom().address;
 
     const gatewayContract = await impersonateAsContractAndMintFunds(
-      await gateway.target
+      await gateway.target,
     );
 
     await nativeTokenPredicate
@@ -79,30 +75,56 @@ describe("NativeTokenPredicate Contract", function () {
     await expect(
       nativeTokenPredicate
         .connect(gatewayContract)
-        .deposit(dataCurrencyToken, address, 1)
+        .deposit(dataCurrencyToken, address, 1),
     ).to.be.revertedWithCustomError(
       nativeTokenPredicate,
-      "BatchAlreadyExecuted"
+      "BatchAlreadyExecuted",
     );
   });
 
-  let owner: any;
-  let receiver: any;
-  let gateway: any;
-  let nativeTokenPredicate: any;
-  let nativeTokenWallet: any;
-  let validatorsc: any;
-  let dataCurrencyToken: any;
+  async function impersonateAsContractAndMintFunds(contractAddress) {
+    const address = contractAddress.toLowerCase();
+
+    // impersonate as a contract on specified address
+    await provider.send("hardhat_impersonateAccount", [address]);
+
+    const signer = await ethers.getSigner(address);
+
+    // minting 100000000000000000000 tokens to signer
+    await provider.send("hardhat_setBalance", [
+      signer.address,
+      "0x56BC75E2D63100000",
+    ]);
+
+    return signer;
+  }
+
+  let gateway;
+  let nativeTokenPredicate;
+  let nativeTokenWallet;
+  let validatorsc;
+  let owner;
+  let receiver;
+  let data;
+  let dataCurrencyToken;
+  let fixture;
+  let connection;
+  let ethers;
+  let provider;
 
   beforeEach(async function () {
-    const fixture = await loadFixture(deployGatewayFixtures);
+    fixture = await deployGatewayFixtures(hre);
 
-    owner = fixture.owner;
-    receiver = fixture.receiver;
     gateway = fixture.gateway;
     nativeTokenPredicate = fixture.nativeTokenPredicate;
     nativeTokenWallet = fixture.nativeTokenWallet;
     validatorsc = fixture.validatorsc;
+    owner = fixture.owner;
+    receiver = fixture.receiver;
+    data = fixture.data;
     dataCurrencyToken = fixture.dataCurrencyToken;
+    connection = fixture.connection;
+    ethers = fixture.ethers;
+    provider = fixture.provider;
   });
 });
