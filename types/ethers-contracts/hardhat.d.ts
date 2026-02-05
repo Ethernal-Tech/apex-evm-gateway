@@ -11,8 +11,6 @@ import * as Contracts from "./index.js";
 declare module "@nomicfoundation/hardhat-ethers/types" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
   getContractFactory(name: 'Gateway', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.Gateway__factory>
-getContractFactory(name: 'MockPrecompileFalse', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.MockPrecompileFalse__factory>
-getContractFactory(name: 'MockPrecompileTrue', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.MockPrecompileTrue__factory>
 getContractFactory(name: 'NativeTokenPredicate', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.NativeTokenPredicate__factory>
 getContractFactory(name: 'NativeTokenWallet', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.NativeTokenWallet__factory>
 getContractFactory(name: 'UUPSProxy', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.UUPSProxy__factory>
@@ -22,10 +20,10 @@ getContractFactory(name: 'IGatewayStructs', signerOrOptions?: ethers.Signer | Fa
 getContractFactory(name: 'INativeTokenPredicate', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.INativeTokenPredicate__factory>
 getContractFactory(name: 'INativeTokenWallet', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.INativeTokenWallet__factory>
 getContractFactory(name: 'IValidators', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.IValidators__factory>
+getContractFactory(name: 'MockPrecompileFalse', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.MockPrecompileFalse__factory>
+getContractFactory(name: 'MockPrecompileTrue', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.MockPrecompileTrue__factory>
 
   getContractAt(name: 'Gateway', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.Gateway>
-getContractAt(name: 'MockPrecompileFalse', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.MockPrecompileFalse>
-getContractAt(name: 'MockPrecompileTrue', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.MockPrecompileTrue>
 getContractAt(name: 'NativeTokenPredicate', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.NativeTokenPredicate>
 getContractAt(name: 'NativeTokenWallet', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.NativeTokenWallet>
 getContractAt(name: 'UUPSProxy', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.UUPSProxy>
@@ -35,10 +33,10 @@ getContractAt(name: 'IGatewayStructs', address: string | ethers.Addressable, sig
 getContractAt(name: 'INativeTokenPredicate', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.INativeTokenPredicate>
 getContractAt(name: 'INativeTokenWallet', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.INativeTokenWallet>
 getContractAt(name: 'IValidators', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.IValidators>
+getContractAt(name: 'MockPrecompileFalse', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.MockPrecompileFalse>
+getContractAt(name: 'MockPrecompileTrue', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.MockPrecompileTrue>
 
   deployContract(name: 'Gateway', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Gateway>
-deployContract(name: 'MockPrecompileFalse', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockPrecompileFalse>
-deployContract(name: 'MockPrecompileTrue', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockPrecompileTrue>
 deployContract(name: 'NativeTokenPredicate', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.NativeTokenPredicate>
 deployContract(name: 'NativeTokenWallet', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.NativeTokenWallet>
 deployContract(name: 'UUPSProxy', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.UUPSProxy>
@@ -48,10 +46,10 @@ deployContract(name: 'IGatewayStructs', signerOrOptions?: ethers.Signer | Deploy
 deployContract(name: 'INativeTokenPredicate', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.INativeTokenPredicate>
 deployContract(name: 'INativeTokenWallet', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.INativeTokenWallet>
 deployContract(name: 'IValidators', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.IValidators>
+deployContract(name: 'MockPrecompileFalse', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockPrecompileFalse>
+deployContract(name: 'MockPrecompileTrue', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockPrecompileTrue>
 
   deployContract(name: 'Gateway', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Gateway>
-deployContract(name: 'MockPrecompileFalse', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockPrecompileFalse>
-deployContract(name: 'MockPrecompileTrue', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockPrecompileTrue>
 deployContract(name: 'NativeTokenPredicate', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.NativeTokenPredicate>
 deployContract(name: 'NativeTokenWallet', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.NativeTokenWallet>
 deployContract(name: 'UUPSProxy', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.UUPSProxy>
@@ -61,6 +59,8 @@ deployContract(name: 'IGatewayStructs', args: any[], signerOrOptions?: ethers.Si
 deployContract(name: 'INativeTokenPredicate', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.INativeTokenPredicate>
 deployContract(name: 'INativeTokenWallet', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.INativeTokenWallet>
 deployContract(name: 'IValidators', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.IValidators>
+deployContract(name: 'MockPrecompileFalse', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockPrecompileFalse>
+deployContract(name: 'MockPrecompileTrue', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockPrecompileTrue>
 
     // default types
     getContractFactory(

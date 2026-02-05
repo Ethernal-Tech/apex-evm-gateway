@@ -2,10 +2,6 @@ import { defineConfig } from "hardhat/config";
 import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import HardhatIgnitionEthersPlugin from "@nomicfoundation/hardhat-ignition-ethers";
 
-const config: HardhatUserConfig = {
-  solidity: "0.8.24",
-};
-
 export default defineConfig({
   plugins: [hardhatToolboxMochaEthers, HardhatIgnitionEthersPlugin],
   solidity: {
@@ -17,6 +13,11 @@ export default defineConfig({
         runs: 200,
       },
       viaIR: true,
+    },
+  },
+  networks: {
+    hardhat: {
+      type: "edr-simulated",
     },
   },
 });
