@@ -63,6 +63,7 @@ describe("Gateway Contract", function () {
 
   it("Withdraw sucess", async () => {
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+    const treasuryAddress = await gateway.treasuryAddress();
 
     await gateway.deposit(
       "0x7465737400000000000000000000000000000000000000000000000000000000",
@@ -72,6 +73,9 @@ describe("Gateway Contract", function () {
 
     const nativeTokenWalletBefore = await ethers.provider.getBalance(
       nativeTokenWalletAddress
+    );
+    const treasuryAddressBefore = await ethers.provider.getBalance(
+      treasuryAddress
     );
 
     const value = { value: ethers.parseUnits("250", "wei") };
@@ -86,9 +90,15 @@ describe("Gateway Contract", function () {
     const nativeTokenWalletAfter = await ethers.provider.getBalance(
       nativeTokenWalletAddress
     );
+    const treasuryAddressAfter = await ethers.provider.getBalance(
+      treasuryAddress
+    );
 
     expect(nativeTokenWalletAfter).to.equal(
-      nativeTokenWalletBefore + BigInt(250)
+      nativeTokenWalletBefore + BigInt(200)
+    );
+    expect(treasuryAddressAfter).to.equal(
+      treasuryAddressBefore + BigInt(50)
     );
 
     expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
@@ -99,7 +109,7 @@ describe("Gateway Contract", function () {
     expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
     expect(withdrawEvent?.args?.fee).to.equal(100);
     expect(withdrawEvent?.args?.operationFee).to.equal(50);
-    expect(withdrawEvent?.args?.value).to.equal(250);
+    expect(withdrawEvent?.args?.value).to.equal(200);
   });
 
   it("Withdraw should fail if not enough value is submitted", async () => {
@@ -134,6 +144,18 @@ describe("Gateway Contract", function () {
     expect(await gateway.minBridgingAmount()).to.equal(200);
     expect(await gateway.minTokenBridgingAmount()).to.equal(20);
     expect(await gateway.minOperationFee()).to.equal(20);
+  });
+
+  it("Set treasury address should fail if not called by owner", async () => {
+    await expect(
+      gateway.connect(receiver).setTreasuryAddress("0xcCB2dDA531690E0eacf03338116Ea214c6379cD4")
+    ).to.to.be.revertedWithCustomError(gateway, "OwnableUnauthorizedAccount");
+  });
+
+  it("Set treasury address should succeed if called by owner", async () => {
+    expect(await gateway.treasuryAddress()).to.equal("0x0000000000000000000000000000000000000000");
+    await gateway.connect(owner).setTreasuryAddress("0xcCB2dDA531690E0eacf03338116Ea214c6379cD4");
+    expect(await gateway.treasuryAddress()).to.equal("0xcCB2dDA531690E0eacf03338116Ea214c6379cD4");
   });
 
   it("Withdraw should fail if briding amount is less then minBridgingAmount", async () => {
@@ -184,8 +206,33 @@ describe("Gateway Contract", function () {
       .withArgs(50, 1);
   });
 
+
+  it("Withdraw should fail if operation fee is less then minOperationFee", async () => {
+    await gateway.deposit(
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      "0x7465737400000000000000000000000000000000000000000000000000000000",
+      dataCurrencyToken
+    );
+
+    const value = { value: ethers.parseUnits("230", "wei") };
+
+    const receiverWithdrawCurrencyTokenInvalidAmount = structuredClone(
+      receiverWithdrawCurrencyToken
+    );
+    receiverWithdrawCurrencyTokenInvalidAmount[0].amount = 1;
+
+    await expect(
+      gateway
+        .connect(receiver)
+        .withdraw(1, receiverWithdrawCurrencyTokenInvalidAmount, 100, 30, value)
+    )
+      .to.to.be.revertedWithCustomError(gateway, "InsufficientFee")
+      .withArgs(50, 30);
+  });
+
   it("Bunch of consecutive deposits then consecutive withdrawals", async () => {
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+    const treasuryAddress = await gateway.treasuryAddress();
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
@@ -230,6 +277,9 @@ describe("Gateway Contract", function () {
     const nativeTokenWalletBefore = await ethers.provider.getBalance(
       nativeTokenWalletAddress
     );
+    const treasuryAddressBefore = await ethers.provider.getBalance(
+      treasuryAddress
+    );
 
     for (let i = 0; i < 100; i++) {
       const withdrawTx = await gateway
@@ -243,9 +293,15 @@ describe("Gateway Contract", function () {
       let nativeTokenWalletAfter = await ethers.provider.getBalance(
         nativeTokenWalletAddress
       );
+      let treasuryAddressAfter = await ethers.provider.getBalance(
+        treasuryAddress
+      );
 
       expect(nativeTokenWalletAfter).to.equal(
-        nativeTokenWalletBefore + BigInt(250 * (i + 1))
+        nativeTokenWalletBefore + BigInt(200 * (i + 1))
+      );
+      expect(treasuryAddressAfter).to.equal(
+        treasuryAddressBefore + BigInt(50 * (i + 1))
       );
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
@@ -256,12 +312,13 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.fee).to.equal(100);
       expect(withdrawEvent?.args?.operationFee).to.equal(50);
-      expect(withdrawEvent?.args?.value).to.equal(250);
+      expect(withdrawEvent?.args?.value).to.equal(200);
     }
   });
 
   it("Bunch of consecutive deposits/withraws", async () => {
     const nativeTokenWalletAddress = await nativeTokenWallet.getAddress();
+    const treasuryAddress = await gateway.treasuryAddress();
 
     const blockNumber = await ethers.provider.getBlockNumber();
     const abiCoder = new ethers.AbiCoder();
@@ -297,6 +354,9 @@ describe("Gateway Contract", function () {
     let nativeTokenWalletBefore = await ethers.provider.getBalance(
       nativeTokenWalletAddress
     );
+    let treasuryAddressBefore = await ethers.provider.getBalance(
+      treasuryAddress
+    );
 
     for (let i = 0; i < 100; i++) {
       const depositReceipt = await depositTXs[i].wait();
@@ -317,9 +377,15 @@ describe("Gateway Contract", function () {
       let nativeTokenWalletAfter = await ethers.provider.getBalance(
         nativeTokenWalletAddress
       );
+      let treasuryAddressAfter = await ethers.provider.getBalance(
+        treasuryAddress
+      );
 
       expect(nativeTokenWalletAfter).to.equal(
-        nativeTokenWalletBefore + BigInt(250 * (i + 1))
+        nativeTokenWalletBefore + BigInt(200 * (i + 1))
+      );
+      expect(treasuryAddressAfter).to.equal(
+        treasuryAddressBefore + BigInt(50 * (i + 1))
       );
 
       expect(withdrawEvent?.args?.destinationChainId).to.equal(1);
@@ -330,7 +396,7 @@ describe("Gateway Contract", function () {
       expect(withdrawEvent?.args?.receivers[0].amount).to.equal(100);
       expect(withdrawEvent?.args?.fee).to.equal(100);
       expect(withdrawEvent?.args?.operationFee).to.equal(50);
-      expect(withdrawEvent?.args?.value).to.equal(250);
+      expect(withdrawEvent?.args?.value).to.equal(200);
     }
   });
   it("Direct Deposit should emit FundsDeposited event", async function () {

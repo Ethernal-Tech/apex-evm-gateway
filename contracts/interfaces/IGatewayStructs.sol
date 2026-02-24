@@ -48,6 +48,9 @@ interface IGatewayStructs {
         uint256 minTokenAmount,
         uint256 minOperationFee
     );
+    event TreasuryAddressUpdated(
+        address treasuryAddress
+    );
     event TokenRegistered(
         string name,
         string symbol,
@@ -79,6 +82,7 @@ interface IGatewayStructs {
         uint256 bridgingAmount
     );
     error InvalidSignature();
+    error InvalidAddress();
     error NotContractAddress(address addr);
     error NotGateway();
     error NotPredicate();

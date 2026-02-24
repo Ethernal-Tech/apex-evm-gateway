@@ -193,7 +193,7 @@ describe("Transfering MintBurn tokens", function () {
       expect(event?.args?.receivers[0].amount).to.equal(100);
       expect(event?.args?.fee).to.equal(100);
       expect(event?.args?.operationFee).to.equal(50);
-      expect(event?.args?.value).to.equal(150);
+      expect(event?.args?.value).to.equal(100);
     });
   });
 
