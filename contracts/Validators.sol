@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {Utils} from "./Utils.sol";
+import {BLSVerifier} from "./BLSVerifier.sol";
 
 /**
  * @title Validators
@@ -21,10 +22,6 @@ contract Validators is
     UUPSUpgradeable,
     Utils
 {
-    address public constant VALIDATOR_BLS_PRECOMPILE =
-        0x0000000000000000000000000000000000002060;
-    uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
-
     address private gateway;
 
     ValidatorChainData[] private validatorsChainData;
@@ -125,25 +122,46 @@ contract Validators is
      * @param _signature BLS signature to validate.
      * @param _bitmap Bitmap representing validator participation.
      * @return valid Boolean indicating whether the signature is valid.
-     * @dev Calls the BLS precompile contract for verification. Uses gas limit `VALIDATOR_BLS_PRECOMPILE_GAS`.
+     * @dev Uses BLSVerifier library for verification on Polygon (EVM chains without BLS precompiles).
+     *      For chains with BLS precompiles, this would call the precompile contract instead.
      */
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,
         uint256 _bitmap
     ) external view returns (bool) {
-        // verify signatures` for provided sig data and sigs bytes
-        // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls,calls-loop
-        (bool callSuccess, bytes memory returnData) = VALIDATOR_BLS_PRECOMPILE
-            .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
-            abi.encodePacked(
-                uint8(1),
-                abi.encode(_hash, _signature, validatorsChainData, _bitmap)
-            )
-        );
+        // Convert ValidatorChainData array to bytes array for BLS verification
+        bytes[] memory publicKeyBytes = new bytes[](validatorsChainData.length);
+        
+        for (uint256 i = 0; i < validatorsChainData.length; i++) {
+            // Each validator's key is uint256[4], which represents a G2 point (96 bytes)
+            // Convert the uint256[4] key to bytes
+            publicKeyBytes[i] = _uint256ArrayToBytes(validatorsChainData[i].key);
+        }
 
-        return callSuccess && abi.decode(returnData, (bool));
+        // Use BLSVerifier library for verification
+        return BLSVerifier.verifyAggregatedSignature(
+            _hash,
+            bytes(_signature),
+            publicKeyBytes,
+            _bitmap
+        );
+    }
+
+    /**
+     * @notice Converts a uint256[4] array to bytes
+     * @param _data The uint256[4] array to convert
+     * @return The bytes representation (96 bytes total)
+     */
+    function _uint256ArrayToBytes(uint256[4] memory _data) private pure returns (bytes memory) {
+        bytes memory result = new bytes(128);
+        for (uint256 i = 0; i < 4; i++) {
+            bytes32 value = bytes32(_data[i]);
+            for (uint256 j = 0; j < 32; j++) {
+                result[i * 32 + j] = value[j];
+            }
+        }
+        return result;
     }
 
     function version() public pure returns (string memory) {

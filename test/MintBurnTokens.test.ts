@@ -70,7 +70,8 @@ describe("Transfering MintBurn tokens", function () {
         ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
         [[1, 200, 1, [[receiver.address, 1000, 9183]]]]
       );
-      await expect(gateway.connect(receiver).deposit("0xff003300", 1, data))
+      // Use a proper 32-byte signature to pass BLS validation
+      await expect(gateway.connect(receiver).deposit("0x7465737400000000000000000000000000000000000000000000000000000000", 1, data))
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
         .withArgs(9183);
     });

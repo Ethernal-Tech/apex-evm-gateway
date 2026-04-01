@@ -169,7 +169,6 @@ contract Gateway is
     ) external {
         bytes32 _hash = keccak256(_data);
         bool valid = validators.isBlsSignatureValid(_hash, _signature, _bitmap);
-
         if (!valid) revert InvalidSignature();
 
         bool success = nativeTokenPredicate.deposit(

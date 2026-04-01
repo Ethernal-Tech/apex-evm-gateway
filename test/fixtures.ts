@@ -226,8 +226,10 @@ export async function deployGatewayFixtures() {
 
   await validatorsc.setValidatorsChainData(validatorsCardanoData);
 
+  // Mock the EIP-197 pairing precompile (0x0008) to always return true for testing
+  // This simulates successful BLS signature verification
   await hre.network.provider.send("hardhat_setCode", [
-    "0x0000000000000000000000000000000000002060",
+    "0x0000000000000000000000000000000000000008",
     alwaysTrueBytecode,
   ]);
 
