@@ -12,7 +12,7 @@ import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
  */
 contract BLSVerifier {
     // Domain separation tag matching the Go implementation
-    bytes private constant DOMAIN = bytes("ExpectedDomain");
+    bytes private constant DOMAIN = bytes("DOMAIN_APEX_BRIDGE_EVM");
     /**
      * @notice Verifies BLS signature using pairing check without precompiles
      * @param _hash The hash of the message being signed

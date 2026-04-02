@@ -23,11 +23,12 @@ contract Validators is
     Utils
 {
     address private gateway;
-    BLSVerifier private blsVerifier;
 
     ValidatorChainData[] private validatorsChainData;
 
     uint256 public lastConfirmedValidatorsSet;
+
+    BLSVerifier private blsVerifier;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -54,6 +55,14 @@ contract Validators is
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
+
+    function setAdditionalDependenciesAndSync(
+        address _blsVerifier
+    ) external onlyOwner {
+        if (_blsVerifier == address(0)) revert InvalidAddress();
+
+        blsVerifier = BLSVerifier(_blsVerifier);
+    }
 
     /**
      * @notice Sets the initial validators chain data.
