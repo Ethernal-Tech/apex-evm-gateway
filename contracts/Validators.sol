@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {Utils} from "./Utils.sol";
+import {BLSVerifier} from "./BLSVerifier.sol";
 
 /**
  * @title Validators
@@ -21,11 +22,8 @@ contract Validators is
     UUPSUpgradeable,
     Utils
 {
-    address public constant VALIDATOR_BLS_PRECOMPILE =
-        0x0000000000000000000000000000000000002060;
-    uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
-
     address private gateway;
+    BLSVerifier private blsVerifier;
 
     ValidatorChainData[] private validatorsChainData;
 
@@ -33,7 +31,7 @@ contract Validators is
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -43,6 +41,8 @@ contract Validators is
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        // Deploy new BLSVerifier instance
+        blsVerifier = new BLSVerifier();
     }
 
     function setDependencies(address _gatewayAddress) external onlyOwner {
@@ -125,25 +125,14 @@ contract Validators is
      * @param _signature BLS signature to validate.
      * @param _bitmap Bitmap representing validator participation.
      * @return valid Boolean indicating whether the signature is valid.
-     * @dev Calls the BLS precompile contract for verification. Uses gas limit `VALIDATOR_BLS_PRECOMPILE_GAS`.
+     * @dev Uses the BLSVerifier contract for signature verification instead of precompile.
      */
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,
         uint256 _bitmap
     ) external view returns (bool) {
-        // verify signatures` for provided sig data and sigs bytes
-        // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls,calls-loop
-        (bool callSuccess, bytes memory returnData) = VALIDATOR_BLS_PRECOMPILE
-            .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
-            abi.encodePacked(
-                uint8(1),
-                abi.encode(_hash, _signature, validatorsChainData, _bitmap)
-            )
-        );
-
-        return callSuccess && abi.decode(returnData, (bool));
+        return blsVerifier.verifyBLSSignature(_hash, _signature, _bitmap, validatorsChainData);
     }
 
     function version() public pure returns (string memory) {
