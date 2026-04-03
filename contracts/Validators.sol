@@ -62,6 +62,10 @@ contract Validators is
         address newImplementation
     ) internal override onlyOwner {}
 
+    function setDomain(string calldata _domain) external onlyOwner {
+        blsDomain = abi.encodePacked(keccak256(abi.encodePacked(_domain)));
+    }
+
     /**
      * @notice Sets the initial validators chain data.
      * @param _validatorsChainData Array of validator chain data.
