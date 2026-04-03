@@ -22,13 +22,18 @@ contract Validators is
     UUPSUpgradeable,
     Utils
 {
+    address public constant VALIDATOR_BLS_PRECOMPILE =
+        0x0000000000000000000000000000000000002060;
+    uint256 public constant VALIDATOR_BLS_PRECOMPILE_GAS = 150000;
+
     address private gateway;
 
     ValidatorChainData[] private validatorsChainData;
 
     uint256 public lastConfirmedValidatorsSet;
 
-    BLSVerifier private blsVerifier;
+    // Domain separation tag for BLS signature verification — set once at initialization
+    bytes private blsDomain;
 
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
@@ -39,11 +44,12 @@ contract Validators is
         _disableInitializers();
     }
 
-    function initialize() public initializer {
+    function initialize(bytes memory _blsDomain) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-        // Deploy new BLSVerifier instance
-        blsVerifier = new BLSVerifier();
+        require(_blsDomain.length > 0, "Validators: empty BLS domain");
+        require(_blsDomain.length <= 255, "Validators: BLS domain too long");
+        blsDomain = _blsDomain;
     }
 
     function setDependencies(address _gatewayAddress) external onlyOwner {
@@ -55,14 +61,6 @@ contract Validators is
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
-
-    function setAdditionalDependenciesAndSync(
-        address _blsVerifier
-    ) external onlyOwner {
-        if (_blsVerifier == address(0)) revert InvalidAddress();
-
-        blsVerifier = BLSVerifier(_blsVerifier);
-    }
 
     /**
      * @notice Sets the initial validators chain data.
@@ -141,7 +139,19 @@ contract Validators is
         bytes calldata _signature,
         uint256 _bitmap
     ) external view returns (bool) {
-        return blsVerifier.verifyBLSSignature(_hash, _signature, _bitmap, validatorsChainData);
+        (bool callSuccess, bytes memory returnData) = VALIDATOR_BLS_PRECOMPILE
+            .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
+            abi.encodePacked(
+                uint8(1),
+                abi.encode(_hash, _signature, validatorsChainData, _bitmap)
+            )
+        );
+
+        if (callSuccess && returnData.length > 0) {
+            return abi.decode(returnData, (bool));
+        }
+
+        return BLSVerifier.verifyBLSSignature(_hash, _signature, _bitmap, validatorsChainData, blsDomain);
     }
 
     function version() public pure returns (string memory) {

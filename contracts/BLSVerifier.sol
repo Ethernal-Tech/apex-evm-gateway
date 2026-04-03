@@ -11,11 +11,10 @@ import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
  *      Custom hashToPoint uses SHA-256 (precompile 0x02) via expand_message_xmd to match
  *      the Go implementation (crypto/sha256 + Fouque-Tibouchi map-to-curve).
  *      Performs proper G2 elliptic curve point addition for public key aggregation.
+ *      Implemented as a library — all functions are inlined into the calling contract
+ *      at compile time (no separate deployment, no DELEGATECALL).
  */
-contract BLSVerifier {
-    // Domain separation tag matching the Go implementation
-    bytes private constant DOMAIN = bytes("ExpectedDomain");
-
+library BLSVerifier {
     // BN254 base field modulus p
     uint256 private constant N =
         21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -51,14 +50,16 @@ contract BLSVerifier {
      * @param _signature The BLS signature (64 bytes representing G1 point)
      * @param _bitmap Bitmap representing which validators participated
      * @param _publicKeys Array of validator public keys (G2 points)
+     * @param _domain Domain separation tag
      * @return True if signature is valid
      */
     function verifyBLSSignature(
         bytes32 _hash,
         bytes calldata _signature,
         uint256 _bitmap,
-        IGatewayStructs.ValidatorChainData[] calldata _publicKeys
-    ) external view returns (bool) {
+        IGatewayStructs.ValidatorChainData[] memory _publicKeys,
+        bytes memory _domain
+    ) internal view returns (bool) {
         if (_signature.length != 64) {
             return false;
         }
@@ -78,7 +79,7 @@ contract BLSVerifier {
 
         // Hash the message to a G1 point using SHA-256 based expand_message_xmd
         // and Fouque-Tibouchi map-to-curve — matching the Go implementation exactly
-        uint256[2] memory messagePoint = _hashToPoint(abi.encodePacked(_hash));
+        uint256[2] memory messagePoint = _hashToPoint(abi.encodePacked(_hash), _domain);
 
         // Aggregate public keys using proper EC point addition on G2
         // First: find the first participating key
@@ -115,10 +116,14 @@ contract BLSVerifier {
      * @notice Maps an arbitrary message to a G1 point on BN254
      * @dev Mirrors Go's hashToPoint: expand_message_xmd(SHA-256) + Fouque-Tibouchi
      * @param message The message bytes to hash
+     * @param domain Domain separation tag
      * @return A G1 point
      */
-    function _hashToPoint(bytes memory message) internal view returns (uint256[2] memory) {
-        (uint256 u0, uint256 u1) = _hashToField(message);
+    function _hashToPoint(
+        bytes memory message,
+        bytes memory domain
+    ) internal view returns (uint256[2] memory) {
+        (uint256 u0, uint256 u1) = _hashToField(message, domain);
         uint256[2] memory p0 = _mapToPoint(u0);
         uint256[2] memory p1 = _mapToPoint(u1);
 
@@ -142,9 +147,10 @@ contract BLSVerifier {
      *      chunks, reduces each mod MODULUS
      */
     function _hashToField(
-        bytes memory message
+        bytes memory message,
+        bytes memory domain
     ) internal view returns (uint256 u0, uint256 u1) {
-        bytes memory pseudo = _expandMsgSHA256XMD(message, DOMAIN, 96);
+        bytes memory pseudo = _expandMsgSHA256XMD(message, domain, 96);
         u0 = _reduce48(pseudo, 0);
         u1 = _reduce48(pseudo, 48);
     }

@@ -1,8 +1,18 @@
 import hre from "hardhat";
+import * as dotenv from "dotenv";
+dotenv.config();
 const { ethers, upgrades } = hre;
 
 async function main() {
   console.log("Deploying Validators contract to Polygon Amoy...\n");
+
+  // Read BLS domain from environment variable
+  const blsDomainStr = process.env.BLS_DOMAIN;
+  if (!blsDomainStr) {
+    throw new Error("BLS_DOMAIN environment variable is not set");
+  }
+  const blsDomain = ethers.toUtf8Bytes(blsDomainStr);
+  console.log(`BLS Domain: "${blsDomainStr}" (${blsDomain.length} bytes)`);
 
   // Get signer
   const [signer] = await ethers.getSigners();
@@ -15,7 +25,7 @@ async function main() {
   // Deploy Validators as UUPS proxy
   const Validators = await ethers.getContractFactory("Validators", signer);
   console.log("Deploying Validators proxy...");
-  const validators = await upgrades.deployProxy(Validators, [], {
+  const validators = await upgrades.deployProxy(Validators, [blsDomain], {
     kind: "uups",
   });
   await validators.waitForDeployment();
@@ -41,6 +51,7 @@ async function main() {
     validators: validatorsAddress,
     network: "amoy",
     deployer: signer.address,
+    blsDomain: blsDomainStr,
     timestamp: new Date().toISOString(),
   };
   fs.writeFileSync(
