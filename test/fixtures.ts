@@ -79,7 +79,9 @@ export async function deployGatewayFixtures() {
 
   const validatorsProxy = await ValidatorscProxy.deploy(
     validatorscLogic.target,
-    Validators.interface.encodeFunctionData("initialize", [])
+    Validators.interface.encodeFunctionData("initialize", [
+      ethers.toUtf8Bytes("ExpectedDomain"),
+    ])
   );
 
   const gatewayProxy = await GatewayProxy.deploy(
