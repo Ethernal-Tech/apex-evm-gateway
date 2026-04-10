@@ -91,6 +91,7 @@ library BLSVerifier {
         }
 
         uint256[4] memory aggregatedPubKey = _publicKeys[i].key;
+        uint256 sigCnt = 1;
 
         // Aggregate remaining participating keys
         for (i = i + 1; i < _publicKeys.length; i++) {
@@ -98,6 +99,11 @@ library BLSVerifier {
                 continue;
             }
             aggregatedPubKey = _addG2Points(aggregatedPubKey, _publicKeys[i].key);
+            sigCnt++;
+        }
+
+        if (sigCnt < (_publicKeys.length * 2) / 3 + 1) {
+            return false;
         }
 
         // Verify the pairing: e(signature, -G2) * e(messagePoint, aggregatedPubKey) == 1
