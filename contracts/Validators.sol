@@ -44,12 +44,10 @@ contract Validators is
         _disableInitializers();
     }
 
-    function initialize(bytes memory _blsDomain) public initializer {
+    function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-        require(_blsDomain.length > 0, "Validators: empty BLS domain");
-        require(_blsDomain.length <= 255, "Validators: BLS domain too long");
-        blsDomain = _blsDomain;
+        blsDomain = abi.encodePacked(keccak256(abi.encodePacked("DOMAIN_APEX_BRIDGE_EVM")));
     }
 
     function setDependencies(address _gatewayAddress) external onlyOwner {
