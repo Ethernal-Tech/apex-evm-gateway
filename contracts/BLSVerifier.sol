@@ -156,7 +156,7 @@ library BLSVerifier {
         bytes memory message,
         bytes memory domain
     ) internal view returns (uint256 u0, uint256 u1) {
-        bytes memory pseudo = _expandMsgSHA256XMD(message, domain, 96);
+        bytes memory pseudo = _expandMsgSHA256XMD(message, domain);
         u0 = _reduce48(pseudo, 0);
         u1 = _reduce48(pseudo, 48);
     }
@@ -202,14 +202,13 @@ library BLSVerifier {
      */
     function _expandMsgSHA256XMD(
         bytes memory message,
-        bytes memory dst,
-        uint256 outLen
+        bytes memory dst
     ) internal view returns (bytes memory out) {
         require(dst.length <= 255, "BLSVerifier: DST too long");
-        require(outLen == 96, "BLSVerifier: only outLen=96 supported");
 
         uint8 dstLen = uint8(dst.length);
 
+        // count is 2, size is 48 bytes, so total 96 bytes
         // b0 = SHA256(zeros(64) || msg || uint16(96) || 0x00 || DST || uint8(len(DST)))
         bytes32 b0 = _sha256(abi.encodePacked(new bytes(64), message, uint8(0), uint8(96), uint8(0), dst, dstLen));
 
