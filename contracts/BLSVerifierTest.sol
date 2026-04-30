@@ -14,4 +14,11 @@ contract BLSVerifierTest {
     ) public view returns (bool) {
         return BLSVerifier.verifyBLSSignature(_hash, _signature, _bitmap, _publicKeys, _domain);
     }
+
+    function hashToPoint(
+        bytes memory message,
+        bytes memory domain
+    ) public view returns (uint256[2] memory) {
+        return BLSVerifier._hashToPoint(message, domain);
+    }
 }
