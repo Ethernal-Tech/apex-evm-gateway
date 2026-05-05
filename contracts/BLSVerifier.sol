@@ -93,6 +93,10 @@ library BLSVerifier {
             }
         }
 
+        if (i >= _publicKeys.length) {
+            return false; // No participating keys found in bitmap
+        }
+
         uint256[4] memory aggregatedPubKey = _publicKeys[i].key;
         uint256 sigCnt = 1;
 
