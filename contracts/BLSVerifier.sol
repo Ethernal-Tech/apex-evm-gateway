@@ -79,7 +79,10 @@ library BLSVerifier {
 
         // Hash the message to a G1 point using SHA-256 based expand_message_xmd
         // and Fouque-Tibouchi map-to-curve — matching the Go implementation exactly
-        uint256[2] memory messagePoint = _hashToPoint(abi.encodePacked(_hash), _domain);
+        uint256[2] memory messagePoint = _hashToPoint(
+            abi.encodePacked(_hash),
+            _domain
+        );
 
         // Aggregate public keys using proper EC point addition on G2
         // First: find the first participating key
@@ -98,7 +101,10 @@ library BLSVerifier {
             if ((_bitmap & (1 << i)) == 0) {
                 continue;
             }
-            aggregatedPubKey = _addG2Points(aggregatedPubKey, _publicKeys[i].key);
+            aggregatedPubKey = _addG2Points(
+                aggregatedPubKey,
+                _publicKeys[i].key
+            );
             sigCnt++;
         }
 
@@ -210,7 +216,17 @@ library BLSVerifier {
 
         // count is 2, size is 48 bytes, so total 96 bytes
         // b0 = SHA256(zeros(64) || msg || uint16(96) || 0x00 || DST || uint8(len(DST)))
-        bytes32 b0 = _sha256(abi.encodePacked(new bytes(64), message, uint8(0), uint8(96), uint8(0), dst, dstLen));
+        bytes32 b0 = _sha256(
+            abi.encodePacked(
+                new bytes(64),
+                message,
+                uint8(0),
+                uint8(96),
+                uint8(0),
+                dst,
+                dstLen
+            )
+        );
 
         // b1 = SHA256(b0 || 0x01 || DST || uint8(len(DST)))
         bytes32 b1 = _sha256(abi.encodePacked(b0, uint8(1), dst, dstLen));
@@ -233,7 +249,9 @@ library BLSVerifier {
      */
     function _sha256(bytes memory data) internal view returns (bytes32 result) {
         assembly {
-            if iszero(staticcall(gas(), 2, add(data, 32), mload(data), 0x00, 0x20)) {
+            if iszero(
+                staticcall(gas(), 2, add(data, 32), mload(data), 0x00, 0x20)
+            ) {
                 revert(0, 0)
             }
             result := mload(0x00)
@@ -245,7 +263,9 @@ library BLSVerifier {
      * @dev Exact translation of Go's mapToPoint in arithmetic.go
      *      Uses the same constants z0, z1 and the same three-candidate approach
      */
-    function _mapToPoint(uint256 x) internal view returns (uint256[2] memory p) {
+    function _mapToPoint(
+        uint256 x
+    ) internal view returns (uint256[2] memory p) {
         // decision = isQR(x): true if x is a quadratic residue mod N
         bool decision = _isQR(x);
 
@@ -284,7 +304,11 @@ library BLSVerifier {
 
         // x3 = a0^4 * a2^2 + 1
         uint256 a0sq = mulmod(a0, a0, N);
-        uint256 x3 = addmod(mulmod(mulmod(a0sq, a0sq, N), mulmod(a2, a2, N), N), 1, N);
+        uint256 x3 = addmod(
+            mulmod(mulmod(a0sq, a0sq, N), mulmod(a2, a2, N), N),
+            1,
+            N
+        );
         // g(x3) must be a QR
         uint256 gx3 = addmod(mulmod(mulmod(x3, x3, N), x3, N), 3, N);
         (y, found) = _sqrt(gx3);
@@ -430,21 +454,30 @@ library BLSVerifier {
     // ==================== Fp2 Arithmetic ====================
 
     function _fp2Add(
-        uint256 a0, uint256 a1, uint256 b0, uint256 b1
+        uint256 a0,
+        uint256 a1,
+        uint256 b0,
+        uint256 b1
     ) internal pure returns (uint256 c0, uint256 c1) {
         c0 = addmod(a0, b0, N);
         c1 = addmod(a1, b1, N);
     }
 
     function _fp2Sub(
-        uint256 a0, uint256 a1, uint256 b0, uint256 b1
+        uint256 a0,
+        uint256 a1,
+        uint256 b0,
+        uint256 b1
     ) internal pure returns (uint256 c0, uint256 c1) {
         c0 = addmod(a0, N - b0, N);
         c1 = addmod(a1, N - b1, N);
     }
 
     function _fp2Mul(
-        uint256 a0, uint256 a1, uint256 b0, uint256 b1
+        uint256 a0,
+        uint256 a1,
+        uint256 b0,
+        uint256 b1
     ) internal pure returns (uint256 c0, uint256 c1) {
         // (a0 + a1*u)(b0 + b1*u) = (a0*b0 - a1*b1) + (a0*b1 + a1*b0)*u
         uint256 t1 = mulmod(a0, b0, N);
@@ -454,10 +487,13 @@ library BLSVerifier {
     }
 
     function _fp2Inv(
-        uint256 a0, uint256 a1
+        uint256 a0,
+        uint256 a1
     ) internal view returns (uint256 c0, uint256 c1) {
         // (a0 + a1*u)^{-1} = (a0 - a1*u) / (a0² + a1²)
-        uint256 t2Inv = _modInverse(addmod(mulmod(a0, a0, N), mulmod(a1, a1, N), N));
+        uint256 t2Inv = _modInverse(
+            addmod(mulmod(a0, a0, N), mulmod(a1, a1, N), N)
+        );
         c0 = mulmod(a0, t2Inv, N);
         c1 = mulmod(N - a1, t2Inv, N);
     }
