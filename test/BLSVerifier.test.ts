@@ -27,7 +27,6 @@ describe("BLSVerifier", function () {
         const signature = "0x1fba998b0456bf41900cb13872b440f2aeac7bf6ec7ea7136da8ac9b45ba04e108763c156ce3e29c6f47c6511414f961c401029db5fc3b642e5d5c890e5fd890";
         const bitmap = BigInt(125);
 
-        // This will always return true because the precompile is mocked to alwaysTrueBytecode
         const result = await blsVerifierTest.verifyBLSSignature(
             message,
             signature,
@@ -35,8 +34,6 @@ describe("BLSVerifier", function () {
             validatorsData,
             domain
         );
-
-        // Assert
         expect(result).to.equal(true);
     });
 
@@ -44,7 +41,6 @@ describe("BLSVerifier", function () {
         const signature = "0x245fa387c4e5c42713b7a413255ff92f3a83fd3123bdcf3b6d9e3320a9e83a232fe8877ebb6be6dbabf188ec04b4bbda9d6b109fcda70da99ea6934f1b090aee";
         const bitmap = BigInt(247);
 
-        // This will always return true because the precompile is mocked to alwaysTrueBytecode
         const result = await blsVerifierTest.verifyBLSSignature(
             message,
             signature,
@@ -52,8 +48,6 @@ describe("BLSVerifier", function () {
             validatorsData,
             domain
         );
-
-        // Assert
         expect(result).to.equal(true);
     });
 
@@ -61,7 +55,6 @@ describe("BLSVerifier", function () {
         const signature = "0x2ccd599d96c60d63a486a37cdb86cc5a2fc534fcfc3c3e3d20ef004ed62b86cc21b710dc54c6ce3e1d8615b47ac091c73a028c22967eaaf7207f9c9306a670af";
         const bitmap = BigInt(255);
 
-        // This will always return true because the precompile is mocked to alwaysTrueBytecode
         const result = await blsVerifierTest.verifyBLSSignature(
             message,
             signature,
@@ -69,8 +62,6 @@ describe("BLSVerifier", function () {
             validatorsData,
             domain
         );
-
-        // Assert
         expect(result).to.equal(true);
     });
 
@@ -78,7 +69,6 @@ describe("BLSVerifier", function () {
         const signature = "0x0f1e2ef0a189c4f8be90c03a16e0c7d47ee58924e8a259a7b78e20d8a4829dd81b0d64bbd69841caa9a67a13e035346d7d0f13ed174a4c3d8ba2fc28fd653d15";
         const bitmap = BigInt(238);
 
-        // This will always return true because the precompile is mocked to alwaysTrueBytecode
         const result = await blsVerifierTest.verifyBLSSignature(
             message,
             signature,
@@ -86,8 +76,6 @@ describe("BLSVerifier", function () {
             validatorsData,
             domain
         );
-
-        // Assert
         expect(result).to.equal(true);
     });
 
@@ -95,7 +83,6 @@ describe("BLSVerifier", function () {
         const signature = "0x0d7ca3d5ababf03f7f39d3de8594723ea7b2c2e49a964dec4c66420a1e86c7cc1ebc3f0285a62686f0d62aef072349985825e7cf90fc1a6e2cdfffddeefb2f02";
         const bitmap = BigInt(235);
 
-        // This will always return true because the precompile is mocked to alwaysTrueBytecode
         const result = await blsVerifierTest.verifyBLSSignature(
             message,
             signature,
@@ -103,8 +90,6 @@ describe("BLSVerifier", function () {
             validatorsData,
             domain
         );
-
-        // Assert
         expect(result).to.equal(false);
     });
 
@@ -112,7 +97,6 @@ describe("BLSVerifier", function () {
         const signature = "0x0f1e2ef0a189c4f8be90c03a16e0c7d47ee58924e8a259a7b78e20d8a4829dd81b0d64bbd69841caa9a67a13e035346d7d0f13ed174a4c3d8ba2fc28fd653d15";
         const bitmap = BigInt(2);
 
-        // This will always return true because the precompile is mocked to alwaysTrueBytecode
         const result = await blsVerifierTest.verifyBLSSignature(
             message,
             signature,
@@ -120,8 +104,6 @@ describe("BLSVerifier", function () {
             validatorsData,
             domain
         );
-
-        // Assert
         expect(result).to.equal(false);
     });
 
@@ -129,7 +111,6 @@ describe("BLSVerifier", function () {
         const signature = "0x1dcbd106fe5f2d393d1abb12a614daee9c4e3eebab1c026a4295e0c9547d95b61e48592e5c9bb3f27a26055bebf4eeb278adc628fbf08ba3245d3c8552c7a0c6";
         const bitmap = BigInt(234);
 
-        // This will always return true because the precompile is mocked to alwaysTrueBytecode
         const result = await blsVerifierTest.verifyBLSSignature(
             message,
             signature,
@@ -137,8 +118,6 @@ describe("BLSVerifier", function () {
             validatorsData,
             domain
         );
-
-        // Assert
         expect(result).to.equal(false);
     });
 });
