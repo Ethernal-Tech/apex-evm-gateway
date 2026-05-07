@@ -16,13 +16,9 @@ import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
  */
 library BLSVerifier {
     // BN254 base field modulus p
+    // used for field reduction after expand_message_xmd (= r, the curve order)
     uint256 private constant N =
         21888242871839275222246405745257275088696311157297823662689037894645226208583;
-
-    // Go's modulus used for field reduction after expand_message_xmd (= r, the curve order)
-    // 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
-    uint256 private constant MODULUS =
-        0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47;
 
     // 2^256 mod MODULUS — used to reduce 48-byte field elements in two 256-bit chunks
     uint256 private constant R2 =
@@ -195,8 +191,8 @@ library BLSVerifier {
         }
         // value mod MODULUS = (hi * R2 + lo) mod MODULUS
         // Both hi and lo fit in uint256; use addmod/mulmod
-        uint256 hiContrib = mulmod(hi, R2, MODULUS);
-        result = addmod(hiContrib, lo % MODULUS, MODULUS);
+        uint256 hiContrib = mulmod(hi, R2, N);
+        result = addmod(hiContrib, lo % N, N);
     }
 
     /**
