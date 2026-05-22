@@ -73,6 +73,11 @@ library BLSVerifier {
         signature[0] = uint256(bytes32(_signature[0:32]));
         signature[1] = uint256(bytes32(_signature[32:64]));
 
+        //check that signature is not the point at infinity (0, 0) in G1
+        if (signature[0] == 0 && signature[1] == 0) {
+            return false;
+        }
+
         // Hash the message to a G1 point using SHA-256 based expand_message_xmd
         // and Fouque-Tibouchi map-to-curve — matching the Go implementation exactly
         uint256[2] memory messagePoint = _hashToPoint(
@@ -87,10 +92,6 @@ library BLSVerifier {
             if ((_bitmap & (1 << i)) != 0) {
                 break;
             }
-        }
-
-        if (i >= _publicKeys.length) {
-            return false; // No participating keys found in bitmap
         }
 
         uint256[4] memory aggregatedPubKey = _publicKeys[i].key;
