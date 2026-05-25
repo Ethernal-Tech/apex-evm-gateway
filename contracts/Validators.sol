@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IValidators} from "./interfaces/IValidators.sol";
 import {IGatewayStructs} from "./interfaces/IGatewayStructs.sol";
 import {Utils} from "./Utils.sol";
+import {BLSVerifier} from "./BLSVerifier.sol";
 
 /**
  * @title Validators
@@ -31,9 +32,12 @@ contract Validators is
 
     uint256 public lastConfirmedValidatorsSet;
 
+    // Domain separation tag for BLS signature verification — set once at initialization
+    bytes private blsDomain;
+
     // When adding new variables use one slot from the gap (decrease the gap array size)
     // Double check when setting structs or arrays
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -43,6 +47,7 @@ contract Validators is
     function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+        blsDomain = abi.encodePacked(keccak256(abi.encodePacked("DOMAIN_APEX_BRIDGE_EVM")));
     }
 
     function setDependencies(address _gatewayAddress) external onlyOwner {
@@ -54,6 +59,10 @@ contract Validators is
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
+
+    function setDomain(string calldata _domain) external onlyOwner {
+        blsDomain = abi.encodePacked(keccak256(abi.encodePacked(_domain)));
+    }
 
     /**
      * @notice Sets the initial validators chain data.
@@ -125,16 +134,13 @@ contract Validators is
      * @param _signature BLS signature to validate.
      * @param _bitmap Bitmap representing validator participation.
      * @return valid Boolean indicating whether the signature is valid.
-     * @dev Calls the BLS precompile contract for verification. Uses gas limit `VALIDATOR_BLS_PRECOMPILE_GAS`.
+     * @dev Uses the BLSVerifier contract for signature verification instead of precompile.
      */
     function isBlsSignatureValid(
         bytes32 _hash,
         bytes calldata _signature,
         uint256 _bitmap
     ) external view returns (bool) {
-        // verify signatures` for provided sig data and sigs bytes
-        // solhint-disable-next-line avoid-low-level-calls
-        // slither-disable-next-line low-level-calls,calls-loop
         (bool callSuccess, bytes memory returnData) = VALIDATOR_BLS_PRECOMPILE
             .staticcall{gas: VALIDATOR_BLS_PRECOMPILE_GAS}(
             abi.encodePacked(
@@ -143,11 +149,15 @@ contract Validators is
             )
         );
 
-        return callSuccess && abi.decode(returnData, (bool));
+        if (callSuccess && returnData.length > 0) {
+            return abi.decode(returnData, (bool));
+        }
+
+        return BLSVerifier.verifyBLSSignature(_hash, _signature, _bitmap, validatorsChainData, blsDomain);
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.0";
+        return "1.1.0";
     }
 
     modifier onlyGateway() {
