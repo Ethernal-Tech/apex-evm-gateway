@@ -75,7 +75,9 @@ contract NativeTokenPredicate is
 
     /**
      * @notice Handles token deposits.
-     * @param _data Encoded deposit data, including batch ID, TTL, and receiver details.
+     * @param _data Canonical abi.encode of Deposits: batch ID, TTL, fee, receivers, and the destination
+     * (chainId, gateway) the batch was signed for. Other encodings revert with InvalidPayload,
+     * another destination with WrongDestination.
      * @param _relayer Address of the relayer initiating the deposit.
      * @return success Indicates whether the deposit operation succeeded.
      * @dev Validates batch ID, TTL expiration, and performs deposits for receivers and the relayer.
@@ -86,6 +88,22 @@ contract NativeTokenPredicate is
         uint16 _currencyTokenId
     ) external onlyGateway nonReentrant returns (bool) {
         Deposits memory _deposits = abi.decode(_data, (Deposits));
+
+        // Only the canonical encoding is accepted. abi.decode tolerates other byte layouts
+        // (trailing bytes, pre-upgrade 4-field payloads that decode with chainId = receivers.length
+        // and gateway = receivers[0].receiver), and those must never reach the checks below.
+        if (keccak256(abi.encode(_deposits)) != keccak256(_data)) {
+            revert InvalidPayload();
+        }
+
+        // The signed payload is bound to one chain and one Gateway; this runs
+        // before any state change so a replay on another Gateway cannot move lastBatchId.
+        if (
+            _deposits.chainId != block.chainid ||
+            _deposits.gateway != address(gateway)
+        ) {
+            revert WrongDestination();
+        }
 
         // _deposits.batchId cannot go into the past but can go into the future.
         // This is not a bug; it is mandatory by design and aligns with how oracles work.
@@ -151,7 +169,7 @@ contract NativeTokenPredicate is
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.0";
+        return "1.0.1";
     }
 
     modifier onlyGateway() {

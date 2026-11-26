@@ -247,8 +247,8 @@ describe("Gateway Contract", function () {
 
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 1]]]]
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[], uint256, address)"],
+        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 1]], (await ethers.provider.getNetwork()).chainId, await gateway.getAddress()]]
       );
       dataArray.push(data);
     }
@@ -333,8 +333,8 @@ describe("Gateway Contract", function () {
 
     for (let i = 0; i < 100; i++) {
       const data = abiCoder.encode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 1]]]]
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[], uint256, address)"],
+        [[i + 1, blockNumber + 100, 1, [[addresses[i], 200, 1]], (await ethers.provider.getNetwork()).chainId, await gateway.getAddress()]]
       );
       dataArray.push(data);
     }
@@ -429,9 +429,9 @@ describe("Gateway Contract", function () {
     const address = ethers.Wallet.createRandom().address;
     const dataTTLExpired = abiCoder.encode(
       [
-        "tuple(uint64, uint64, uint256, tuple(uint8, address, uint256, uint256)[])",
+        "tuple(uint64, uint64, uint256, tuple(address, uint256, uint16)[], uint256, address)",
       ],
-      [[1, blockNumber - 1, 1, [[1, address, 100, 0]]]]
+      [[1, blockNumber - 1, 1, [[address, 100, 1]], (await ethers.provider.getNetwork()).chainId, await gateway.getAddress()]]
     );
 
     const depositTx = await gateway.deposit(

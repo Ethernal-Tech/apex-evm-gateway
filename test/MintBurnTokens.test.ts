@@ -67,8 +67,8 @@ describe("Transfering MintBurn tokens", function () {
 
     it("Should revert if tokenId is not valid (deposit)", async () => {
       const data = new ethers.AbiCoder().encode(
-        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[])"],
-        [[1, 200, 1, [[receiver.address, 1000, 9183]]]]
+        ["tuple(uint64, uint64, uint256, tuple(address, uint256, uint256)[], uint256, address)"],
+        [[1, (await ethers.provider.getBlockNumber()) + 100, 1, [[receiver.address, 1000, 9183]], (await ethers.provider.getNetwork()).chainId, await gateway.getAddress()]]
       );
       await expect(gateway.connect(receiver).deposit("0xff003300", 1, data))
         .to.be.revertedWithCustomError(gateway, "TokenNotRegistered")
