@@ -13,6 +13,8 @@ interface IGatewayStructs {
         uint64 ttlExpired;
         uint256 feeAmount;
         ReceiverDeposit[] receivers;
+        uint256 chainId;
+        address gateway;
     }
 
     struct ValidatorSetChange {
@@ -20,6 +22,8 @@ interface IGatewayStructs {
         uint256 _validatorsSetNumber;
         uint256 _ttl;
         ValidatorChainData[] _validatorsChainData;
+        uint256 chainId;
+        address gateway;
     }
 
     struct ReceiverDeposit {
@@ -82,6 +86,7 @@ interface IGatewayStructs {
         uint256 bridgingAmount
     );
     error InvalidSignature();
+    error InvalidPayload();
     error InvalidAddress();
     error NotContractAddress(address addr);
     error NotGateway();
@@ -90,6 +95,7 @@ interface IGatewayStructs {
     error TokenIdAlreadyRegistered(uint16 tokenId);
     error TokenNotRegistered(uint16 tokenId);
     error TransferFailed();
+    error WrongDestination();
     error WrongValidatorsSetValue();
     error WrongValue(uint256 expected, uint256 received);
     error CurrencyTokenId();

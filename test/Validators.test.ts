@@ -22,7 +22,7 @@ describe("Validators Contract", function () {
   it("UpdateValidators should revert if not called by Gateway", async () => {
     const data = ethers.AbiCoder.defaultAbiCoder().encode(
       [
-        "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData)",
+        "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData, uint256 chainId, address gateway)",
       ],
       [validatorSetChange]
     );
@@ -36,7 +36,7 @@ describe("Validators Contract", function () {
 
     const data = ethers.AbiCoder.defaultAbiCoder().encode(
       [
-        "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData)",
+        "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData, uint256 chainId, address gateway)",
       ],
       [validatorSetChange]
     );
@@ -59,7 +59,7 @@ describe("Validators Contract", function () {
 
     const data = ethers.AbiCoder.defaultAbiCoder().encode(
       [
-        "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData)",
+        "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData, uint256 chainId, address gateway)",
       ],
       [validatorSetChange]
     );
@@ -84,7 +84,7 @@ describe("Validators Contract", function () {
   it("UpdateValidators success", async () => {
     const data = ethers.AbiCoder.defaultAbiCoder().encode(
       [
-        "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData)",
+        "tuple(uint64 batchId, uint256 _validatorsSetNumber, uint256 _ttl, tuple(uint256[4] key)[] _validatorsChainData, uint256 chainId, address gateway)",
       ],
       [validatorSetChange]
     );

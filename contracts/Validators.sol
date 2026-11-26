@@ -91,6 +91,18 @@ contract Validators is
             (ValidatorSetChange)
         );
 
+        // Only the canonical encoding is accepted (see NativeTokenPredicate.deposit).
+        if (keccak256(abi.encode(_validatorSetChange)) != keccak256(_data)) {
+            revert InvalidPayload();
+        }
+
+        if (
+            _validatorSetChange.chainId != block.chainid ||
+            _validatorSetChange.gateway != address(gateway)
+        ) {
+            revert WrongDestination();
+        }
+
         if (
             _validatorSetChange._validatorsSetNumber !=
             (lastConfirmedValidatorsSet + 1)
@@ -157,7 +169,7 @@ contract Validators is
     }
 
     function version() public pure returns (string memory) {
-        return "1.1.0";
+        return "1.1.1";
     }
 
     modifier onlyGateway() {

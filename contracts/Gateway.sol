@@ -343,7 +343,7 @@ contract Gateway is
     }
 
     function version() public pure returns (string memory) {
-        return "1.0.2";
+        return "1.0.3";
     }
 
     modifier onlyPredicate() {
